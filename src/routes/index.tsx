@@ -512,7 +512,8 @@ function Home() {
 
               <div className="pt-3 border-t border-border space-y-2">
                 <h4 className="text-sm font-semibold">{t("استيراد كتب وملفات", "Import books & files")}</h4>
-                <input ref={fileRef} type="file" multiple accept="*/*"
+                <input ref={fileRef} type="file" multiple
+                  accept="application/pdf,.pdf,image/*,.docx,audio/*,text/*,.md,.txt,.json,.csv,.html"
                   onChange={(e) => onFiles(e.target.files)} className="hidden" />
                 <Button variant="secondary" className="w-full" onClick={() => fileRef.current?.click()} disabled={importing}>
                   <FileUp className="size-4" />
