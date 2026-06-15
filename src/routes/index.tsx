@@ -415,26 +415,70 @@ function Home() {
                   </div>
                 )}
                 {chat.map((m) => (
-                  <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed ${
+                  <div key={m.id} className={`flex group ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                       m.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-sm"
+                        ? "bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap"
                         : "bg-card border border-border rounded-bl-sm"
-                    }`}>{m.text}</div>
+                    }`}>
+                      {m.role === "assistant" ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-pre:my-2 prose-headings:my-2">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text}</ReactMarkdown>
+                          {m.imageUrl && (
+                            <img src={m.imageUrl} alt="generated" className="mt-2 rounded-lg max-w-full" />
+                          )}
+                          <div className="flex gap-1 mt-2 opacity-0 group-hover:opacity-100 transition">
+                            <Button variant="ghost" size="icon" className="size-7" onClick={() => copyMsg(m.text)} title={t("نسخ", "Copy")}>
+                              <Copy className="size-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="size-7" onClick={() => speak(m.text)} title={t("استمع", "Speak")}>
+                              <Volume2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        m.text
+                      )}
+                    </div>
                   </div>
                 ))}
+                {thinking && (
+                  <div className="flex justify-start">
+                    <div className="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm text-muted-foreground">
+                      <span className="inline-flex gap-1">
+                        <span className="size-1.5 rounded-full bg-current animate-bounce" />
+                        <span className="size-1.5 rounded-full bg-current animate-bounce [animation-delay:120ms]" />
+                        <span className="size-1.5 rounded-full bg-current animate-bounce [animation-delay:240ms]" />
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="border-t border-border p-3 flex gap-2 bg-background">
+              <div className="border-t border-border p-3 flex gap-2 bg-background items-center">
+                <Button
+                  variant={recording ? "destructive" : "outline"}
+                  size="icon"
+                  onClick={recording ? stopRec : startRec}
+                  disabled={transcribing}
+                  title={recording ? t("إيقاف التسجيل", "Stop") : t("إدخال صوتي", "Voice input")}
+                >
+                  {transcribing ? <Wand2 className="size-4 animate-pulse" /> : recording ? <Square className="size-4" /> : <Mic className="size-4" />}
+                </Button>
                 <Input value={input} onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && send()}
-                  placeholder={t("اكتب سؤالك…", "Type your question…")} className="flex-1" />
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
+                  placeholder={t("اكتب… أو جرّب /صورة، /لخّص، /ترجم، /اشرح", "Type… or try /image, /summarize, /translate, /explain")} className="flex-1" />
                 <Button onClick={send} disabled={!input.trim() || thinking}>
                   {thinking ? t("يفكر…", "Thinking…") : t("إرسال", "Send")}
                 </Button>
                 {chat.length > 0 && (
-                  <Button variant="ghost" size="icon" onClick={clearChat} title={t("مسح", "Clear")}>
-                    <Trash2 className="size-4" />
-                  </Button>
+                  <>
+                    <Button variant="ghost" size="icon" onClick={exportChatMD} title={t("تصدير", "Export")}>
+                      <FileDown className="size-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={clearChat} title={t("مسح", "Clear")}>
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </>
                 )}
               </div>
             </Card>
