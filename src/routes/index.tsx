@@ -13,6 +13,7 @@ import {
   Brain, Sparkles, Plus, Search, Trash2, MessageSquare, BookOpen, Languages,
   Upload, Download, FileUp, Flame, Tag as TagIcon, Library,
   Mic, Square, Volume2, Copy, Image as ImageIcon, FileDown, Wand2,
+  FolderOpen, HardDrive,
 } from "lucide-react";
 import { searchTFIDF, chunkText, type Doc } from "@/lib/nawat-search";
 import { extractPdfText } from "@/lib/pdf-extract";
@@ -22,6 +23,10 @@ import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
 import { transcribeAudio } from "@/lib/nawat-transcribe.functions";
 import { generateImage } from "@/lib/nawat-image.functions";
+import {
+  fsSupported, pickRootDir, getRootName, clearRootDir,
+  saveSnapshot, loadSnapshot, saveOriginalFile,
+} from "@/lib/nawat-fs";
 
 export const Route = createFileRoute("/")({
   head: () => ({
