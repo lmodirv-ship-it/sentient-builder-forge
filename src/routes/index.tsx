@@ -338,11 +338,11 @@ function Home() {
 
               <div className="pt-3 border-t border-border space-y-2">
                 <h4 className="text-sm font-semibold">{t("استيراد كتب وملفات", "Import books & files")}</h4>
-                <input ref={fileRef} type="file" multiple accept=".pdf,.txt,.md,application/pdf,text/plain"
+                <input ref={fileRef} type="file" multiple accept="*/*"
                   onChange={(e) => onFiles(e.target.files)} className="hidden" />
                 <Button variant="secondary" className="w-full" onClick={() => fileRef.current?.click()} disabled={importing}>
                   <FileUp className="size-4" />
-                  {importing ? t("جارٍ القراءة…", "Reading…") : t("رفع PDF / TXT / MD", "Upload PDF / TXT / MD")}
+                  {importing ? t("جارٍ القراءة…", "Reading…") : t("رفع أي ملف (PDF/صور/Word/نص)", "Upload any file (PDF/images/Word/text)")}
                 </Button>
                 <div className="flex gap-2">
                   <Button variant="outline" className="flex-1" onClick={exportJSON} disabled={!docs.length}>
