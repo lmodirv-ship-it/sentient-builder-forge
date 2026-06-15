@@ -79,6 +79,8 @@ function Home() {
   const [thinking, setThinking] = useState(false);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [folderName, setFolderName] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const ask = useServerFn(askNawat);
   const transcribe = useServerFn(transcribeAudio);
   const imageGen = useServerFn(generateImage);
@@ -87,13 +89,45 @@ function Home() {
   const jsonRef = useRef<HTMLInputElement>(null);
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
-    setDocs(load<Doc[]>(K_DOCS, []));
-    setChat(load<ChatMsg[]>(K_CHAT, []));
-    setStreak(load<Streak>(K_STREAK, { last: "", days: 0 }));
+    (async () => {
+      // Try restoring from chosen folder first; fall back to localStorage.
+      let restored = false;
+      try {
+        const name = await getRootName();
+        if (name) {
+          setFolderName(name);
+          const snap = await loadSnapshot();
+          if (snap) {
+            if (Array.isArray(snap.docs)) setDocs(snap.docs as Doc[]);
+            if (Array.isArray(snap.chat)) setChat(snap.chat as ChatMsg[]);
+            restored = true;
+          }
+        }
+      } catch { /* permission denied or no handle */ }
+      if (!restored) {
+        setDocs(load<Doc[]>(K_DOCS, []));
+        setChat(load<ChatMsg[]>(K_CHAT, []));
+      }
+      setStreak(load<Streak>(K_STREAK, { last: "", days: 0 }));
+      hydratedRef.current = true;
+    })();
   }, []);
   useEffect(() => { chatRef.current?.scrollTo({ top: 1e9, behavior: "smooth" }); }, [chat]);
+
+  // Auto-sync to chosen folder whenever data changes (debounced).
+  useEffect(() => {
+    if (!hydratedRef.current || !folderName) return;
+    const id = setTimeout(async () => {
+      try {
+        setSyncing(true);
+        await saveSnapshot({ docs, chat, savedAt: Date.now() });
+      } catch { /* ignore */ } finally { setSyncing(false); }
+    }, 600);
+    return () => clearTimeout(id);
+  }, [docs, chat, folderName]);
 
   const persistDocs = (next: Doc[]) => { setDocs(next); save(K_DOCS, next); const s = bumpStreak(streak); setStreak(s); save(K_STREAK, s); };
   const persistChat = (next: ChatMsg[]) => { setChat(next); save(K_CHAT, next); };
