@@ -364,19 +364,23 @@ function Home() {
       <header className="border-b border-border/60 backdrop-blur-xl sticky top-0 z-10 bg-background/60">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-2xl bg-primary/10 border border-primary/30 grid place-items-center text-primary shadow-elegant">
+            <div className="relative size-10 rounded-2xl bg-primary/10 border border-primary/40 grid place-items-center text-primary shadow-elegant">
               <Brain className="size-5" />
+              <span className="absolute inset-0 rounded-2xl animate-[pulse-ring_2.4s_ease-out_infinite]" />
             </div>
             <div>
-              <h1 className="text-lg font-extrabold leading-tight tracking-tight">{t("نواة", "Nawat")}</h1>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground leading-tight">{t("يعمل بلا إنترنت", "Runs offline")}</p>
+              <h1 className="text-lg font-extrabold leading-tight tracking-tight nawat-holo">{t("نواة", "NAWAT")}</h1>
+              <p className="nawat-chip text-muted-foreground leading-tight flex items-center gap-1.5">
+                <span className="inline-block size-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
+                {t("نظام معرفي · أوفلاين", "COGNITIVE OS · OFFLINE")}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {streak.days > 0 && (
-              <Badge variant="secondary" className="gap-1 bg-secondary/60 border border-border"><Flame className="size-3 text-orange-400" />{streak.days} {t("يوم", "d")}</Badge>
+              <Badge variant="secondary" className="gap-1 bg-secondary/60 border border-border nawat-chip"><Flame className="size-3 text-orange-400" />{streak.days}</Badge>
             )}
-            <Badge variant="secondary" className="gap-1 bg-secondary/60 border border-border"><Sparkles className="size-3 text-primary" />{docs.length}</Badge>
+            <Badge variant="secondary" className="gap-1 bg-secondary/60 border border-border nawat-chip"><Sparkles className="size-3 text-primary" />{docs.length}</Badge>
             <Button variant="outline" size="sm" onClick={() => setLang(isAr ? "en" : "ar")}>
               <Languages className="size-4" /> {isAr ? "EN" : "ع"}
             </Button>
@@ -384,17 +388,29 @@ function Home() {
         </div>
       </header>
 
-      <section className="max-w-6xl mx-auto px-4 pt-16 pb-8 text-center relative">
-        <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.05] bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent">
-          {t("اقرأ. علّمني. ثم اسألني.", "Read. Teach me. Then ask me.")}
+      <section className="max-w-6xl mx-auto px-4 pt-20 pb-10 text-center relative">
+        <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-md nawat-chip text-primary">
+          <span className="inline-block size-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary)] animate-pulse" />
+          {t("الإصدار 2026 · نواة الذكاء", "v2026 · NEURAL CORE")}
+        </div>
+        <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.05]">
+          <span className="nawat-holo">{t("اقرأ. علّمني.", "Read. Teach me.")}</span>
+          <br />
+          <span className="bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent">{t("ثم اسألني.", "Then ask me.")}</span>
         </h2>
-        <p className="mt-5 text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-6 text-muted-foreground max-w-2xl mx-auto leading-relaxed">
           {t(
             "ارفع كتباً PDF أو أضف ملاحظات يومية. أُقطّعها وأفهرسها وأجد لك أهم المقاطع — كل ذلك داخل متصفحك بدون إنترنت.",
             "Upload PDFs or add daily notes. I chunk, index, and retrieve the most relevant passages — fully in your browser, no internet needed.",
           )}
         </p>
+        <div className="mt-8 flex items-center justify-center gap-6 nawat-chip text-muted-foreground">
+          <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-primary" /> {t("بدون خوادم", "ZERO SERVER")}</span>
+          <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-[oklch(0.7_0.22_280)]" /> {t("بحث TF-IDF", "TF-IDF SEARCH")}</span>
+          <span className="hidden sm:flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-[oklch(0.75_0.2_220)]" /> {t("ذاكرة محلية", "LOCAL MEMORY")}</span>
+        </div>
       </section>
+
 
       <main className="max-w-6xl mx-auto px-4 pb-16">
         <Tabs defaultValue="chat" className="w-full">
