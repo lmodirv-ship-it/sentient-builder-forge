@@ -16,6 +16,7 @@ import { extractPdfText } from "@/lib/pdf-extract";
 import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
+import { ocrImage } from "@/lib/nawat-ocr.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -98,32 +99,81 @@ function Home() {
 
   const removeDoc = (id: string) => persistDocs(docs.filter((x) => x.id !== id));
 
+  const fileToDataUrl = (file: File): Promise<string> =>
+    new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result));
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+
+  const extractFromFile = async (file: File): Promise<{ text: string; tag: string }> => {
+    const name = file.name.toLowerCase();
+    const mime = file.type;
+
+    // PDF
+    if (mime === "application/pdf" || name.endsWith(".pdf")) {
+      return { text: await extractPdfText(file), tag: "pdf" };
+    }
+    // Images → AI OCR
+    if (mime.startsWith("image/") || /\.(png|jpe?g|webp|gif|bmp|heic)$/.test(name)) {
+      const dataUrl = await fileToDataUrl(file);
+      const { text, error } = await ocrImage({ data: { dataUrl, filename: file.name, lang } });
+      if (error) throw new Error(error);
+      return { text, tag: "image" };
+    }
+    // Word .docx
+    if (name.endsWith(".docx") || mime.includes("officedocument.wordprocessingml")) {
+      const mammoth: any = await import("mammoth/mammoth.browser");
+      const buf = await file.arrayBuffer();
+      const { value } = await mammoth.extractRawText({ arrayBuffer: buf });
+      return { text: value, tag: "docx" };
+    }
+    // Audio → not supported (transcription needs special handling)
+    if (mime.startsWith("audio/") || /\.(mp3|wav|m4a|ogg|webm|aac|flac)$/.test(name)) {
+      throw new Error(t("الملفات الصوتية غير مدعومة بعد.", "Audio files not supported yet."));
+    }
+    // Video → not supported
+    if (mime.startsWith("video/")) {
+      throw new Error(t("ملفات الفيديو غير مدعومة.", "Video files not supported."));
+    }
+    // Text fallback (txt, md, json, csv, html, code, etc.)
+    try {
+      return { text: await file.text(), tag: "text" };
+    } catch {
+      throw new Error(t("نوع ملف غير مدعوم.", "Unsupported file type."));
+    }
+  };
+
   const onFiles = async (files: FileList | null) => {
     if (!files?.length) return;
     setImporting(true);
+    const errors: string[] = [];
     try {
       const newDocs: Doc[] = [];
       for (const file of Array.from(files)) {
-        let text = "";
-        if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
-          text = await extractPdfText(file);
-        } else {
-          text = await file.text();
+        try {
+          const { text, tag } = await extractFromFile(file);
+          if (!text.trim()) {
+            errors.push(`${file.name}: ${t("فارغ", "empty")}`);
+            continue;
+          }
+          const chunks = chunkText(text);
+          const now = Date.now();
+          chunks.forEach((c, i) => newDocs.push({
+            id: crypto.randomUUID(),
+            title: chunks.length > 1 ? `${file.name} — ${i + 1}/${chunks.length}` : file.name,
+            content: c,
+            tags: ["import", tag],
+            source: file.name,
+            createdAt: now + i,
+          }));
+        } catch (e: any) {
+          errors.push(`${file.name}: ${e?.message || e}`);
         }
-        const chunks = chunkText(text);
-        const now = Date.now();
-        chunks.forEach((c, i) => newDocs.push({
-          id: crypto.randomUUID(),
-          title: `${file.name} — ${i + 1}/${chunks.length}`,
-          content: c,
-          tags: ["import"],
-          source: file.name,
-          createdAt: now + i,
-        }));
       }
-      persistDocs([...newDocs, ...docs]);
-    } catch (e: any) {
-      alert(t("فشل الاستيراد: ", "Import failed: ") + (e?.message || e));
+      if (newDocs.length) persistDocs([...newDocs, ...docs]);
+      if (errors.length) alert(t("بعض الملفات لم تُستورد:\n", "Some files failed:\n") + errors.join("\n"));
     } finally {
       setImporting(false);
       if (fileRef.current) fileRef.current.value = "";
