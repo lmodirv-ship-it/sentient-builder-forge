@@ -207,6 +207,10 @@ function Home() {
       const newDocs: Doc[] = [];
       for (const file of Array.from(files)) {
         try {
+          // Save the original file into the chosen folder (any size) if set.
+          if (folderName) {
+            try { await saveOriginalFile(file); } catch { /* ignore */ }
+          }
           const { text, tag } = await extractFromFile(file);
           if (!text.trim()) {
             errors.push(`${file.name}: ${t("فارغ", "empty")}`);
