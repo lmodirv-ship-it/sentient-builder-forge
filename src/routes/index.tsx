@@ -580,6 +580,64 @@ function Home() {
                   <Library className="size-4" /> {t(`حمّل المكتبة الأساسية (${SEED_COUNT})`, `Load starter library (${SEED_COUNT})`)}
                 </Button>
               </div>
+
+              <div className="pt-3 border-t border-border space-y-2">
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <HardDrive className="size-4" />
+                  {t("مجلد الحفظ على جهازك", "Local save folder")}
+                </h4>
+                {folderName ? (
+                  <>
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      <span className={`size-1.5 rounded-full ${syncing ? "bg-amber-400 animate-pulse" : "bg-primary"}`} />
+                      <span className="truncate">{folderName}</span>
+                      <span className="ms-auto">{syncing ? t("جارٍ الحفظ…", "Saving…") : t("متزامن", "Synced")}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1" onClick={async () => {
+                        try {
+                          const n = await pickRootDir();
+                          if (n) {
+                            setFolderName(n);
+                            await saveSnapshot({ docs, chat, savedAt: Date.now() });
+                          }
+                        } catch (e: any) { alert(e?.message || String(e)); }
+                      }}>
+                        <FolderOpen className="size-4" /> {t("تغيير", "Change")}
+                      </Button>
+                      <Button variant="ghost" className="flex-1" onClick={async () => {
+                        await clearRootDir();
+                        setFolderName(null);
+                      }}>
+                        {t("فصل", "Disconnect")}
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      {t("كل ملف ترفعه يُحفظ كاملاً داخل هذا المجلد (مهما كان حجمه)، مع نسخة JSON كاملة من ذاكرتك ونسخ احتياطية مؤرّخة.", "Every uploaded file is saved fully in this folder (any size), plus a full JSON snapshot of your memory and dated backups.")}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="secondary" className="w-full" disabled={!fsSupported()} onClick={async () => {
+                      try {
+                        const n = await pickRootDir();
+                        if (n) {
+                          setFolderName(n);
+                          await saveSnapshot({ docs, chat, savedAt: Date.now() });
+                        }
+                      } catch (e: any) { alert(e?.message || String(e)); }
+                    }}>
+                      <FolderOpen className="size-4" />
+                      {t("اختر مجلد الحفظ على الحاسوب", "Pick a save folder on your computer")}
+                    </Button>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      {fsSupported()
+                        ? t("اختر مجلداً مرة واحدة، وسيحفظ نواة كل شيء فيه تلقائياً (ملفات + ذاكرة كاملة).", "Pick a folder once and Nawat will auto-save everything there (files + full memory).")
+                        : t("هذه الميزة تتطلب Chrome أو Edge على الحاسوب.", "This feature requires Chrome or Edge on desktop.")}
+                    </p>
+                  </>
+                )}
+              </div>
             </Card>
 
             <div className="lg:col-span-3 space-y-3">
