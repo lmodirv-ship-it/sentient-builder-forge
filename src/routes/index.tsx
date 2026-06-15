@@ -226,9 +226,48 @@ function Home() {
   }, [docs, query, activeTag]);
 
   const send = async () => {
-    const text = input.trim();
-    if (!text || thinking) return;
-    const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text };
+    const raw = input.trim();
+    if (!raw || thinking) return;
+
+    // Slash command: /صورة or /image — generate an image
+    const imgMatch = raw.match(/^\/(?:صورة|image|img)\s+([\s\S]+)/i);
+    if (imgMatch) {
+      const prompt = imgMatch[1].trim();
+      const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+      const baseChat = [...chat, user];
+      persistChat(baseChat);
+      setInput("");
+      setThinking(true);
+      try {
+        const { imageUrl, error } = await imageGen({ data: { prompt } });
+        const assistant: ChatMsg = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          text: error ? (t("تعذّر توليد الصورة: ", "Image failed: ") + error) : t("تم توليد الصورة:", "Generated:"),
+          imageUrl: error ? undefined : imageUrl,
+        };
+        persistChat([...baseChat, assistant]);
+      } finally {
+        setThinking(false);
+      }
+      return;
+    }
+
+    // Expand other slash commands into natural prompts
+    let text = raw;
+    const cmd = raw.match(/^\/(\S+)\s*([\s\S]*)$/);
+    if (cmd) {
+      const [, name, rest] = cmd;
+      const n = name.toLowerCase();
+      if (["لخص", "لخّص", "summarize", "sum"].includes(n))
+        text = isAr ? `لخّص ما يلي بإيجاز ونقاط واضحة:\n${rest}` : `Summarize concisely with bullet points:\n${rest}`;
+      else if (["ترجم", "translate", "tr"].includes(n))
+        text = isAr ? `ترجم النص التالي إلى الإنجليزية:\n${rest}` : `Translate the following to Arabic:\n${rest}`;
+      else if (["اشرح", "explain", "ex"].includes(n))
+        text = isAr ? `اشرح بأسلوب بسيط ومنظّم:\n${rest}` : `Explain simply and clearly:\n${rest}`;
+    }
+
+    const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
     const baseChat = [...chat, user];
     persistChat(baseChat);
     setInput("");
@@ -259,6 +298,66 @@ function Home() {
   };
 
   const clearChat = () => persistChat([]);
+
+  // ===== Voice input (MediaRecorder → AI transcription) =====
+  const startRec = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      chunksRef.current = [];
+      mr.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
+      mr.onstop = async () => {
+        stream.getTracks().forEach((tr) => tr.stop());
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" });
+        const buf = await blob.arrayBuffer();
+        const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+        setTranscribing(true);
+        try {
+          const fmt = (mr.mimeType || "").includes("mp4") ? "mp4" : "webm";
+          const { text, error } = await transcribe({ data: { audioBase64: b64, format: fmt as any, lang } });
+          if (error) alert(error);
+          else setInput((prev) => (prev ? prev + " " : "") + text);
+        } finally {
+          setTranscribing(false);
+        }
+      };
+      mediaRef.current = mr;
+      mr.start();
+      setRecording(true);
+    } catch (e: any) {
+      alert(t("تعذّر الوصول للميكروفون: ", "Mic access failed: ") + (e?.message || ""));
+    }
+  };
+  const stopRec = () => {
+    mediaRef.current?.stop();
+    setRecording(false);
+  };
+
+  // ===== TTS =====
+  const speak = (text: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = isAr ? "ar-SA" : "en-US";
+    window.speechSynthesis.speak(u);
+  };
+
+  // ===== Copy =====
+  const copyMsg = (text: string) => {
+    navigator.clipboard?.writeText(text);
+  };
+
+  // ===== Export chat as Markdown =====
+  const exportChatMD = () => {
+    const md = chat
+      .map((m) => `### ${m.role === "user" ? (isAr ? "أنا" : "Me") : (isAr ? "نواة" : "Nawat")}\n${m.text}${m.imageUrl ? `\n\n![image](${m.imageUrl})` : ""}`)
+      .join("\n\n---\n\n");
+    const blob = new Blob([`# ${isAr ? "محادثة نواة" : "Nawat Chat"} — ${todayISO()}\n\n${md}`], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `nawat-chat-${todayISO()}.md`; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div dir={isAr ? "rtl" : "ltr"} className="min-h-screen bg-background text-foreground">
