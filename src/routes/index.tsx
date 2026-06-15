@@ -13,6 +13,7 @@ import {
   Brain, Sparkles, Plus, Search, Trash2, MessageSquare, BookOpen, Languages,
   Upload, Download, FileUp, Flame, Tag as TagIcon, Library,
   Mic, Square, Volume2, Copy, Image as ImageIcon, FileDown, Wand2,
+  FolderOpen, HardDrive,
 } from "lucide-react";
 import { searchTFIDF, chunkText, type Doc } from "@/lib/nawat-search";
 import { extractPdfText } from "@/lib/pdf-extract";
@@ -22,6 +23,10 @@ import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
 import { transcribeAudio } from "@/lib/nawat-transcribe.functions";
 import { generateImage } from "@/lib/nawat-image.functions";
+import {
+  fsSupported, pickRootDir, getRootName, clearRootDir,
+  saveSnapshot, loadSnapshot, saveOriginalFile,
+} from "@/lib/nawat-fs";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -74,6 +79,8 @@ function Home() {
   const [thinking, setThinking] = useState(false);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [folderName, setFolderName] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const ask = useServerFn(askNawat);
   const transcribe = useServerFn(transcribeAudio);
   const imageGen = useServerFn(generateImage);
@@ -82,13 +89,45 @@ function Home() {
   const jsonRef = useRef<HTMLInputElement>(null);
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
-    setDocs(load<Doc[]>(K_DOCS, []));
-    setChat(load<ChatMsg[]>(K_CHAT, []));
-    setStreak(load<Streak>(K_STREAK, { last: "", days: 0 }));
+    (async () => {
+      // Try restoring from chosen folder first; fall back to localStorage.
+      let restored = false;
+      try {
+        const name = await getRootName();
+        if (name) {
+          setFolderName(name);
+          const snap = await loadSnapshot();
+          if (snap) {
+            if (Array.isArray(snap.docs)) setDocs(snap.docs as Doc[]);
+            if (Array.isArray(snap.chat)) setChat(snap.chat as ChatMsg[]);
+            restored = true;
+          }
+        }
+      } catch { /* permission denied or no handle */ }
+      if (!restored) {
+        setDocs(load<Doc[]>(K_DOCS, []));
+        setChat(load<ChatMsg[]>(K_CHAT, []));
+      }
+      setStreak(load<Streak>(K_STREAK, { last: "", days: 0 }));
+      hydratedRef.current = true;
+    })();
   }, []);
   useEffect(() => { chatRef.current?.scrollTo({ top: 1e9, behavior: "smooth" }); }, [chat]);
+
+  // Auto-sync to chosen folder whenever data changes (debounced).
+  useEffect(() => {
+    if (!hydratedRef.current || !folderName) return;
+    const id = setTimeout(async () => {
+      try {
+        setSyncing(true);
+        await saveSnapshot({ docs, chat, savedAt: Date.now() });
+      } catch { /* ignore */ } finally { setSyncing(false); }
+    }, 600);
+    return () => clearTimeout(id);
+  }, [docs, chat, folderName]);
 
   const persistDocs = (next: Doc[]) => { setDocs(next); save(K_DOCS, next); const s = bumpStreak(streak); setStreak(s); save(K_STREAK, s); };
   const persistChat = (next: ChatMsg[]) => { setChat(next); save(K_CHAT, next); };
@@ -168,6 +207,10 @@ function Home() {
       const newDocs: Doc[] = [];
       for (const file of Array.from(files)) {
         try {
+          // Save the original file into the chosen folder (any size) if set.
+          if (folderName) {
+            try { await saveOriginalFile(file); } catch { /* ignore */ }
+          }
           const { text, tag } = await extractFromFile(file);
           if (!text.trim()) {
             errors.push(`${file.name}: ${t("فارغ", "empty")}`);
@@ -536,6 +579,64 @@ function Home() {
                 }}>
                   <Library className="size-4" /> {t(`حمّل المكتبة الأساسية (${SEED_COUNT})`, `Load starter library (${SEED_COUNT})`)}
                 </Button>
+              </div>
+
+              <div className="pt-3 border-t border-border space-y-2">
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <HardDrive className="size-4" />
+                  {t("مجلد الحفظ على جهازك", "Local save folder")}
+                </h4>
+                {folderName ? (
+                  <>
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      <span className={`size-1.5 rounded-full ${syncing ? "bg-amber-400 animate-pulse" : "bg-primary"}`} />
+                      <span className="truncate">{folderName}</span>
+                      <span className="ms-auto">{syncing ? t("جارٍ الحفظ…", "Saving…") : t("متزامن", "Synced")}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1" onClick={async () => {
+                        try {
+                          const n = await pickRootDir();
+                          if (n) {
+                            setFolderName(n);
+                            await saveSnapshot({ docs, chat, savedAt: Date.now() });
+                          }
+                        } catch (e: any) { alert(e?.message || String(e)); }
+                      }}>
+                        <FolderOpen className="size-4" /> {t("تغيير", "Change")}
+                      </Button>
+                      <Button variant="ghost" className="flex-1" onClick={async () => {
+                        await clearRootDir();
+                        setFolderName(null);
+                      }}>
+                        {t("فصل", "Disconnect")}
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      {t("كل ملف ترفعه يُحفظ كاملاً داخل هذا المجلد (مهما كان حجمه)، مع نسخة JSON كاملة من ذاكرتك ونسخ احتياطية مؤرّخة.", "Every uploaded file is saved fully in this folder (any size), plus a full JSON snapshot of your memory and dated backups.")}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="secondary" className="w-full" disabled={!fsSupported()} onClick={async () => {
+                      try {
+                        const n = await pickRootDir();
+                        if (n) {
+                          setFolderName(n);
+                          await saveSnapshot({ docs, chat, savedAt: Date.now() });
+                        }
+                      } catch (e: any) { alert(e?.message || String(e)); }
+                    }}>
+                      <FolderOpen className="size-4" />
+                      {t("اختر مجلد الحفظ على الحاسوب", "Pick a save folder on your computer")}
+                    </Button>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      {fsSupported()
+                        ? t("اختر مجلداً مرة واحدة، وسيحفظ نواة كل شيء فيه تلقائياً (ملفات + ذاكرة كاملة).", "Pick a folder once and Nawat will auto-save everything there (files + full memory).")
+                        : t("هذه الميزة تتطلب Chrome أو Edge على الحاسوب.", "This feature requires Chrome or Edge on desktop.")}
+                    </p>
+                  </>
+                )}
               </div>
             </Card>
 
