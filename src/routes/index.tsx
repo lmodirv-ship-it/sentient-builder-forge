@@ -9,10 +9,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Brain, Sparkles, Plus, Search, Trash2, MessageSquare, BookOpen, Languages,
-  Upload, Download, FileUp, Flame, Tag as TagIcon,
+  Upload, Download, FileUp, Flame, Tag as TagIcon, Library,
 } from "lucide-react";
 import { searchTFIDF, chunkText, type Doc } from "@/lib/nawat-search";
 import { extractPdfText } from "@/lib/pdf-extract";
+import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
 
 export const Route = createFileRoute("/")({
   head: () => ({
