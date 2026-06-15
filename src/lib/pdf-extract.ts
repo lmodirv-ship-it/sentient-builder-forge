@@ -1,12 +1,18 @@
-// Extract text from PDF in the browser using pdfjs-dist.
+// Extract text from PDF in the browser using pdfjs-dist (legacy build for max compat).
 export async function extractPdfText(file: File): Promise<string> {
-  const pdfjs: any = await import("pdfjs-dist");
-  // Use the bundled worker as a URL
+  const pdfjs: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
   // @ts-ignore
-  const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+  const workerUrl = (await import("pdfjs-dist/legacy/build/pdf.worker.min.mjs?url")).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+
   const buf = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: buf }).promise;
+  const loadingTask = pdfjs.getDocument({
+    data: buf,
+    isEvalSupported: false,
+    useSystemFonts: true,
+    disableFontFace: true,
+  });
+  const pdf = await loadingTask.promise;
   let text = "";
   for (let p = 1; p <= pdf.numPages; p++) {
     const page = await pdf.getPage(p);
