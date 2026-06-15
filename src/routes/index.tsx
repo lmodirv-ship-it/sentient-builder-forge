@@ -264,7 +264,9 @@ function Home() {
                 <Input value={input} onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && send()}
                   placeholder={t("اكتب سؤالك…", "Type your question…")} className="flex-1" />
-                <Button onClick={send} disabled={!input.trim()}>{t("إرسال", "Send")}</Button>
+                <Button onClick={send} disabled={!input.trim() || thinking}>
+                  {thinking ? t("يفكر…", "Thinking…") : t("إرسال", "Send")}
+                </Button>
                 {chat.length > 0 && (
                   <Button variant="ghost" size="icon" onClick={clearChat} title={t("مسح", "Clear")}>
                     <Trash2 className="size-4" />
