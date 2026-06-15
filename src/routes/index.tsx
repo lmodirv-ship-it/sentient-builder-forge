@@ -288,6 +288,13 @@ function Home() {
                     <Upload className="size-4" /> {t("استعادة", "Restore")}
                   </Button>
                 </div>
+                <Button variant="secondary" className="w-full" onClick={() => {
+                  if (confirm(t(`سيُضاف ${SEED_COUNT} مفهوماً جاهزاً إلى ذاكرتك. متابعة؟`, `${SEED_COUNT} ready-made concepts will be added. Continue?`))) {
+                    persistDocs([...getSeedDocs(), ...docs]);
+                  }
+                }}>
+                  <Library className="size-4" /> {t(`حمّل المكتبة الأساسية (${SEED_COUNT})`, `Load starter library (${SEED_COUNT})`)}
+                </Button>
               </div>
             </Card>
 
