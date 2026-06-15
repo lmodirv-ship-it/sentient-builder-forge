@@ -58,12 +58,17 @@ export const askNawat = createServerFn({ method: "POST" })
       return { text };
     } catch (e: any) {
       const msg = String(e?.message || e);
-      if (msg.includes("429")) {
+      const status = e?.statusCode || e?.status;
+      if (status === 429 || msg.includes("429") || /rate.?limit/i.test(msg)) {
         return { text: isAr ? "⚠️ تم تجاوز حد الطلبات. حاول بعد قليل." : "⚠️ Rate limit reached. Try again shortly." };
       }
-      if (msg.includes("402")) {
-        return { text: isAr ? "⚠️ نفد رصيد الذكاء الاصطناعي. أضف رصيداً من إعدادات Workspace." : "⚠️ AI credits exhausted. Add credits in Workspace settings." };
+      if (status === 402 || msg.includes("402") || /payment required|credits?/i.test(msg)) {
+        return {
+          text: isAr
+            ? "⚠️ نفد رصيد الذكاء الاصطناعي في حسابك.\n\nأضف رصيداً من: Settings → Workspace → Plans & Credits (أو Cloud & AI balance — يوجد 1$ مجاني شهرياً)."
+            : "⚠️ AI credits exhausted.\n\nAdd credits in: Settings → Workspace → Plans & Credits (or Cloud & AI balance — $1 free monthly).",
+        };
       }
-      throw e;
+      return { text: (isAr ? "⚠️ خطأ: " : "⚠️ Error: ") + msg };
     }
   });
