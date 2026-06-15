@@ -14,6 +14,8 @@ import {
 import { searchTFIDF, chunkText, type Doc } from "@/lib/nawat-search";
 import { extractPdfText } from "@/lib/pdf-extract";
 import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
+import { useServerFn } from "@tanstack/react-start";
+import { askNawat } from "@/lib/nawat-ai.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -63,6 +65,8 @@ function Home() {
   const [input, setInput] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [thinking, setThinking] = useState(false);
+  const ask = useServerFn(askNawat);
   const chatRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const jsonRef = useRef<HTMLInputElement>(null);
@@ -156,27 +160,37 @@ function Home() {
     return list;
   }, [docs, query, activeTag]);
 
-  const send = () => {
+  const send = async () => {
     const text = input.trim();
-    if (!text) return;
+    if (!text || thinking) return;
     const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text };
-    const hits = searchTFIDF(text, docs, 5);
-    const reply = hits.length
-      ? t(
-          `وجدت ${hits.length} مقاطع ذات صلة من ذاكرتك:\n\n` +
-            hits.map((h, i) => `【${i + 1}】 ${h.title}\n${h.content.slice(0, 320)}${h.content.length > 320 ? "…" : ""}`).join("\n\n") +
-            `\n\nℹ️ تجميع المقاطع في إجابة مولّدة يتطلب نموذج لغة (Lovable AI). أنا الآن أعمل كاملاً داخل متصفحك.`,
-          `Found ${hits.length} relevant passages in your memory:\n\n` +
-            hits.map((h, i) => `【${i + 1}】 ${h.title}\n${h.content.slice(0, 320)}${h.content.length > 320 ? "…" : ""}`).join("\n\n") +
-            `\n\nℹ️ Synthesizing a generated answer needs an LLM (Lovable AI). I'm running fully in your browser right now.`,
-        )
-      : t(
-          "لا أجد شيئاً عن هذا في ذاكرتي. أضف ملاحظات أو ارفع كتاباً PDF من تبويب «الذاكرة».",
-          "Nothing in my memory about this yet. Add notes or upload a PDF in the Memory tab.",
-        );
-    const assistant: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: reply };
-    persistChat([...chat, user, assistant]);
+    const baseChat = [...chat, user];
+    persistChat(baseChat);
     setInput("");
+    setThinking(true);
+    try {
+      const hits = searchTFIDF(text, docs, 6);
+      const history = baseChat.slice(-10).map((m) => ({ role: m.role, text: m.text }));
+      const { text: reply } = await ask({
+        data: {
+          question: text,
+          lang,
+          context: hits.map((h) => ({ title: h.title, content: h.content.slice(0, 800) })),
+          history,
+        },
+      });
+      const assistant: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: reply };
+      persistChat([...baseChat, assistant]);
+    } catch (e: any) {
+      const assistant: ChatMsg = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        text: t("تعذّر الاتصال بنواة الذكاء. حاول مجدداً.", "Failed to reach AI core. Try again.") + "\n" + (e?.message || ""),
+      };
+      persistChat([...baseChat, assistant]);
+    } finally {
+      setThinking(false);
+    }
   };
 
   const clearChat = () => persistChat([]);
