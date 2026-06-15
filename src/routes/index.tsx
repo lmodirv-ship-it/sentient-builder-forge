@@ -140,9 +140,13 @@ function Home() {
       const { value } = await mammoth.extractRawText({ arrayBuffer: buf });
       return { text: value, tag: "docx" };
     }
-    // Audio → not supported (transcription needs special handling)
+    // Audio → AI transcription
     if (mime.startsWith("audio/") || /\.(mp3|wav|m4a|ogg|webm|aac|flac)$/.test(name)) {
-      throw new Error(t("الملفات الصوتية غير مدعومة بعد.", "Audio files not supported yet."));
+      const dataUrl = await fileToDataUrl(file);
+      const fmt = (name.match(/\.(mp3|wav|m4a|ogg|webm|aac|flac)$/)?.[1] || "webm") as any;
+      const { text, error } = await transcribe({ data: { audioBase64: dataUrl, format: fmt, lang } });
+      if (error) throw new Error(error);
+      return { text, tag: "audio" };
     }
     // Video → not supported
     if (mime.startsWith("video/")) {
