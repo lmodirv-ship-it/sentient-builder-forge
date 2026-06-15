@@ -146,18 +146,27 @@
     border-color: var(--color-border);
   }
 
+  html, body {
+    font-family: var(--font-sans);
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    background-image:
+      radial-gradient(60% 45% at 12% 8%, color-mix(in oklab, var(--primary) 18%, transparent) 0%, transparent 70%),
+      radial-gradient(50% 40% at 88% 18%, oklch(0.5 0.18 240 / 0.18) 0%, transparent 70%),
+      radial-gradient(55% 50% at 50% 110%, color-mix(in oklab, var(--primary) 14%, transparent) 0%, transparent 70%);
+    background-attachment: fixed;
   }
 
-  input,
-  textarea,
-  select {
-    color: #ffffff;
-  }
-  input::placeholder,
-  textarea::placeholder {
-    color: oklch(0.7 0 0);
-  }
+  input, textarea, select { color: #ffffff; }
+  input::placeholder, textarea::placeholder { color: oklch(0.65 0.01 250); }
+
+  ::selection { background: color-mix(in oklab, var(--primary) 35%, transparent); color: #fff; }
+}
+
+@utility nawat-glow {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 25%, transparent),
+              0 20px 60px -20px color-mix(in oklab, var(--primary) 40%, transparent);
 }
