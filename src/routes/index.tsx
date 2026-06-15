@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Brain, Sparkles, Plus, Search, Trash2, MessageSquare, BookOpen, Languages,
   Upload, Download, FileUp, Flame, Tag as TagIcon, Library,
+  Mic, Square, Volume2, Copy, Image as ImageIcon, FileDown, Wand2,
 } from "lucide-react";
 import { searchTFIDF, chunkText, type Doc } from "@/lib/nawat-search";
 import { extractPdfText } from "@/lib/pdf-extract";
@@ -17,6 +20,8 @@ import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
+import { transcribeAudio } from "@/lib/nawat-transcribe.functions";
+import { generateImage } from "@/lib/nawat-image.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,7 +35,7 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type ChatMsg = { id: string; role: "user" | "assistant"; text: string };
+type ChatMsg = { id: string; role: "user" | "assistant"; text: string; imageUrl?: string };
 type Streak = { last: string; days: number };
 
 const K_DOCS = "nawat.docs.v2";
@@ -67,10 +72,16 @@ function Home() {
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [thinking, setThinking] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const ask = useServerFn(askNawat);
+  const transcribe = useServerFn(transcribeAudio);
+  const imageGen = useServerFn(generateImage);
   const chatRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const jsonRef = useRef<HTMLInputElement>(null);
+  const mediaRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     setDocs(load<Doc[]>(K_DOCS, []));
