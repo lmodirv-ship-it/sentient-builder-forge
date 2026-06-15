@@ -361,22 +361,22 @@ function Home() {
 
   return (
     <div dir={isAr ? "rtl" : "ltr"} className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/60 backdrop-blur sticky top-0 z-10 bg-background/80">
+      <header className="border-b border-border/60 backdrop-blur-xl sticky top-0 z-10 bg-background/60">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="size-9 rounded-xl bg-gradient-to-br from-primary to-primary/40 grid place-items-center text-primary-foreground shadow-elegant">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-2xl bg-primary/10 border border-primary/30 grid place-items-center text-primary shadow-elegant">
               <Brain className="size-5" />
             </div>
             <div>
-              <h1 className="text-lg font-bold leading-tight">{t("نواة", "Nawat")}</h1>
-              <p className="text-xs text-muted-foreground leading-tight">{t("يعمل بلا إنترنت", "Runs fully offline")}</p>
+              <h1 className="text-lg font-extrabold leading-tight tracking-tight">{t("نواة", "Nawat")}</h1>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground leading-tight">{t("يعمل بلا إنترنت", "Runs offline")}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {streak.days > 0 && (
-              <Badge variant="secondary" className="gap-1"><Flame className="size-3 text-orange-500" />{streak.days} {t("يوم", "d")}</Badge>
+              <Badge variant="secondary" className="gap-1 bg-secondary/60 border border-border"><Flame className="size-3 text-orange-400" />{streak.days} {t("يوم", "d")}</Badge>
             )}
-            <Badge variant="secondary" className="gap-1"><Sparkles className="size-3" />{docs.length}</Badge>
+            <Badge variant="secondary" className="gap-1 bg-secondary/60 border border-border"><Sparkles className="size-3 text-primary" />{docs.length}</Badge>
             <Button variant="outline" size="sm" onClick={() => setLang(isAr ? "en" : "ar")}>
               <Languages className="size-4" /> {isAr ? "EN" : "ع"}
             </Button>
@@ -384,11 +384,11 @@ function Home() {
         </div>
       </header>
 
-      <section className="max-w-6xl mx-auto px-4 pt-10 pb-6 text-center">
-        <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-br from-foreground to-foreground/50 bg-clip-text text-transparent">
+      <section className="max-w-6xl mx-auto px-4 pt-16 pb-8 text-center relative">
+        <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.05] bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent">
           {t("اقرأ. علّمني. ثم اسألني.", "Read. Teach me. Then ask me.")}
         </h2>
-        <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
+        <p className="mt-5 text-muted-foreground max-w-2xl mx-auto leading-relaxed">
           {t(
             "ارفع كتباً PDF أو أضف ملاحظات يومية. أُقطّعها وأفهرسها وأجد لك أهم المقاطع — كل ذلك داخل متصفحك بدون إنترنت.",
             "Upload PDFs or add daily notes. I chunk, index, and retrieve the most relevant passages — fully in your browser, no internet needed.",
@@ -398,14 +398,14 @@ function Home() {
 
       <main className="max-w-6xl mx-auto px-4 pb-16">
         <Tabs defaultValue="chat" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto">
-            <TabsTrigger value="chat" className="gap-2"><MessageSquare className="size-4" />{t("اسأل", "Ask")}</TabsTrigger>
-            <TabsTrigger value="memory" className="gap-2"><BookOpen className="size-4" />{t("الذاكرة", "Memory")}</TabsTrigger>
+          <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto p-1 bg-card/40 backdrop-blur-md border border-border rounded-2xl h-auto">
+            <TabsTrigger value="chat" className="gap-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"><MessageSquare className="size-4" />{t("اسأل", "Ask")}</TabsTrigger>
+            <TabsTrigger value="memory" className="gap-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"><BookOpen className="size-4" />{t("الذاكرة", "Memory")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="chat" className="mt-6">
-            <Card className="p-0 overflow-hidden">
-              <div ref={chatRef} className="h-[55vh] overflow-y-auto p-4 space-y-3 bg-muted/30">
+            <Card className="p-0 overflow-hidden rounded-[2rem] bg-card/30 backdrop-blur-xl border-border/60 nawat-glow">
+              <div ref={chatRef} className="h-[55vh] overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-transparent to-primary/[0.04]">
                 {chat.length === 0 && (
                   <div className="h-full grid place-items-center text-center text-muted-foreground">
                     <div>
