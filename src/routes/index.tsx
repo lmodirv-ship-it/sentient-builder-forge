@@ -363,27 +363,49 @@ function Home() {
     const raw = input.trim();
     if (!raw || thinking) return;
 
-    // Slash command: /صورة or /image — generate an image
-    const imgMatch = raw.match(/^\/(?:صورة|image|img)\s+([\s\S]+)/i);
-    if (imgMatch) {
-      const prompt = imgMatch[1].trim();
+    // Media requests → always route to HN Groupe services (image/video/audio/…)
+    // instead of using built-in generators. Nawat is a router to your own tools.
+    const imgIntent = /^\/(?:صورة|image|img)\b/i.test(raw)
+      || /\b(انشئ|أنشئ|اصنع|ولّد|ولد|اعمل|ارسم|generate|create|make|draw)\b.*\b(صور[ةه]?|image|picture|photo|illustration|logo|شعار|بوستر|poster|thumbnail)\b/i.test(raw)
+      || /\b(صور[ةه]?|image|picture|photo|logo|شعار)\b.*\b(انشئ|أنشئ|اصنع|ولّد|generate|create|make|draw)\b/i.test(raw);
+    const vidIntent = /^\/(?:فيديو|فديو|video|vid)\b/i.test(raw)
+      || /\b(انشئ|أنشئ|اصنع|ولّد|ولد|اعمل|generate|create|make|produce)\b.*\b(فيديو|فديو|video|clip|film|فلم|movie|مقطع)\b/i.test(raw)
+      || /\b(فيديو|فديو|video|clip|film|فلم|movie)\b.*\b(انشئ|أنشئ|اصنع|ولّد|generate|create|make)\b/i.test(raw);
+    if (imgIntent || vidIntent) {
       const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
-      const baseChat = [...chat, user];
-      persistChat(baseChat);
+      const promptText = raw.replace(/^\/(?:صورة|image|img|فيديو|فديو|video|vid)\s*/i, "").trim();
+      const q = promptText ? encodeURIComponent(promptText) : "";
+      const kind = vidIntent ? "video" : "image";
+      const tools = kind === "image"
+        ? [
+            { name: "HN AI Generation", url: "https://generatin.hn-groupe.org" },
+            { name: "HN AI Studio",     url: "https://ai.hn-groupe.org" },
+            { name: "HN AI Pro",        url: "https://hn-ai.pro" },
+          ]
+        : [
+            { name: "HN Video Studio",  url: "https://studio.hn-createur.com" },
+            { name: "HN Video",         url: "https://video.hn-groupe.net" },
+            { name: "HN Cinema",        url: "https://cinema.hn-groupe.org" },
+            { name: "HN Film",          url: "https://film.hn-groupe.net" },
+          ];
+      const header = kind === "image"
+        ? t("🎨 لإنشاء صورة، استخدم أدوات مجموعة HN المخصّصة:", "🎨 To generate an image, use HN Groupe's dedicated tools:")
+        : t("🎬 لإنشاء فيديو، استخدم أستوديوهات مجموعة HN:", "🎬 To create a video, use HN Groupe's studios:");
+      const lines = tools.map(({ name, url }) => {
+        const link = q ? `${url}?q=${q}` : url;
+        return `- [${name}](${link})`;
+      });
+      const promptLine = promptText
+        ? `\n\n**${t("الطلب", "Prompt")}:** ${promptText}`
+        : "";
+      const tip = t(
+        "\n\n> النواة توجّهك دائماً إلى مواقعك الخاصة بدل استخدام مولّدات خارجية.",
+        "\n\n> Nawat always routes you to your own HN sites instead of external generators.",
+      );
+      const reply = `${header}\n${lines.join("\n")}${promptLine}${tip}`;
+      const assistant: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: reply };
+      persistChat([...chat, user, assistant]);
       setInput("");
-      setThinking(true);
-      try {
-        const { imageUrl, error } = await imageGen({ data: { prompt } });
-        const assistant: ChatMsg = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          text: error ? (t("تعذّر توليد الصورة: ", "Image failed: ") + error) : t("تم توليد الصورة:", "Generated:"),
-          imageUrl: error ? undefined : imageUrl,
-        };
-        persistChat([...baseChat, assistant]);
-      } finally {
-        setThinking(false);
-      }
       return;
     }
 
