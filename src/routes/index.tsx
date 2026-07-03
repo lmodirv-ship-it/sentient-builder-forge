@@ -30,6 +30,8 @@ import {
 } from "@/lib/nawat-sites-memory";
 import { routeSitesQuestion, findProjects, projectsForCategoryLabel } from "@/lib/nawat-sites-router";
 import { getCapabilityDocs, HN_CAPABILITIES_COUNT } from "@/lib/hn-capabilities";
+import { detectServiceIntent, findCapability, formatServiceReply } from "@/lib/nawat-service-router";
+import { getServiceQADocs } from "@/lib/nawat-service-qa";
 import { hnBridge } from "@/lib/hn-bridge";
 import { HN_PILLARS } from "@/lib/hn-ecosystem";
 import { HNStatusPill } from "@/components/HNStatusPill";
