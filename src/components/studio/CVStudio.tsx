@@ -10,6 +10,7 @@ import { generateCV } from "@/lib/nawat-cv.functions";
 import { saveProject } from "@/lib/studio-projects";
 import { cacheKey, getCached, setCached } from "@/lib/studio-cache";
 import { downloadBlob } from "./shared";
+import { VoiceControls } from "@/components/VoiceControls";
 
 function localCVTemplate(prompt: string, lang: "ar" | "en"): string {
   const isAr = lang === "ar";

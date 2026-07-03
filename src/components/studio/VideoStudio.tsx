@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { generateVideo } from "@/lib/nawat-video.functions";
 import { saveProject, localVideoPreview } from "@/lib/studio-projects";
 import { cacheKey, getCached, setCached } from "@/lib/studio-cache";
+import { VoiceControls } from "@/components/VoiceControls";
 
 export default function VideoStudio({ online }: { online: boolean }) {
   const runVideo = useServerFn(generateVideo);

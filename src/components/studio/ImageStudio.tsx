@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { generateImage } from "@/lib/nawat-image.functions";
 import { saveProject, localImageSVG } from "@/lib/studio-projects";
 import { cacheKey, getCached, setCached } from "@/lib/studio-cache";
+import { VoiceControls } from "@/components/VoiceControls";
 
 export default function ImageStudio({ online }: { online: boolean }) {
   const runImage = useServerFn(generateImage);
