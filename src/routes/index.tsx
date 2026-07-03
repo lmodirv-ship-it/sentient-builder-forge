@@ -137,11 +137,17 @@ function Home() {
     const base = (content.trim() || title.trim());
     const chunks = chunkText(base);
     const tagArr = tags.split(",").map((x) => x.trim()).filter(Boolean);
+    // Tier inferred from tags: #core / #جوهر → core, #daily / #يومي → daily, else long-term.
+    const tagSet = new Set(tagArr.map((x) => x.toLowerCase()));
+    const tier: "daily" | "long" | "core" =
+      tagSet.has("core") || tagSet.has("جوهر") || tagSet.has("مبدأ") || tagSet.has("رؤية") ? "core"
+      : tagSet.has("daily") || tagSet.has("يومي") || tagSet.has("مهمة") || tagSet.has("task") ? "daily"
+      : "long";
     const now = Date.now();
     const newDocs: Doc[] = chunks.map((c, i) => ({
       id: crypto.randomUUID(),
       title: chunks.length > 1 ? `${title.trim() || "ملاحظة"} (${i + 1}/${chunks.length})` : (title.trim() || c.slice(0, 60)),
-      content: c, tags: tagArr, createdAt: now + i,
+      content: c, tags: tagArr, createdAt: now + i, tier,
     }));
     persistDocs([...newDocs, ...docs]);
     setTitle(""); setContent(""); setTags("");
@@ -328,6 +334,7 @@ function Home() {
             source: h.source,
             date: h.createdAt ? new Date(h.createdAt).toISOString().slice(0, 10) : undefined,
             tags: h.tags,
+            tier: h.tier,
           })),
           history,
         },
@@ -349,6 +356,7 @@ function Home() {
           tags: ["conversation", isAr ? "حوار" : "dialogue"],
           source: "chat",
           createdAt: now,
+          tier: "long",
         };
         persistDocs([qa, ...docs]);
       }
@@ -489,14 +497,55 @@ function Home() {
           <TabsContent value="chat" className="mt-6">
             <Card className="p-0 overflow-hidden rounded-[2rem] bg-card/30 backdrop-blur-xl border-border/60 nawat-glow">
               <div ref={chatRef} className="h-[55vh] overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-transparent to-primary/[0.04]">
-                {chat.length === 0 && (
-                  <div className="h-full grid place-items-center text-center text-muted-foreground">
-                    <div>
-                      <Brain className="size-10 mx-auto mb-2 opacity-50" />
-                      <p>{t("اسألني عن أي شيء علّمتني إياه.", "Ask me about anything you've taught me.")}</p>
+                {chat.length === 0 && (() => {
+                  // Proactive greeting — Nawat opens by noticing, not asking.
+                  const now = Date.now();
+                  const total = docs.length;
+                  const core = docs.filter((d) => d.tier === "core").length;
+                  const recent = [...docs].sort((a, b) => b.createdAt - a.createdAt)[0];
+                  const daysSince = recent ? Math.floor((now - recent.createdAt) / 86400000) : null;
+                  // Tag clusters: find any tag repeated across ≥3 docs → possible unification signal.
+                  const tagCount: Record<string, number> = {};
+                  for (const d of docs) for (const tg of d.tags || []) tagCount[tg] = (tagCount[tg] || 0) + 1;
+                  const cluster = Object.entries(tagCount).filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1])[0];
+
+                  let msg: string;
+                  if (total === 0) {
+                    msg = t(
+                      "أنا حافظ المعرفة… وأنت صاحب القرار.\nذاكرتك فارغة الآن. حين تضع أول ملاحظة أو ملف، أبدأ في تنظيمها لك.",
+                      "I am the keeper of knowledge — you are the decision maker.\nYour memory is empty. Add your first note or file, and I'll begin organizing it.",
+                    );
+                  } else if (cluster && cluster[1] >= 3) {
+                    msg = t(
+                      `راجعتُ ملاحظاتك، ولاحظت ${cluster[1]} مقاطع تتحدث عن «${cluster[0]}». هل نراجعها معاً؟`,
+                      `I reviewed your notes and noticed ${cluster[1]} passages about "${cluster[0]}". Shall we look at them together?`,
+                    );
+                  } else if (daysSince !== null && daysSince >= 3) {
+                    msg = t(
+                      `لم تفتحني منذ ${daysSince} أيام. آخر ما أضفتَه: «${recent!.title.slice(0, 60)}». هل نُكمله؟`,
+                      `You haven't opened me in ${daysSince} days. Your last addition: "${recent!.title.slice(0, 60)}". Continue it?`,
+                    );
+                  } else if (recent) {
+                    msg = t(
+                      `اليوم لا أحتاج منك شيئاً… لكن آخر ما وضعتَه — «${recent.title.slice(0, 60)}» — قد يفيد ما تعمل عليه.`,
+                      `Today I need nothing from you… but your last entry — "${recent.title.slice(0, 60)}" — might help what you're working on.`,
+                    );
+                  } else {
+                    msg = t("أنا حافظ المعرفة… وأنت صاحب القرار.", "I am the keeper of knowledge — you are the decision maker.");
+                  }
+
+                  return (
+                    <div className="h-full grid place-items-center text-center text-muted-foreground">
+                      <div className="max-w-md px-4">
+                        <Brain className="size-10 mx-auto mb-3 opacity-60" />
+                        <p className="whitespace-pre-line leading-relaxed text-[13.5px]">{msg}</p>
+                        <p className="mt-3 text-[11px] opacity-60">
+                          {t(`ذاكرة: ${total} مقطع • ${core} جوهري`, `Memory: ${total} passages • ${core} core`)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
                 {chat.map((m) => (
                   <div key={m.id} className={`flex group ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
