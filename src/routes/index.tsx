@@ -822,8 +822,12 @@ function Home() {
             <TabsTrigger value="memory" className="gap-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"><BookOpen className="size-4" />{t("الذاكرة", "Memory")}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="chat" className="mt-6">
-            <Card className="p-0 overflow-hidden rounded-[2rem] bg-card/30 backdrop-blur-xl border-border/60 nawat-glow">
+          <TabsContent value="chat" className="mt-6 relative">
+            {/* Background brain — large, pulsing, behind chat */}
+            <div className="absolute inset-0 grid place-items-center pointer-events-none overflow-hidden z-0">
+              <NeuralBrain bg className="w-[80vw] h-[80vw] max-w-[600px] max-h-[600px] text-muted-foreground brain-bg brain-glow" />
+            </div>
+            <Card className="relative p-0 overflow-hidden rounded-[2rem] bg-card/30 backdrop-blur-xl border-border/60 nawat-glow z-[1]">
               <div ref={chatRef} className="h-[55vh] overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-transparent to-primary/[0.04]">
                 {chat.length === 0 && (
                   <div className="h-full grid place-items-center">
