@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   startEngine, stopEngine, subscribeEngine, engineStatus, MODE_LABEL,
-  type DevMode,
+  forgetSavedFolder, type DevMode,
 } from "@/lib/dev-engine";
 import { getLogs, subscribeLogs, clearLogs, reasonOf, type LogEntry } from "@/lib/studio-logger";
 
