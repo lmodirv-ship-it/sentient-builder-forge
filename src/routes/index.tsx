@@ -15,7 +15,8 @@ import {
   Mic, Square, Volume2, Copy, Image as ImageIcon, FileDown, Wand2,
   FolderOpen, HardDrive,
 } from "lucide-react";
-import { searchTFIDF, chunkText, type Doc } from "@/lib/nawat-search";
+import { searchTFIDF, searchHybrid, rerank, withNeighbors, chunkText, type Doc } from "@/lib/nawat-search";
+import { expandQuery } from "@/lib/nawat-query-expand.functions";
 import { extractPdfText } from "@/lib/pdf-extract";
 import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
 import { getSitesDocs, SITES_COUNT, SITES_CATEGORY_COUNT, extractUrls, relatedCategoriesFor, SITE_CATEGORIES } from "@/lib/nawat-sites";
@@ -107,8 +108,23 @@ function Home() {
   const [folderName, setFolderName] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const ask = useServerFn(askNawat);
+  const expand = useServerFn(expandQuery);
   const transcribe = useServerFn(transcribeAudio);
   const imageGen = useServerFn(generateImage);
+  const [feedback, setFeedback] = useState<Record<string, number>>(() => load<Record<string, number>>("nawat.feedback.v1", {}));
+  const [usedCtx, setUsedCtx] = useState<Record<string, { ids: string[]; top: number; tiers: string[] }>>({});
+  const setFb = (docId: string, delta: number) => {
+    setFeedback((prev) => {
+      const next = { ...prev, [docId]: Math.max(-5, Math.min(5, (prev[docId] || 0) + delta)) };
+      save("nawat.feedback.v1", next);
+      return next;
+    });
+  };
+  const rateAnswer = (msgId: string, sign: 1 | -1) => {
+    const meta = usedCtx[msgId];
+    if (!meta) return;
+    for (const id of meta.ids) setFb(id, sign);
+  };
   const chatRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const jsonRef = useRef<HTMLInputElement>(null);
