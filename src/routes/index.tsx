@@ -90,12 +90,17 @@ function Highlight({ text, terms }: { text: string; terms: string[] }) {
   );
 }
 
-function NeuralBrain({ className }: { className?: string }) {
+function NeuralBrain({ className, bg = false }: { className?: string; bg?: boolean }) {
   return (
     <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
       <defs>
         <linearGradient id="filament-grad" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="var(--primary)" />
+          <stop offset="100%" stopColor="var(--gold)" />
+        </linearGradient>
+        <linearGradient id="lightning-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="var(--gold)" />
+          <stop offset="50%" stopColor="var(--primary)" />
           <stop offset="100%" stopColor="var(--gold)" />
         </linearGradient>
         <filter id="filament-glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -105,9 +110,16 @@ function NeuralBrain({ className }: { className?: string }) {
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
+        <filter id="brain-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
       {/* Brain outline */}
-      <g stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7">
+      <g stroke="currentColor" strokeWidth={bg ? "1" : "2"} strokeLinecap="round" strokeLinejoin="round" opacity={bg ? 0.35 : 0.7}>
         {/* Left hemisphere */}
         <path d="M60,22 C45,22 32,30 26,45 C22,55 22,68 28,78 C34,90 46,98 58,100" />
         {/* Right hemisphere */}
@@ -122,7 +134,7 @@ function NeuralBrain({ className }: { className?: string }) {
         <path d="M88,58 Q78,68 84,80" opacity="0.5" />
       </g>
       {/* Animated light filaments */}
-      <g filter="url(#filament-glow)" stroke="url(#filament-grad)" strokeWidth="1.8" strokeLinecap="round" fill="none">
+      <g filter="url(#filament-glow)" stroke="url(#filament-grad)" strokeWidth={bg ? "1.2" : "1.8"} strokeLinecap="round" fill="none">
         <path d="M35,40 Q45,55 35,70" className="filament" strokeDasharray="18 110" style={{ animationDelay: "0s" }} />
         <path d="M45,35 Q55,50 45,80" className="filament" strokeDasharray="18 110" style={{ animationDelay: "0.4s" }} />
         <path d="M85,40 Q75,55 85,70" className="filament" strokeDasharray="18 110" style={{ animationDelay: "0.8s" }} />
@@ -133,8 +145,16 @@ function NeuralBrain({ className }: { className?: string }) {
         <path d="M60,30 Q50,45 60,60" className="filament" strokeDasharray="18 110" style={{ animationDelay: "2.8s" }} />
         <path d="M60,30 Q70,45 60,60" className="filament" strokeDasharray="18 110" style={{ animationDelay: "3.2s" }} />
       </g>
+      {/* Electricity / lightning bolts */}
+      <g stroke="url(#lightning-grad)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity={bg ? 0.5 : 1}>
+        <path d="M42,35 L46,45 L40,48 L48,60" className="lightning-bolt" style={{ ["--bolt-index" as string]: 0 }} />
+        <path d="M78,35 L74,45 L80,48 L72,60" className="lightning-bolt" style={{ ["--bolt-index" as string]: 1 }} />
+        <path d="M60,28 L56,38 L62,42 L58,52" className="lightning-bolt" style={{ ["--bolt-index" as string]: 2 }} />
+        <path d="M50,70 L54,78 L48,82 L52,92" className="lightning-bolt" style={{ ["--bolt-index" as string]: 3 }} />
+        <path d="M70,70 L66,78 L72,82 L68,92" className="lightning-bolt" style={{ ["--bolt-index" as string]: 4 }} />
+      </g>
       {/* Subtle core glow nodes */}
-      <circle cx="60" cy="60" r="3" fill="var(--gold)" opacity="0.8">
+      <circle cx="60" cy="60" r={bg ? "4" : "3"} fill="var(--gold)" opacity="0.8">
         <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" />
       </circle>
       <circle cx="45" cy="55" r="2" fill="var(--primary)" opacity="0.6">
