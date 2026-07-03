@@ -1033,6 +1033,10 @@ function Home() {
         </Tabs>
 
       </main>
+
+      <footer className="w-full border-t border-border/50 bg-card/40 backdrop-blur-sm py-4 px-6 mt-4 text-center text-sm text-muted-foreground">
+        جميع الحقوق محفوظة © مولاي اسماعيل الحسني — Groupe HN للبرمجة والتصميم
+      </footer>
     </div>
   );
 }
