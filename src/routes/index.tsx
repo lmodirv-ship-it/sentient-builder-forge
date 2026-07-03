@@ -90,6 +90,63 @@ function Highlight({ text, terms }: { text: string; terms: string[] }) {
   );
 }
 
+function NeuralBrain({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <defs>
+        <linearGradient id="filament-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="var(--primary)" />
+          <stop offset="100%" stopColor="var(--gold)" />
+        </linearGradient>
+        <filter id="filament-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      {/* Brain outline */}
+      <g stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7">
+        {/* Left hemisphere */}
+        <path d="M60,22 C45,22 32,30 26,45 C22,55 22,68 28,78 C34,90 46,98 58,100" />
+        {/* Right hemisphere */}
+        <path d="M60,22 C75,22 88,30 94,45 C98,55 98,68 92,78 C86,90 74,98 62,100" />
+        {/* Center groove */}
+        <path d="M60,22 L60,100" />
+        {/* Left inner folds */}
+        <path d="M36,42 Q44,52 38,64" opacity="0.5" />
+        <path d="M32,58 Q42,68 36,80" opacity="0.5" />
+        {/* Right inner folds */}
+        <path d="M84,42 Q76,52 82,64" opacity="0.5" />
+        <path d="M88,58 Q78,68 84,80" opacity="0.5" />
+      </g>
+      {/* Animated light filaments */}
+      <g filter="url(#filament-glow)" stroke="url(#filament-grad)" strokeWidth="1.8" strokeLinecap="round" fill="none">
+        <path d="M35,40 Q45,55 35,70" className="filament" strokeDasharray="18 110" style={{ animationDelay: "0s" }} />
+        <path d="M45,35 Q55,50 45,80" className="filament" strokeDasharray="18 110" style={{ animationDelay: "0.4s" }} />
+        <path d="M85,40 Q75,55 85,70" className="filament" strokeDasharray="18 110" style={{ animationDelay: "0.8s" }} />
+        <path d="M75,35 Q65,50 75,80" className="filament" strokeDasharray="18 110" style={{ animationDelay: "1.2s" }} />
+        <path d="M50,50 Q60,65 70,50" className="filament" strokeDasharray="18 110" style={{ animationDelay: "1.6s" }} />
+        <path d="M40,60 Q50,75 60,65" className="filament" strokeDasharray="18 110" style={{ animationDelay: "2s" }} />
+        <path d="M80,60 Q70,75 60,65" className="filament" strokeDasharray="18 110" style={{ animationDelay: "2.4s" }} />
+        <path d="M60,30 Q50,45 60,60" className="filament" strokeDasharray="18 110" style={{ animationDelay: "2.8s" }} />
+        <path d="M60,30 Q70,45 60,60" className="filament" strokeDasharray="18 110" style={{ animationDelay: "3.2s" }} />
+      </g>
+      {/* Subtle core glow nodes */}
+      <circle cx="60" cy="60" r="3" fill="var(--gold)" opacity="0.8">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="45" cy="55" r="2" fill="var(--primary)" opacity="0.6">
+        <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2.4s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="75" cy="55" r="2" fill="var(--primary)" opacity="0.6">
+        <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2.8s" repeatCount="indefinite" />
+      </circle>
+    </svg>
+  );
+}
+
 function bumpStreak(s: Streak): Streak {
   const t = todayISO();
   if (s.last === t) return s;
@@ -747,55 +804,11 @@ function Home() {
           <TabsContent value="chat" className="mt-6">
             <Card className="p-0 overflow-hidden rounded-[2rem] bg-card/30 backdrop-blur-xl border-border/60 nawat-glow">
               <div ref={chatRef} className="h-[55vh] overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-transparent to-primary/[0.04]">
-                {chat.length === 0 && (() => {
-                  // Proactive greeting — Nawat opens by noticing, not asking.
-                  const now = Date.now();
-                  const total = docs.length;
-                  const core = docs.filter((d) => d.tier === "core").length;
-                  const recent = [...docs].sort((a, b) => b.createdAt - a.createdAt)[0];
-                  const daysSince = recent ? Math.floor((now - recent.createdAt) / 86400000) : null;
-                  // Tag clusters: find any tag repeated across ≥3 docs → possible unification signal.
-                  const tagCount: Record<string, number> = {};
-                  for (const d of docs) for (const tg of d.tags || []) tagCount[tg] = (tagCount[tg] || 0) + 1;
-                  const cluster = Object.entries(tagCount).filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1])[0];
-
-                  let msg: string;
-                  if (total === 0) {
-                    msg = t(
-                      "أنا حافظ المعرفة… وأنت صاحب القرار.\nذاكرتك فارغة الآن. حين تضع أول ملاحظة أو ملف، أبدأ في تنظيمها لك.",
-                      "I am the keeper of knowledge — you are the decision maker.\nYour memory is empty. Add your first note or file, and I'll begin organizing it.",
-                    );
-                  } else if (cluster && cluster[1] >= 3) {
-                    msg = t(
-                      `راجعتُ ملاحظاتك، ولاحظت ${cluster[1]} مقاطع تتحدث عن «${cluster[0]}». هل نراجعها معاً؟`,
-                      `I reviewed your notes and noticed ${cluster[1]} passages about "${cluster[0]}". Shall we look at them together?`,
-                    );
-                  } else if (daysSince !== null && daysSince >= 3) {
-                    msg = t(
-                      `لم تفتحني منذ ${daysSince} أيام. آخر ما أضفتَه: «${recent!.title.slice(0, 60)}». هل نُكمله؟`,
-                      `You haven't opened me in ${daysSince} days. Your last addition: "${recent!.title.slice(0, 60)}". Continue it?`,
-                    );
-                  } else if (recent) {
-                    msg = t(
-                      `اليوم لا أحتاج منك شيئاً… لكن آخر ما وضعتَه — «${recent.title.slice(0, 60)}» — قد يفيد ما تعمل عليه.`,
-                      `Today I need nothing from you… but your last entry — "${recent.title.slice(0, 60)}" — might help what you're working on.`,
-                    );
-                  } else {
-                    msg = t("أنا حافظ المعرفة… وأنت صاحب القرار.", "I am the keeper of knowledge — you are the decision maker.");
-                  }
-
-                  return (
-                    <div className="h-full grid place-items-center text-center text-muted-foreground">
-                      <div className="max-w-md px-4">
-                        <Brain className="size-10 mx-auto mb-3 opacity-60" />
-                        <p className="whitespace-pre-line leading-relaxed text-[13.5px]">{msg}</p>
-                        <p className="mt-3 text-[11px] opacity-60">
-                          {t(`ذاكرة: ${total} مقطع • ${core} جوهري`, `Memory: ${total} passages • ${core} core`)}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })()}
+                {chat.length === 0 && (
+                  <div className="h-full grid place-items-center">
+                    <NeuralBrain className="w-32 h-32 text-muted-foreground" />
+                  </div>
+                )}
                 {chat.map((m) => (
                   <div key={m.id} className={`flex group ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[85%] rounded-3xl px-4 py-2.5 text-sm leading-relaxed ${
