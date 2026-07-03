@@ -29,6 +29,7 @@ import {
   projectToDoc,
 } from "@/lib/nawat-sites-memory";
 import { routeSitesQuestion, findProjects, projectsForCategoryLabel } from "@/lib/nawat-sites-router";
+import { getCapabilityDocs, HN_CAPABILITIES_COUNT } from "@/lib/hn-capabilities";
 import { hnBridge } from "@/lib/hn-bridge";
 import { HN_PILLARS } from "@/lib/hn-ecosystem";
 import { HNStatusPill } from "@/components/HNStatusPill";
@@ -247,7 +248,8 @@ function Home() {
         const sites = getSitesDocs();
         const qa = getSitesQADocs();
         const projects = getProjectDocs();
-        const bundled = [...projects, ...sites, ...qa];
+        const caps = getCapabilityDocs();
+        const bundled = [...projects, ...caps, ...sites, ...qa];
         const ids = new Set(bundled.map(s => s.id));
         const merged = [...bundled, ...prev.filter(d => !ids.has(d.id))];
         save(K_DOCS, merged);
@@ -960,13 +962,13 @@ function Home() {
                   <Library className="size-4" /> {t(`حمّل المكتبة الأساسية (${SEED_COUNT})`, `Load starter library (${SEED_COUNT})`)}
                 </Button>
                 <Button variant="secondary" className="w-full" onClick={() => {
-                  const bundled = [...getProjectDocs(), ...getSitesDocs(), ...getSitesQADocs()];
+                  const bundled = [...getProjectDocs(), ...getCapabilityDocs(), ...getSitesDocs(), ...getSitesQADocs()];
                   const ids = new Set(bundled.map(s => s.id));
                   persistDocs([...bundled, ...docs.filter(d => !ids.has(d.id))]);
                 }}>
                   <Library className="size-4" /> {t(
-                    `حدّث فهرس مواقعي (${HN_PROJECT_DOC_COUNT} مشروعاً · ${SITES_COUNT} رابطاً · ${SITES_CATEGORY_COUNT} تصنيفاً · ${SITES_QA_COUNT} س/ج)`,
-                    `Refresh my sites (${HN_PROJECT_DOC_COUNT} projects · ${SITES_COUNT} URLs · ${SITES_CATEGORY_COUNT} categories · ${SITES_QA_COUNT} Q&A)`
+                    `حدّث فهرس مواقعي (${HN_PROJECT_DOC_COUNT} مشروعاً · ${HN_CAPABILITIES_COUNT} خدمة · ${SITES_COUNT} رابطاً · ${SITES_CATEGORY_COUNT} تصنيفاً · ${SITES_QA_COUNT} س/ج)`,
+                    `Refresh my sites (${HN_PROJECT_DOC_COUNT} projects · ${HN_CAPABILITIES_COUNT} services · ${SITES_COUNT} URLs · ${SITES_CATEGORY_COUNT} categories · ${SITES_QA_COUNT} Q&A)`
                   )}
                 </Button>
               </div>
