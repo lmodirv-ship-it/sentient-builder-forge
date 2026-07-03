@@ -837,6 +837,9 @@ function Home() {
             )}
             <Badge variant="secondary" className="hidden sm:inline-flex gap-1 bg-primary/10 border border-primary/30 text-primary nawat-chip"><Sparkles className="size-3" />{docs.length}</Badge>
             <HNStatusPill isAr={isAr} />
+            <a href="/studio" className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/20 transition-colors">
+              <Sparkles className="size-4" />{isAr ? "الاستوديو" : "Studio"}
+            </a>
             <ThemeSwitcher isAr={isAr} />
             <Button variant="outline" size="sm" onClick={() => setLang(isAr ? "en" : "ar")}>
               <Languages className="size-4" /> {isAr ? "EN" : "ع"}
