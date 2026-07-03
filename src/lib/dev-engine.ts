@@ -288,3 +288,10 @@ export async function startEngine(mode: DevMode): Promise<{ folder: string } | n
 
 export function engineStatus() { return snapshot(); }
 export { MODE_LABEL };
+
+/** Forget the saved folder handle — next start will prompt again. */
+export async function forgetSavedFolder() {
+  try { await idbDel("dir"); } catch {}
+  logEvent("info", "engine", "folder", "تم نسيان المجلد المحفوظ");
+}
+
