@@ -494,6 +494,37 @@ function Home() {
       return;
     }
 
+    // ── Wave 2 · Service router: /خدمة /service /افتح /open <name>
+    const svcCmd = raw.match(/^\/(?:خدمة|خدمه|service|svc|افتح|open|نفّذ|نفذ|execute)\s+([\s\S]+)/i);
+    if (svcCmd) {
+      const cap = findCapability(svcCmd[1]);
+      const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+      const reply = cap
+        ? formatServiceReply(
+            { matched: true, confidence: 1, capability: cap, role: null, provider: [...cap.providers].sort((a, b) => a.priority - b.priority)[0], actionUrl: null, alternatives: [] },
+            lang,
+            svcCmd[1],
+          )
+        : t(`لا أجد خدمة باسم "${svcCmd[1]}". جرّب /سsites أو /ابحث.`, `No service named "${svcCmd[1]}". Try /sites or /search.`);
+      persistChat([...chat, user, { id: crypto.randomUUID(), role: "assistant", text: reply }]);
+      setInput("");
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+
+    // ── Wave 2 · High-confidence natural-language service intent — skip AI.
+    if (!raw.startsWith("/")) {
+      const intent = detectServiceIntent(raw);
+      if (intent.matched && intent.confidence >= 0.7 && intent.capability) {
+        const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+        const reply = formatServiceReply(intent, lang, raw);
+        persistChat([...chat, user, { id: crypto.randomUUID(), role: "assistant", text: reply }]);
+        setInput("");
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
+    }
+
     // Local slash commands for HN sites — no AI call, pure memory.
     const sitesCmd = raw.match(/^\/(sites|مواقعي|مواقع)\s*$/i);
     const siteCmd = raw.match(/^\/(site|موقع)\s+([\s\S]+)/i);
