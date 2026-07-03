@@ -25,7 +25,10 @@ import { getSitesQADocs, SITES_QA_COUNT } from "@/lib/nawat-sites-qa";
 import {
   getProjectDocs, HN_PROJECT_DOC_COUNT, findProject,
   renderAllSites, renderProjectCard, renderProjectTasks,
+  renderAllCategories, renderProjectList,
+  projectToDoc,
 } from "@/lib/nawat-sites-memory";
+import { routeSitesQuestion, findProjects, projectsForCategoryLabel } from "@/lib/nawat-sites-router";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
