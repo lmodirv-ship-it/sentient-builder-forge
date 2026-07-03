@@ -391,11 +391,26 @@ function Home() {
     const sitesCmd = raw.match(/^\/(sites|مواقعي|مواقع)\s*$/i);
     const siteCmd = raw.match(/^\/(site|موقع)\s+([\s\S]+)/i);
     const tasksCmd = raw.match(/^\/(tasks|مهام)\s+([\s\S]+)/i);
-    if (sitesCmd || siteCmd || tasksCmd) {
+    const allCmd = raw.match(/^\/(all|كل|الكل|فئات)\s*$/i);
+    const catCmd = raw.match(/^\/(cat|category|فئة|قسم)\s+([\s\S]+)/i);
+    const searchCmd = raw.match(/^\/(find|search|ابحث|بحث)\s+([\s\S]+)/i);
+    if (sitesCmd || siteCmd || tasksCmd || allCmd || catCmd || searchCmd) {
       const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
       let reply = "";
       if (sitesCmd) {
         reply = renderAllSites(lang);
+      } else if (allCmd) {
+        reply = renderAllCategories(lang);
+      } else if (catCmd) {
+        const { key, projects } = projectsForCategoryLabel(catCmd[2]);
+        reply = key
+          ? renderProjectList(projects, lang, `${t("فئة", "Category")}: ${catCmd[2]} — ${projects.length}`)
+          : t(`لا أعرف فئة باسم "${catCmd[2]}".`, `No category "${catCmd[2]}".`);
+      } else if (searchCmd) {
+        const list = findProjects(searchCmd[2], 10);
+        reply = list.length
+          ? renderProjectList(list, lang, `${t("نتائج", "Results")}: "${searchCmd[2]}" — ${list.length}`)
+          : t(`لا أجد مشروعاً يطابق "${searchCmd[2]}".`, `No project matches "${searchCmd[2]}".`);
       } else if (siteCmd) {
         const p = findProject(siteCmd[2]);
         reply = p
