@@ -808,13 +808,13 @@ function Home() {
                   <Library className="size-4" /> {t(`حمّل المكتبة الأساسية (${SEED_COUNT})`, `Load starter library (${SEED_COUNT})`)}
                 </Button>
                 <Button variant="secondary" className="w-full" onClick={() => {
-                  const bundled = [...getSitesDocs(), ...getSitesQADocs()];
+                  const bundled = [...getProjectDocs(), ...getSitesDocs(), ...getSitesQADocs()];
                   const ids = new Set(bundled.map(s => s.id));
                   persistDocs([...bundled, ...docs.filter(d => !ids.has(d.id))]);
                 }}>
                   <Library className="size-4" /> {t(
-                    `حدّث فهرس مواقعي (${SITES_COUNT} موقعاً · ${SITES_CATEGORY_COUNT} تصنيفاً · ${SITES_QA_COUNT} سؤال/جواب)`,
-                    `Refresh my sites (${SITES_COUNT} sites · ${SITES_CATEGORY_COUNT} categories · ${SITES_QA_COUNT} Q&A)`
+                    `حدّث فهرس مواقعي (${HN_PROJECT_DOC_COUNT} مشروعاً · ${SITES_COUNT} رابطاً · ${SITES_CATEGORY_COUNT} تصنيفاً · ${SITES_QA_COUNT} س/ج)`,
+                    `Refresh my sites (${HN_PROJECT_DOC_COUNT} projects · ${SITES_COUNT} URLs · ${SITES_CATEGORY_COUNT} categories · ${SITES_QA_COUNT} Q&A)`
                   )}
                 </Button>
               </div>
