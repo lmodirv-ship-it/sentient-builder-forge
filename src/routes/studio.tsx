@@ -15,6 +15,7 @@ import {
 } from "@/lib/studio-projects";
 import { startBackgroundAgent, getAgentStatus } from "@/lib/background-agent";
 import { kindLabel } from "@/components/studio/shared";
+import { DevEnginePanel } from "@/components/DevEnginePanel";
 
 // Lazy-load each studio tab so only the visible one is downloaded/parsed.
 const SiteStudio = lazy(() => import("@/components/studio/SiteStudio"));
@@ -125,6 +126,7 @@ function StudioPage() {
           </Suspense>
         </Tabs>
       </main>
+      <DevEnginePanel />
     </div>
   );
 }
