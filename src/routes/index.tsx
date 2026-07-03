@@ -903,10 +903,10 @@ function Home() {
                 >
                   {transcribing ? <Wand2 className="size-4 animate-pulse" /> : recording ? <Square className="size-4" /> : <Mic className="size-4" />}
                 </Button>
-                <Input value={input} onChange={(e) => setInput(e.target.value)}
+                <Input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
                   placeholder="" className="flex-1 caret-primary" />
-                <Button onClick={send} disabled={!input.trim() || thinking}>
+                <Button onClick={send} disabled={thinking}>
                   {thinking ? t("يفكر…", "Thinking…") : t("إرسال", "Send")}
                 </Button>
                 {chat.length > 0 && (
