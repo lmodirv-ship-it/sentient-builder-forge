@@ -162,7 +162,8 @@ function Home() {
       setDocs(prev => {
         const sites = getSitesDocs();
         const qa = getSitesQADocs();
-        const bundled = [...sites, ...qa];
+        const projects = getProjectDocs();
+        const bundled = [...projects, ...sites, ...qa];
         const ids = new Set(bundled.map(s => s.id));
         const merged = [...bundled, ...prev.filter(d => !ids.has(d.id))];
         save(K_DOCS, merged);
