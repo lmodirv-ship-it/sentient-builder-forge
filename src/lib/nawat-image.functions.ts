@@ -85,19 +85,19 @@ export const generateImage = createServerFn({ method: "POST" })
     // Primary: OpenAI gpt-image-2.
     const errs: string[] = [];
     const a = await tryImagesEndpoint("openai/gpt-image-2");
-    if (a.url) return { imageUrl: a.url, error: null };
+    if (a.url) return { imageUrl: a.url, error: null, via: "lovable" as const };
     errs.push(a.err);
 
-    // Fallback: Nano Banana 2 (better instruction following than 2.5-flash).
+    // Fallback: Nano Banana 2.
     const b = await tryGeminiChat("google/gemini-3.1-flash-image");
-    if (b.url) return { imageUrl: b.url, error: null };
+    if (b.url) return { imageUrl: b.url, error: null, via: "lovable" as const };
     errs.push(b.err);
 
     // Last resort: 2.5-flash-image.
     const c = await tryGeminiChat("google/gemini-2.5-flash-image");
-    if (c.url) return { imageUrl: c.url, error: null };
+    if (c.url) return { imageUrl: c.url, error: null, via: "lovable" as const };
     errs.push(c.err);
 
     console.error("[nawat-image] all providers failed:", errs);
-    return { imageUrl: "", error: errs.join(" | ") };
+    return { imageUrl: "", error: errs.join(" | "), via: "none" as const };
   });
