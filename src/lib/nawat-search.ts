@@ -53,22 +53,36 @@ export function searchTFIDF(query: string, docs: Doc[], k = 5): Array<Doc & { sc
   const qTokens = tokenize(query);
   if (!qTokens.length || !docs.length) return [];
   const N = docs.length;
+  const titleTokens = docs.map((d) => new Set(tokenize(d.title)));
+  const tagTokens = docs.map((d) => new Set(tokenize(d.tags.join(" "))));
   const docTokens = docs.map((d) => tokenize(d.title + " " + d.content + " " + d.tags.join(" ")));
   const df: Record<string, number> = {};
   for (const tokens of docTokens) {
     for (const w of new Set(tokens)) df[w] = (df[w] || 0) + 1;
   }
+  const avgLen = docTokens.reduce((s, t) => s + t.length, 0) / N || 1;
+  const k1 = 1.4;
+  const b = 0.75;
+  const now = Date.now();
+  const uniqQ = Array.from(new Set(qTokens));
   const scored = docs.map((d, i) => {
     const tokens = docTokens[i];
     const tf: Record<string, number> = {};
     for (const w of tokens) tf[w] = (tf[w] || 0) + 1;
     let score = 0;
-    for (const q of qTokens) {
-      if (!tf[q]) continue;
-      const idf = Math.log(1 + N / (df[q] || 1));
-      score += (tf[q] / tokens.length) * idf;
+    for (const q of uniqQ) {
+      const f = tf[q];
+      if (!f) continue;
+      const idf = Math.log(1 + (N - (df[q] || 0) + 0.5) / ((df[q] || 0) + 0.5));
+      const norm = (f * (k1 + 1)) / (f + k1 * (1 - b + b * (tokens.length / avgLen)));
+      let w = idf * norm;
+      if (titleTokens[i].has(q)) w *= 2.2;
+      if (tagTokens[i].has(q)) w *= 1.6;
+      score += w;
     }
-    return { ...d, score };
+    const ageDays = Math.max(0, (now - (d.createdAt || now)) / 86400000);
+    const recency = 1 + 0.1 * Math.exp(-ageDays / 180);
+    return { ...d, score: score * recency };
   });
   return scored.filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, k);
 }
