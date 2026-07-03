@@ -1,41 +1,111 @@
-// Electron main process — wraps the published Nawat web app in a desktop window.
-// Build: see DESKTOP_MOBILE.md
-const { app, BrowserWindow, shell } = require("electron");
-const path = require("path");
+// Nawat Desktop — Electron shell.
+// Loads the published Nawat/HN app. All HN studios, templates, and
+// server functions run against the hosted backend.
 
-const APP_URL = process.env.NAWAT_URL || "https://learn-grow-unbound.lovable.app";
+const { app, BrowserWindow, Menu, shell, dialog } = require("electron");
+const path = require("path");
+const fs = require("fs");
+const os = require("os");
+
+const APP_URL = process.env.NAWAT_APP_URL || "https://sentient-builder-forge.lovable.app";
+const LOCAL_DATA = path.join(os.homedir(), "Documents", "Nawat");
+try { fs.mkdirSync(LOCAL_DATA, { recursive: true }); } catch {}
+
+let mainWindow = null;
 
 function createWindow() {
-  const win = new BrowserWindow({
-    width: 1280,
-    height: 860,
-    minWidth: 380,
-    minHeight: 600,
-    backgroundColor: "#0a1410",
-    autoHideMenuBar: true,
-    icon: path.join(__dirname, "..", "public", "icon-512.png"),
+  mainWindow = new BrowserWindow({
+    width: 1400,
+    height: 900,
+    minWidth: 1024,
+    minHeight: 640,
+    title: "نواة — Nawat",
+    backgroundColor: "#0a0a0a",
+    autoHideMenuBar: false,
     webPreferences: {
+      preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      spellcheck: false,
     },
   });
 
-  win.loadURL(APP_URL);
-
-  // Open external links in default browser
-  win.webContents.setWindowOpenHandler(({ url }) => {
+  // Only allow navigation to the app itself. Any external link opens in the OS browser.
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: "deny" };
   });
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    try {
+      const target = new URL(url);
+      const home = new URL(APP_URL);
+      if (target.origin !== home.origin) {
+        event.preventDefault();
+        shell.openExternal(url);
+      }
+    } catch {}
+  });
+
+  const showOffline = () => {
+    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>نواة — دون اتصال</title>
+      <style>body{background:#0a0a0a;color:#e5e5e5;font-family:system-ui,Segoe UI,Arial;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+      .box{max-width:520px;padding:24px;border:1px solid #333;border-radius:12px;text-align:center}
+      h1{color:#10b981;margin:0 0 8px}button{margin-top:16px;padding:10px 18px;background:#10b981;border:0;color:#fff;border-radius:8px;cursor:pointer;font-size:14px}
+      code{background:#1a1a1a;padding:2px 6px;border-radius:4px;color:#fbbf24}</style></head>
+      <body><div class="box"><h1>نواة</h1><p>تعذّر الوصول إلى خوادم HN.</p>
+      <p>تأكد من اتصالك بالإنترنت. البيانات المحلية محفوظة في:</p>
+      <code>${LOCAL_DATA.replace(/\\/g, "/")}</code>
+      <div><button onclick="location.reload()">إعادة المحاولة</button></div></div></body></html>`;
+    mainWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(html));
+  };
+
+  mainWindow.webContents.on("did-fail-load", (_e, code) => {
+    if (code <= -100) showOffline();
+  });
+
+  mainWindow.loadURL(APP_URL).catch(showOffline);
+
+  const template = [
+    {
+      label: "نواة",
+      submenu: [
+        { label: "إعادة التحميل", accelerator: "F5", click: () => mainWindow.reload() },
+        { label: "أدوات المطوّر", accelerator: "F12", click: () => mainWindow.webContents.toggleDevTools() },
+        { type: "separator" },
+        {
+          label: "فتح مجلد البيانات",
+          click: () => shell.openPath(LOCAL_DATA),
+        },
+        {
+          label: "حول",
+          click: () => dialog.showMessageBox(mainWindow, {
+            type: "info",
+            title: "حول نواة",
+            message: "نواة — Nawat Desktop",
+            detail: `الإصدار: 1.6.2\nالخادم: ${APP_URL}\nالبيانات المحلية: ${LOCAL_DATA}`,
+          }),
+        },
+        { type: "separator" },
+        { role: "quit", label: "خروج" },
+      ],
+    },
+    {
+      label: "تحرير",
+      submenu: [
+        { role: "undo", label: "تراجع" },
+        { role: "redo", label: "إعادة" },
+        { type: "separator" },
+        { role: "cut", label: "قص" },
+        { role: "copy", label: "نسخ" },
+        { role: "paste", label: "لصق" },
+        { role: "selectAll", label: "تحديد الكل" },
+      ],
+    },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
 app.whenReady().then(createWindow);
-
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
-
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
-});
+app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
+app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
