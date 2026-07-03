@@ -71,6 +71,38 @@ const iface = (url: string, role?: string): HNInterface => ({ url, role });
 
 export const HN_PROJECTS: HNProject[] = [
   {
+    id: "tvcc",
+    name: "TVCC — مرجع إثبات الملكية",
+    nameEn: "TVCC — Ownership Trust Anchor",
+    category: "portal",
+    pillar: "trust-anchor",
+    summary: "الركيزة #1 لمنظومة HN: تُثبت ملكية جميع المواقع والنطاقات وتوحّد الهوية عبرها.",
+    summaryEn: "HN pillar #1: proves ownership of every HN domain and unifies identity across the ecosystem.",
+    primary: "https://hn-driver.online",
+    aliases: ["tvcc", "trust", "ownership"],
+    interfaces: [
+      iface("https://hn-driver.online", "trust-anchor"),
+      iface("https://www.hn-driver.online", "trust-anchor-www"),
+    ],
+  },
+  {
+    id: "hn-cloud",
+    name: "HN-Cloud — التخزين السحابي (VPS)",
+    nameEn: "HN-Cloud — Private VPS Storage",
+    category: "database",
+    pillar: "files-core",
+    summary: "الركيزة #3 لمنظومة HN: تخزين الملفات السحابي على السيرفر الخاص (VPS). كل ملف/نسخة احتياطية يُحفظ هنا.",
+    summaryEn: "HN pillar #3: cloud file storage on the private VPS. All files & backups live here.",
+    primary: "https://hn-groupe.site",
+    aliases: ["cloud", "hn-cloud", "storage", "vps"],
+    interfaces: [
+      iface("https://hn-groupe.site", "cloud-root"),
+      iface("https://www.hn-groupe.site", "cloud-root-www"),
+      iface("https://cloud.hn-createur.com", "cloud-createur"),
+    ],
+  },
+
+  {
     id: "hn-driver",
     name: "HN Driver — منصة النقل والتوصيل",
     nameEn: "HN Driver — Ride & Delivery",
