@@ -8,8 +8,17 @@ const Input = z.object({
 export const generateImage = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => Input.parse(i))
   .handler(async ({ data }) => {
+    // 1) Try HN's own service first (generatin.hn-groupe.org) if configured.
+    const { hnGenerateImage } = await import("./hn-clients.server");
+    const hn = await hnGenerateImage(data.prompt);
+    if (hn.ok) return { imageUrl: hn.imageUrl, error: null, via: "hn" as const };
+    if (!("notConfigured" in hn) || !hn.notConfigured) {
+      // configured but failed — log and continue to Lovable fallback
+      console.warn("[nawat-image] HN generatin failed:", hn.error);
+    }
+
     const key = process.env.LOVABLE_API_KEY;
-    if (!key) return { imageUrl: "", error: "Missing LOVABLE_API_KEY" };
+    if (!key) return { imageUrl: "", error: "Missing LOVABLE_API_KEY", via: "none" as const };
 
     const subject = data.prompt.trim();
     // Force an unambiguous image-generation instruction so chat models don't reply with text.
@@ -76,19 +85,19 @@ export const generateImage = createServerFn({ method: "POST" })
     // Primary: OpenAI gpt-image-2.
     const errs: string[] = [];
     const a = await tryImagesEndpoint("openai/gpt-image-2");
-    if (a.url) return { imageUrl: a.url, error: null };
+    if (a.url) return { imageUrl: a.url, error: null, via: "lovable" as const };
     errs.push(a.err);
 
-    // Fallback: Nano Banana 2 (better instruction following than 2.5-flash).
+    // Fallback: Nano Banana 2.
     const b = await tryGeminiChat("google/gemini-3.1-flash-image");
-    if (b.url) return { imageUrl: b.url, error: null };
+    if (b.url) return { imageUrl: b.url, error: null, via: "lovable" as const };
     errs.push(b.err);
 
     // Last resort: 2.5-flash-image.
     const c = await tryGeminiChat("google/gemini-2.5-flash-image");
-    if (c.url) return { imageUrl: c.url, error: null };
+    if (c.url) return { imageUrl: c.url, error: null, via: "lovable" as const };
     errs.push(c.err);
 
     console.error("[nawat-image] all providers failed:", errs);
-    return { imageUrl: "", error: errs.join(" | ") };
+    return { imageUrl: "", error: errs.join(" | "), via: "none" as const };
   });

@@ -42,6 +42,8 @@ import { transcribeAudio } from "@/lib/nawat-transcribe.functions";
 import { generateImage } from "@/lib/nawat-image.functions";
 import { generateSpeech } from "@/lib/nawat-tts.functions";
 import { generateSiteHtml } from "@/lib/nawat-site-design.functions";
+import { generateVideo } from "@/lib/nawat-video.functions";
+import { generateCV } from "@/lib/nawat-cv.functions";
 import { detectExecutor, runningHeader, stamp, extractSubject, subjectPrompt } from "@/lib/nawat-executor";
 import {
   fsSupported, pickRootDir, getRootName, clearRootDir,
@@ -66,6 +68,7 @@ type ChatMsg = {
   text: string;
   imageUrl?: string;
   audioUrl?: string;
+  videoUrl?: string;
   htmlPayload?: string;
   running?: boolean;
 };
@@ -215,6 +218,8 @@ function Home() {
   const imageGen = useServerFn(generateImage);
   const speechGen = useServerFn(generateSpeech);
   const siteGen = useServerFn(generateSiteHtml);
+  const videoGen = useServerFn(generateVideo);
+  const cvGen = useServerFn(generateCV);
   const [feedback, setFeedback] = useState<Record<string, number>>(() => load<Record<string, number>>("nawat.feedback.v1", {}));
   const [usedCtx, setUsedCtx] = useState<Record<string, { ids: string[]; top: number; tiers: string[] }>>({});
   const setFb = (docId: string, delta: number) => {
@@ -522,8 +527,15 @@ function Home() {
           const r = await siteGen({ data: { prompt: promptText, lang } });
           if (r.error || !r.html) return fail(r.error || "no html");
           finish({ htmlPayload: r.html }, t(`✅ **${def.labelAr}** جاهز. معاينة وتنزيل بالأسفل.`, `✅ **${def.labelEn}** ready. Preview & download below.`));
+        } else if (def.id === "video") {
+          const r = await videoGen({ data: { prompt: promptText } });
+          if (r.error || !r.videoUrl) return fail(r.error || "no video");
+          finish({ videoUrl: r.videoUrl }, t(`✅ **${def.labelAr}** جاهز.`, `✅ **${def.labelEn}** ready.`));
+        } else if (def.id === "cv") {
+          const r = await cvGen({ data: { prompt: promptText, lang } });
+          if (r.error || !r.html) return fail(r.error || "no cv");
+          finish({ htmlPayload: r.html }, t(`✅ **${def.labelAr}** جاهزة. معاينة وتنزيل بالأسفل.`, `✅ **${def.labelEn}** ready. Preview & download below.`));
         } else {
-          // video / cv / other: route (open) instead of run — not wired to a backend yet.
           const q = promptText ? `?q=${encodeURIComponent(promptText)}` : "";
           const msg = t(
             `${def.emoji} افتح [${def.siteName}](${def.siteUrl}${q}) لإتمام الطلب — التشغيل الآلي غير متوفر بعد لهذه الخدمة.`,
@@ -931,6 +943,9 @@ function Home() {
                           )}
                           {m.audioUrl && (
                             <audio controls src={m.audioUrl} className="mt-2 w-full" />
+                          )}
+                          {m.videoUrl && (
+                            <video controls src={m.videoUrl} className="mt-2 w-full rounded-lg" />
                           )}
                           {m.htmlPayload && (
                             <div className="mt-2 space-y-2">

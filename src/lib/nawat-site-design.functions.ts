@@ -10,6 +10,12 @@ const Input = z.object({
 export const generateSiteHtml = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => Input.parse(i))
   .handler(async ({ data }) => {
+    // 1) Try HN Site Builder first (site.hn-groupe.tech) if configured.
+    const { hnGenerateSite } = await import("./hn-clients.server");
+    const hn = await hnGenerateSite(data.prompt, data.lang);
+    if (hn.ok) return { html: hn.html, error: null };
+    if (!("notConfigured" in hn) || !hn.notConfigured) console.warn("[nawat-site] HN failed:", hn.error);
+
     const key = process.env.LOVABLE_API_KEY;
     if (!key) return { html: "", error: "Missing LOVABLE_API_KEY" };
 
