@@ -664,6 +664,7 @@ function Home() {
               <Badge variant="secondary" className="hidden sm:inline-flex gap-1 bg-[color:var(--gold)]/10 border border-[color:var(--gold)]/30 text-[color:var(--gold)] nawat-chip"><Flame className="size-3" />{streak.days}</Badge>
             )}
             <Badge variant="secondary" className="hidden sm:inline-flex gap-1 bg-primary/10 border border-primary/30 text-primary nawat-chip"><Sparkles className="size-3" />{docs.length}</Badge>
+            <HNStatusPill isAr={isAr} />
             <ThemeSwitcher isAr={isAr} />
             <Button variant="outline" size="sm" onClick={() => setLang(isAr ? "en" : "ar")}>
               <Languages className="size-4" /> {isAr ? "EN" : "ع"}
