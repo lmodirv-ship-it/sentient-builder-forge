@@ -684,10 +684,10 @@ function Home() {
                 })()}
                 {chat.map((m) => (
                   <div key={m.id} className={`flex group ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                    <div className={`max-w-[85%] rounded-3xl px-4 py-2.5 text-sm leading-relaxed ${
                       m.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap"
-                        : "bg-card border border-border rounded-bl-sm"
+                        ? "nawat-bubble-user rounded-br-md whitespace-pre-wrap"
+                        : "nawat-glass rounded-bl-md"
                     }`}>
                       {m.role === "assistant" ? (
                         <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-pre:my-2 prose-headings:my-2">
