@@ -1,21 +1,20 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
+// لبناء APK يعمل أوفلاين: شغّل `npm run build` ثم `npx cap sync android`.
+// التطبيق سيحمل كل ملفات dist/ داخل الهاتف — الذاكرة والملاحظات والبحث تعمل بدون إنترنت.
+// ميزات الذكاء الاصطناعي (المحادثة/OCR/الترجمة) وحدها تحتاج اتصالاً.
 const config: CapacitorConfig = {
   appId: "app.nawat.ai",
   appName: "نواة",
   webDir: "dist",
-  server: {
-    // Points the native shell at the deployed web app so AI features keep working.
-    // For a fully offline build, remove `url` and ship `dist/` instead.
-    url: "https://learn-grow-unbound.lovable.app",
-    cleartext: false,
-  },
   android: {
-    backgroundColor: "#0a1410",
+    backgroundColor: "#0a0f1a",
+    allowMixedContent: false,
   },
   ios: {
-    backgroundColor: "#0a1410",
+    backgroundColor: "#0a0f1a",
   },
 };
 
 export default config;
+
