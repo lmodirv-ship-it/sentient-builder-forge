@@ -398,13 +398,26 @@ function Home() {
     setInput("");
     setThinking(true);
     try {
-      const hits = searchTFIDF(text, docs, 10);
-      const history = baseChat.slice(-10).map((m) => ({ role: m.role, text: m.text }));
+      // Query expansion (with graceful fallback to the raw text).
+      let variants: string[] = [text];
+      try {
+        const exp = await expand({ data: { question: text, lang } });
+        if (exp?.variants?.length) variants = exp.variants;
+      } catch { /* offline / gateway down — keep raw query */ }
+
+      // Hybrid retrieval → rerank → neighbor expansion.
+      const pool = searchHybrid(variants, docs, 20);
+      const top = rerank(text, pool, { feedback, k: 8 });
+      const withN = withNeighbors(top, docs, 1).slice(0, 12);
+      const topScore = top[0]?.score ?? 0;
+      const tiersUsed = Array.from(new Set(top.map((h) => h.tier || "long")));
+
+      const history = baseChat.slice(-6).map((m) => ({ role: m.role, text: m.text }));
       const { text: reply } = await ask({
         data: {
           question: text,
           lang,
-          context: hits.map((h) => ({
+          context: withN.map((h) => ({
             title: h.title,
             content: h.content.slice(0, 1000),
             source: h.source,
@@ -417,6 +430,11 @@ function Home() {
       });
       const assistant: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: reply };
       persistChat([...baseChat, assistant]);
+      setUsedCtx((prev) => ({
+        ...prev,
+        [assistant.id]: { ids: top.map((h) => h.id), top: Math.round(topScore * 100) / 100, tiers: tiersUsed },
+      }));
+
 
       // Grow the brain: persist meaningful Q&A pairs as long-term memory.
       const isRefusal =
