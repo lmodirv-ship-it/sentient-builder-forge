@@ -765,12 +765,54 @@ function Home() {
                         : t("لا توجد نتائج.", "No results.")}
                     </Card>
                   )}
-                  {visible.map((it) => (
+                  {visible.map((it) => {
+                    const inlineUrls = extractUrls(it.content);
+                    const cats = relatedCategoriesFor({ id: it.id, tags: it.tags, content: it.content, title: it.title });
+                    // Category URLs not already inline — surfaced as extras.
+                    const inlineSet = new Set(inlineUrls);
+                    const extraCats = cats
+                      .map(c => ({ cat: c, urls: c.urls.filter(u => !inlineSet.has(u)) }))
+                      .filter(x => x.urls.length > 0);
+                    return (
                     <Card key={it.id} className="p-4 group">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold truncate">{it.title}</h4>
                           <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap line-clamp-4">{it.content}</p>
+                          {inlineUrls.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {inlineUrls.slice(0, 12).map((u) => (
+                                <a key={u} href={u} target="_blank" rel="noreferrer noopener"
+                                  className="text-xs px-2 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 truncate max-w-[220px]">
+                                  {u.replace(/^https?:\/\//, "")}
+                                </a>
+                              ))}
+                              {inlineUrls.length > 12 && (
+                                <span className="text-xs text-muted-foreground self-center">+{inlineUrls.length - 12}</span>
+                              )}
+                            </div>
+                          )}
+                          {extraCats.length > 0 && (
+                            <div className="mt-2 space-y-1.5">
+                              {extraCats.map(({ cat, urls }) => (
+                                <details key={cat.key} className="rounded-md border border-border/60 bg-card/40">
+                                  <summary className="cursor-pointer text-xs px-2 py-1.5 flex items-center gap-1.5 select-none">
+                                    <span>{cat.emoji}</span>
+                                    <span className="font-medium">{isAr ? cat.ar : cat.en}</span>
+                                    <span className="text-muted-foreground">({urls.length})</span>
+                                  </summary>
+                                  <div className="flex flex-wrap gap-1.5 p-2 pt-0">
+                                    {urls.map((u) => (
+                                      <a key={u} href={u} target="_blank" rel="noreferrer noopener"
+                                        className="text-xs px-2 py-0.5 rounded-md bg-secondary/60 hover:bg-secondary text-foreground/90 border border-border/60 truncate max-w-[220px]">
+                                        {u.replace(/^https?:\/\//, "")}
+                                      </a>
+                                    ))}
+                                  </div>
+                                </details>
+                              ))}
+                            </div>
+                          )}
                           <div className="flex flex-wrap gap-1 mt-2 items-center">
                             {it.tags.map((tg) => <Badge key={tg} variant="secondary">{tg}</Badge>)}
                             <span className="text-xs text-muted-foreground ms-auto">
@@ -784,7 +826,8 @@ function Home() {
                         </Button>
                       </div>
                     </Card>
-                  ))}
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </div>
