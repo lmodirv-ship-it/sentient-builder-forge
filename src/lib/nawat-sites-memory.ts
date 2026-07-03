@@ -1,7 +1,9 @@
 // Build Nawat memory docs from HN_PROJECTS: one rich Doc per project with
 // summary + primary url + interfaces + inferred tasks. `tier: "core"`.
 import type { Doc } from "./nawat-search";
-import { HN_PROJECTS, CATEGORY_LABEL, type HNProject, type HNCategory } from "./hn-ecosystem";
+import { HN_PROJECTS, CATEGORY_LABEL, HN_PILLARS, type HNProject, type HNCategory } from "./hn-ecosystem";
+import { hnInfrastructureCard } from "./hn-bridge";
+
 
 const CATEGORY_TASKS_AR: Record<HNCategory, string[]> = {
   transport:  ["طلب رحلة", "طلب توصيل", "إدارة السائقين", "مركز الاتصال", "متابعة الطلبات"],
