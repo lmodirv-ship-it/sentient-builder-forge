@@ -3,39 +3,78 @@
 // If the service isn't configured (no key), returns { ok: false, notConfigured: true }
 // so the caller can fall back to the Lovable AI Gateway.
 
-type HNResult<T> = ({ ok: true } & T) | { ok: false; notConfigured?: boolean; error: string; status?: number };
+type HNResult<T> = ({ ok: true } & T) | { ok: false; notConfigured?: boolean; error: string; friendly?: string; status?: number; attempts?: number };
 
-async function postJSON<T = any>(url: string, key: string, body: unknown, timeoutMs = 60_000): Promise<HNResult<{ data: T; contentType: string }>> {
-  const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`,
-        "X-API-Key": key,
-      },
-      body: JSON.stringify(body),
-      signal: ctrl.signal,
-    });
-    const contentType = res.headers.get("content-type") || "";
-    if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      return { ok: false, error: `HTTP ${res.status}: ${t.slice(0, 200)}`, status: res.status };
+function friendlyHN(status: number | undefined, raw: string): string {
+  if (raw === "timeout") return "انتهت مهلة الاتصال بخدمة HN. تحقق من الشبكة وأعد المحاولة.";
+  if (!status) return "تعذر الوصول إلى خدمة HN. الشبكة أو الخادم غير متاح.";
+  if (status === 401 || status === 403) return "المفتاح HN_API_KEY غير صالح أو منتهي — حدّثه من الإعدادات.";
+  if (status === 404) return "نقطة الخدمة غير موجودة على مشروع HN المستهدف.";
+  if (status === 408 || status === 504) return "الخدمة بطيئة جدًا — سنعيد المحاولة تلقائيًا.";
+  if (status === 429) return "تجاوزنا حد الطلبات على HN — انتظر قليلًا ثم أعد المحاولة.";
+  if (status >= 500) return "خطأ داخلي في خدمة HN — نعيد المحاولة تلقائيًا.";
+  return `فشل الاتصال بخدمة HN (رمز ${status}).`;
+}
+
+function isRetriable(status?: number, err?: string): boolean {
+  if (err === "timeout") return true;
+  if (!status) return true; // network error
+  return status === 408 || status === 429 || status === 502 || status === 503 || status === 504;
+}
+
+async function postJSON<T = any>(
+  url: string,
+  key: string,
+  body: unknown,
+  timeoutMs = 60_000,
+  maxAttempts = 3,
+): Promise<HNResult<{ data: T; contentType: string }>> {
+  let lastStatus: number | undefined;
+  let lastErr = "";
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${key}`,
+          "X-API-Key": key,
+        },
+        body: JSON.stringify(body),
+        signal: ctrl.signal,
+      });
+      const contentType = res.headers.get("content-type") || "";
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        lastStatus = res.status;
+        lastErr = `HTTP ${res.status}: ${t.slice(0, 200)}`;
+        if (!isRetriable(res.status) || attempt === maxAttempts) {
+          return { ok: false, error: lastErr, friendly: friendlyHN(res.status, lastErr), status: res.status, attempts: attempt };
+        }
+      } else {
+        let data: any;
+        if (contentType.includes("application/json")) data = await res.json();
+        else if (contentType.startsWith("image/") || contentType.startsWith("audio/") || contentType.startsWith("video/")) {
+          const buf = await res.arrayBuffer();
+          data = { base64: Buffer.from(buf).toString("base64") };
+        } else data = await res.text();
+        return { ok: true, data, contentType };
+      }
+    } catch (e: any) {
+      lastErr = e?.name === "AbortError" ? "timeout" : String(e?.message || e);
+      lastStatus = undefined;
+      if (attempt === maxAttempts) {
+        return { ok: false, error: lastErr, friendly: friendlyHN(undefined, lastErr), attempts: attempt };
+      }
+    } finally {
+      clearTimeout(to);
     }
-    let data: any;
-    if (contentType.includes("application/json")) data = await res.json();
-    else if (contentType.startsWith("image/") || contentType.startsWith("audio/") || contentType.startsWith("video/")) {
-      const buf = await res.arrayBuffer();
-      data = { base64: Buffer.from(buf).toString("base64") };
-    } else data = await res.text();
-    return { ok: true, data, contentType };
-  } catch (e: any) {
-    return { ok: false, error: e?.name === "AbortError" ? "timeout" : String(e?.message || e) };
-  } finally {
-    clearTimeout(to);
+    // exponential backoff: 500ms, 1500ms
+    await new Promise((r) => setTimeout(r, 500 * Math.pow(3, attempt - 1)));
   }
+  return { ok: false, error: lastErr || "unknown", friendly: friendlyHN(lastStatus, lastErr), status: lastStatus, attempts: maxAttempts };
 }
 
 function env(name: string): string | undefined {
