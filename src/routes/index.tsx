@@ -944,6 +944,9 @@ function Home() {
                           {m.audioUrl && (
                             <audio controls src={m.audioUrl} className="mt-2 w-full" />
                           )}
+                          {m.videoUrl && (
+                            <video controls src={m.videoUrl} className="mt-2 w-full rounded-lg" />
+                          )}
                           {m.htmlPayload && (
                             <div className="mt-2 space-y-2">
                               <iframe
