@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   startEngine, stopEngine, subscribeEngine, engineStatus, MODE_LABEL,
-  type DevMode,
+  forgetSavedFolder, type DevMode,
 } from "@/lib/dev-engine";
 import { getLogs, subscribeLogs, clearLogs, reasonOf, type LogEntry } from "@/lib/studio-logger";
 
@@ -107,6 +107,9 @@ export function DevEnginePanel() {
               <span>· {status.cycles} دورة · {status.filesWritten} ملف</span>
             </div>
           </div>
+          <Button size="sm" variant="ghost" onClick={async () => { stopEngine(); await forgetSavedFolder(); toast("اختر المجلد التالي عند البدء التالي"); }} title="تغيير المجلد">
+            <FolderOpen className="h-3 w-3" />
+          </Button>
           <Button size="sm" variant="ghost" onClick={stopEngine}>
             <Square className="h-3 w-3 ml-1" />إيقاف
           </Button>
