@@ -12,6 +12,7 @@ const Input = z.object({
         source: z.string().optional(),
         date: z.string().optional(),
         tags: z.array(z.string()).optional(),
+        tier: z.enum(["daily", "long", "core"]).optional(),
       }),
     )
     .max(12)

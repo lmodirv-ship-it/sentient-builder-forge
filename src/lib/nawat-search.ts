@@ -85,7 +85,9 @@ export function searchTFIDF(query: string, docs: Doc[], k = 5): Array<Doc & { sc
     }
     const ageDays = Math.max(0, (now - (d.createdAt || now)) / 86400000);
     const recency = 1 + 0.1 * Math.exp(-ageDays / 180);
-    return { ...d, score: score * recency };
+    // Tier weighting: core (essence) > long-term > daily (ephemeral)
+    const tierWeight = d.tier === "core" ? 1.8 : d.tier === "daily" ? 0.7 : 1.0;
+    return { ...d, score: score * recency * tierWeight };
   });
   return scored.filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, k);
 }
