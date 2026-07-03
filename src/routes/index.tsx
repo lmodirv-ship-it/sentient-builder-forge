@@ -874,7 +874,7 @@ function Home() {
                                 <details key={cat.key} className="rounded-md border border-border/60 bg-card/40">
                                   <summary className="cursor-pointer text-xs px-2 py-1.5 flex items-center gap-1.5 select-none">
                                     <span>{cat.emoji}</span>
-                                    <span className="font-medium">{isAr ? cat.ar : cat.en}</span>
+                                    <span className="font-medium"><Highlight text={isAr ? cat.ar : cat.en} terms={highlightTerms} /></span>
                                     <span className="text-muted-foreground">({urls.length})</span>
                                   </summary>
                                   <div className="flex flex-wrap gap-1.5 p-2 pt-0">
