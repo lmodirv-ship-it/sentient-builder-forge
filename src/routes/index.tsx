@@ -114,11 +114,13 @@ function Home() {
         setChat(load<ChatMsg[]>(K_CHAT, []));
       }
       setStreak(load<Streak>(K_STREAK, { last: "", days: 0 }));
-      // Auto-seed the HN sites registry once; upsert (replace) by stable id on every load so edits to the list propagate.
+      // Auto-seed the HN sites registry + expected Q&A. Upsert by stable id so edits propagate on every load.
       setDocs(prev => {
         const sites = getSitesDocs();
-        const siteIds = new Set(sites.map(s => s.id));
-        const merged = [...sites, ...prev.filter(d => !siteIds.has(d.id))];
+        const qa = getSitesQADocs();
+        const bundled = [...sites, ...qa];
+        const ids = new Set(bundled.map(s => s.id));
+        const merged = [...bundled, ...prev.filter(d => !ids.has(d.id))];
         save(K_DOCS, merged);
         return merged;
       });
