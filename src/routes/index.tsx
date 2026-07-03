@@ -18,7 +18,7 @@ import {
 import { searchTFIDF, chunkText, type Doc } from "@/lib/nawat-search";
 import { extractPdfText } from "@/lib/pdf-extract";
 import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
-import { getSitesDocs, SITES_COUNT, SITES_CATEGORY_COUNT, extractUrls, relatedCategoriesFor } from "@/lib/nawat-sites";
+import { getSitesDocs, SITES_COUNT, SITES_CATEGORY_COUNT, extractUrls, relatedCategoriesFor, SITE_CATEGORIES } from "@/lib/nawat-sites";
 import { getSitesQADocs, SITES_QA_COUNT } from "@/lib/nawat-sites-qa";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
@@ -77,6 +77,7 @@ function Home() {
   const [query, setQuery] = useState("");
   const [input, setInput] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -282,9 +283,32 @@ function Home() {
   const visible = useMemo(() => {
     let list = docs;
     if (activeTag) list = list.filter((d) => d.tags.includes(activeTag));
-    if (query.trim()) list = searchTFIDF(query, list, 100);
+    if (activeCategory) {
+      list = list.filter((d) =>
+        relatedCategoriesFor({ id: d.id, tags: d.tags, content: d.content, title: d.title })
+          .some((c) => c.key === activeCategory)
+      );
+    }
+    const q = query.trim().toLowerCase();
+    if (q) {
+      // Broaden: title / content / tags / URLs / category names all count as matches.
+      const substr = list.filter((d) => {
+        const cats = relatedCategoriesFor({ id: d.id, tags: d.tags, content: d.content, title: d.title });
+        const hay = [
+          d.title,
+          d.content,
+          d.tags.join(" "),
+          extractUrls(d.content).join(" "),
+          cats.map((c) => `${c.key} ${c.ar} ${c.en}`).join(" "),
+        ].join(" ").toLowerCase();
+        return hay.includes(q);
+      });
+      const ranked = searchTFIDF(query, list, 100);
+      const seen = new Set<string>();
+      list = [...ranked, ...substr].filter((d) => (seen.has(d.id) ? false : (seen.add(d.id), true)));
+    }
     return list;
-  }, [docs, query, activeTag]);
+  }, [docs, query, activeTag, activeCategory]);
 
   const send = async () => {
     const raw = input.trim();
@@ -740,13 +764,36 @@ function Home() {
               <div className="relative">
                 <Search className="size-4 absolute top-1/2 -translate-y-1/2 start-3 text-muted-foreground" />
                 <Input value={query} onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t("ابحث في ذاكرتك…", "Search your memory…")} className="ps-9" />
+                  placeholder={t("ابحث بالاسم، الوسم، الرابط، أو التصنيف…", "Search by name, tag, URL, or category…")} className="ps-9 pe-9" />
+                {(query || activeTag || activeCategory) && (
+                  <button type="button"
+                    onClick={() => { setQuery(""); setActiveTag(null); setActiveCategory(null); }}
+                    className="absolute top-1/2 -translate-y-1/2 end-2 text-xs text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded">
+                    ×
+                  </button>
+                )}
               </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant={activeCategory === null ? "default" : "secondary"} className="cursor-pointer"
+                  onClick={() => setActiveCategory(null)}>
+                  🌐 {t("كل التصنيفات", "All categories")}
+                </Badge>
+                {SITE_CATEGORIES.map((c) => (
+                  <Badge key={c.key} variant={activeCategory === c.key ? "default" : "secondary"}
+                    className="cursor-pointer"
+                    onClick={() => setActiveCategory(activeCategory === c.key ? null : c.key)}>
+                    <span className="me-1">{c.emoji}</span>{isAr ? c.ar : c.en}
+                    <span className="opacity-60 ms-1">{c.urls.length}</span>
+                  </Badge>
+                ))}
+              </div>
+
               {allTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   <Badge variant={activeTag === null ? "default" : "secondary"} className="cursor-pointer"
                     onClick={() => setActiveTag(null)}>
-                    <TagIcon className="size-3" /> {t("الكل", "All")}
+                    <TagIcon className="size-3" /> {t("كل الوسوم", "All tags")}
                   </Badge>
                   {allTags.map(([tg, n]) => (
                     <Badge key={tg} variant={activeTag === tg ? "default" : "secondary"}
@@ -756,6 +803,11 @@ function Home() {
                   ))}
                 </div>
               )}
+
+              <div className="text-xs text-muted-foreground">
+                {t(`${visible.length} نتيجة من ${docs.length}`, `${visible.length} of ${docs.length} results`)}
+              </div>
+
               <ScrollArea className="h-[50vh] pr-2">
                 <div className="space-y-2">
                   {visible.length === 0 && (
