@@ -18,6 +18,7 @@ import {
 import { searchTFIDF, chunkText, type Doc } from "@/lib/nawat-search";
 import { extractPdfText } from "@/lib/pdf-extract";
 import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
+import { getSitesDocs, SITES_COUNT, SITES_CATEGORY_COUNT } from "@/lib/nawat-sites";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
@@ -112,6 +113,14 @@ function Home() {
         setChat(load<ChatMsg[]>(K_CHAT, []));
       }
       setStreak(load<Streak>(K_STREAK, { last: "", days: 0 }));
+      // Auto-seed the HN sites registry once; upsert (replace) by stable id on every load so edits to the list propagate.
+      setDocs(prev => {
+        const sites = getSitesDocs();
+        const siteIds = new Set(sites.map(s => s.id));
+        const merged = [...sites, ...prev.filter(d => !siteIds.has(d.id))];
+        save(K_DOCS, merged);
+        return merged;
+      });
       hydratedRef.current = true;
     })();
   }, []);
@@ -652,7 +661,18 @@ function Home() {
                 }}>
                   <Library className="size-4" /> {t(`حمّل المكتبة الأساسية (${SEED_COUNT})`, `Load starter library (${SEED_COUNT})`)}
                 </Button>
+                <Button variant="secondary" className="w-full" onClick={() => {
+                  const sites = getSitesDocs();
+                  const ids = new Set(sites.map(s => s.id));
+                  persistDocs([...sites, ...docs.filter(d => !ids.has(d.id))]);
+                }}>
+                  <Library className="size-4" /> {t(
+                    `حدّث فهرس مواقعي (${SITES_COUNT} في ${SITES_CATEGORY_COUNT} تصنيفاً)`,
+                    `Refresh my sites index (${SITES_COUNT} in ${SITES_CATEGORY_COUNT} categories)`
+                  )}
+                </Button>
               </div>
+
 
               <div className="pt-3 border-t border-border space-y-2">
                 <h4 className="text-sm font-semibold flex items-center gap-2">
