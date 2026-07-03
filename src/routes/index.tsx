@@ -42,7 +42,7 @@ import { transcribeAudio } from "@/lib/nawat-transcribe.functions";
 import { generateImage } from "@/lib/nawat-image.functions";
 import { generateSpeech } from "@/lib/nawat-tts.functions";
 import { generateSiteHtml } from "@/lib/nawat-site-design.functions";
-import { detectExecutor, runningHeader, stamp } from "@/lib/nawat-executor";
+import { detectExecutor, runningHeader, stamp, extractSubject, subjectPrompt } from "@/lib/nawat-executor";
 import {
   fsSupported, pickRootDir, getRootName, clearRootDir,
   saveSnapshot, loadSnapshot, saveOriginalFile,
