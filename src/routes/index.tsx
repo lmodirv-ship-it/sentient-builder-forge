@@ -18,6 +18,7 @@ import {
 import { searchTFIDF, chunkText, type Doc } from "@/lib/nawat-search";
 import { extractPdfText } from "@/lib/pdf-extract";
 import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
+import { getSitesDocs, SITES_COUNT, SITES_CATEGORY_COUNT } from "@/lib/nawat-sites";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
