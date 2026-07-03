@@ -665,13 +665,13 @@ function Home() {
                   <Library className="size-4" /> {t(`حمّل المكتبة الأساسية (${SEED_COUNT})`, `Load starter library (${SEED_COUNT})`)}
                 </Button>
                 <Button variant="secondary" className="w-full" onClick={() => {
-                  const sites = getSitesDocs();
-                  const ids = new Set(sites.map(s => s.id));
-                  persistDocs([...sites, ...docs.filter(d => !ids.has(d.id))]);
+                  const bundled = [...getSitesDocs(), ...getSitesQADocs()];
+                  const ids = new Set(bundled.map(s => s.id));
+                  persistDocs([...bundled, ...docs.filter(d => !ids.has(d.id))]);
                 }}>
                   <Library className="size-4" /> {t(
-                    `حدّث فهرس مواقعي (${SITES_COUNT} في ${SITES_CATEGORY_COUNT} تصنيفاً)`,
-                    `Refresh my sites index (${SITES_COUNT} in ${SITES_CATEGORY_COUNT} categories)`
+                    `حدّث فهرس مواقعي (${SITES_COUNT} موقعاً · ${SITES_CATEGORY_COUNT} تصنيفاً · ${SITES_QA_COUNT} سؤال/جواب)`,
+                    `Refresh my sites (${SITES_COUNT} sites · ${SITES_CATEGORY_COUNT} categories · ${SITES_QA_COUNT} Q&A)`
                   )}
                 </Button>
               </div>
