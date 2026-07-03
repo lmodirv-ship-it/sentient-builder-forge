@@ -19,6 +19,7 @@ import { searchTFIDF, chunkText, type Doc } from "@/lib/nawat-search";
 import { extractPdfText } from "@/lib/pdf-extract";
 import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
 import { getSitesDocs, SITES_COUNT, SITES_CATEGORY_COUNT } from "@/lib/nawat-sites";
+import { getSitesQADocs, SITES_QA_COUNT } from "@/lib/nawat-sites-qa";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
@@ -113,11 +114,13 @@ function Home() {
         setChat(load<ChatMsg[]>(K_CHAT, []));
       }
       setStreak(load<Streak>(K_STREAK, { last: "", days: 0 }));
-      // Auto-seed the HN sites registry once; upsert (replace) by stable id on every load so edits to the list propagate.
+      // Auto-seed the HN sites registry + expected Q&A. Upsert by stable id so edits propagate on every load.
       setDocs(prev => {
         const sites = getSitesDocs();
-        const siteIds = new Set(sites.map(s => s.id));
-        const merged = [...sites, ...prev.filter(d => !siteIds.has(d.id))];
+        const qa = getSitesQADocs();
+        const bundled = [...sites, ...qa];
+        const ids = new Set(bundled.map(s => s.id));
+        const merged = [...bundled, ...prev.filter(d => !ids.has(d.id))];
         save(K_DOCS, merged);
         return merged;
       });
@@ -662,13 +665,13 @@ function Home() {
                   <Library className="size-4" /> {t(`حمّل المكتبة الأساسية (${SEED_COUNT})`, `Load starter library (${SEED_COUNT})`)}
                 </Button>
                 <Button variant="secondary" className="w-full" onClick={() => {
-                  const sites = getSitesDocs();
-                  const ids = new Set(sites.map(s => s.id));
-                  persistDocs([...sites, ...docs.filter(d => !ids.has(d.id))]);
+                  const bundled = [...getSitesDocs(), ...getSitesQADocs()];
+                  const ids = new Set(bundled.map(s => s.id));
+                  persistDocs([...bundled, ...docs.filter(d => !ids.has(d.id))]);
                 }}>
                   <Library className="size-4" /> {t(
-                    `حدّث فهرس مواقعي (${SITES_COUNT} في ${SITES_CATEGORY_COUNT} تصنيفاً)`,
-                    `Refresh my sites index (${SITES_COUNT} in ${SITES_CATEGORY_COUNT} categories)`
+                    `حدّث فهرس مواقعي (${SITES_COUNT} موقعاً · ${SITES_CATEGORY_COUNT} تصنيفاً · ${SITES_QA_COUNT} سؤال/جواب)`,
+                    `Refresh my sites (${SITES_COUNT} sites · ${SITES_CATEGORY_COUNT} categories · ${SITES_QA_COUNT} Q&A)`
                   )}
                 </Button>
               </div>
