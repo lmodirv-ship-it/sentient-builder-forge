@@ -309,3 +309,40 @@ export function getSitesDocs(): Doc[] {
 
 export const SITES_COUNT = allSites().length;
 export const SITES_CATEGORY_COUNT = SITE_CATEGORIES.length;
+
+/** Extract raw http(s) URLs from arbitrary text. */
+export function extractUrls(text: string): string[] {
+  if (!text) return [];
+  const re = /https?:\/\/[^\s•)\]]+/gi;
+  const out = new Set<string>();
+  for (const m of text.match(re) || []) out.add(m.replace(/[.,;:]+$/, ""));
+  return [...out];
+}
+
+/** Find HN site categories relevant to a memory doc (by id, tags, or content). */
+export function relatedCategoriesFor(input: {
+  id?: string;
+  tags?: string[];
+  content?: string;
+  title?: string;
+}): SiteCategory[] {
+  const id = input.id || "";
+  // Direct category doc.
+  const direct = id.startsWith("site-cat-")
+    ? SITE_CATEGORIES.find(c => id === `site-cat-${c.key}`)
+    : null;
+  if (direct) return [direct];
+
+  const hay = [
+    ...(input.tags || []),
+    input.title || "",
+    input.content || "",
+  ].join(" ").toLowerCase();
+
+  const hits: SiteCategory[] = [];
+  for (const c of SITE_CATEGORIES) {
+    const needles = [c.key, c.ar, c.en].map(s => s.toLowerCase());
+    if (needles.some(n => n && hay.includes(n))) hits.push(c);
+  }
+  return hits;
+}
