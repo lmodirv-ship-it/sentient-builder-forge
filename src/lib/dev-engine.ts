@@ -51,21 +51,77 @@ type Writer = {
   write: (filename: string, content: string) => Promise<string>; // returns saved path or filename
 };
 
-async function pickWriter(): Promise<Writer> {
+// IndexedDB: persist the picked directory handle across sessions.
+const IDB_NAME = "nawat-engine-fs";
+const IDB_STORE = "handles";
+function idb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbGet<T = any>(key: string): Promise<T | undefined> {
+  const db = await idb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, "readonly");
+    const r = tx.objectStore(IDB_STORE).get(key);
+    r.onsuccess = () => resolve(r.result as T | undefined);
+    r.onerror = () => reject(r.error);
+  });
+}
+async function idbSet(key: string, value: any): Promise<void> {
+  const db = await idb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, "readwrite");
+    tx.objectStore(IDB_STORE).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbDel(key: string): Promise<void> {
+  const db = await idb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, "readwrite");
+    tx.objectStore(IDB_STORE).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function makeFsWriter(dir: any): Writer {
+  return {
+    kind: "fs",
+    folderName: dir.name,
+    write: async (filename, content) => {
+      const fh = await dir.getFileHandle(filename, { create: true });
+      const w = await fh.createWritable();
+      await w.write(content);
+      await w.close();
+      return `${dir.name}/${filename}`;
+    },
+  };
+}
+
+async function pickWriter(forceNew = false): Promise<Writer> {
   const anyWin = window as any;
   if (typeof anyWin.showDirectoryPicker === "function") {
-    const dir = await anyWin.showDirectoryPicker({ id: "nawat-engine", mode: "readwrite" });
-    return {
-      kind: "fs",
-      folderName: dir.name,
-      write: async (filename, content) => {
-        const fh = await dir.getFileHandle(filename, { create: true });
-        const w = await fh.createWritable();
-        await w.write(content);
-        await w.close();
-        return `${dir.name}/${filename}`;
-      },
-    };
+    // Try to reuse previously granted folder.
+    if (!forceNew) {
+      try {
+        const saved: any = await idbGet("dir");
+        if (saved) {
+          const perm = await saved.queryPermission?.({ mode: "readwrite" });
+          if (perm === "granted" || (await saved.requestPermission?.({ mode: "readwrite" })) === "granted") {
+            return makeFsWriter(saved);
+          }
+        }
+      } catch {}
+    }
+    const dir = await anyWin.showDirectoryPicker({ id: "nawat-engine", mode: "readwrite", startIn: "documents" });
+    try { await idbSet("dir", dir); } catch {}
+    return makeFsWriter(dir);
   }
   // Fallback: trigger downloads (browser saves to default Downloads folder).
   return {
