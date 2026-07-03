@@ -12,8 +12,4 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  // Required for Electron (file://) builds — keep asset paths relative.
-  vite: {
-    base: "./",
-  },
 });
