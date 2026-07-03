@@ -68,6 +68,7 @@ type ChatMsg = {
   text: string;
   imageUrl?: string;
   audioUrl?: string;
+  videoUrl?: string;
   htmlPayload?: string;
   running?: boolean;
 };
