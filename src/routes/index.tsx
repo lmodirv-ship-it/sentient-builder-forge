@@ -629,10 +629,9 @@ function Home() {
 
       <main className="max-w-6xl mx-auto px-4 pb-16">
         <Tabs defaultValue="chat" className="w-full">
-          <TabsList className="grid grid-cols-3 w-full max-w-xl mx-auto p-1 bg-card/40 backdrop-blur-md border border-border rounded-2xl h-auto">
+          <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto p-1 bg-card/40 backdrop-blur-md border border-border rounded-2xl h-auto">
             <TabsTrigger value="chat" className="gap-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"><MessageSquare className="size-4" />{t("اسأل", "Ask")}</TabsTrigger>
             <TabsTrigger value="memory" className="gap-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"><BookOpen className="size-4" />{t("الذاكرة", "Memory")}</TabsTrigger>
-            <TabsTrigger value="network" className="gap-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"><Network className="size-4" />{t("شبكة HN", "HN Network")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="chat" className="mt-6">
@@ -1004,9 +1003,6 @@ function Home() {
             </div>
           </TabsContent>
 
-          <TabsContent value="network" className="mt-6">
-            <EcosystemBrowser lang={lang} />
-          </TabsContent>
         </Tabs>
 
         <p className="text-xs text-muted-foreground text-center mt-8">
