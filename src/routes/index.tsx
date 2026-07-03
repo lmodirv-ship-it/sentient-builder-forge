@@ -638,6 +638,7 @@ function Home() {
   };
 
   const clearChat = () => persistChat([]);
+  const removeMsg = (id: string) => persistChat(chat.filter((m) => m.id !== id));
 
   // ===== Voice input (MediaRecorder → AI transcription) =====
   const startRec = async () => {
@@ -823,6 +824,9 @@ function Home() {
                             <img src={m.imageUrl} alt="generated" className="mt-2 rounded-lg max-w-full" />
                           )}
                           <div className="flex gap-1 mt-2 items-center">
+                            <Button variant="ghost" size="icon" className="size-7 opacity-0 group-hover:opacity-100 transition hover:text-red-400" onClick={() => removeMsg(m.id)} title={t("حذف", "Delete")}>
+                              <Trash2 className="size-3.5" />
+                            </Button>
                             <Button variant="ghost" size="icon" className="size-7 opacity-0 group-hover:opacity-100 transition" onClick={() => copyMsg(m.text)} title={t("نسخ", "Copy")}>
                               <Copy className="size-3.5" />
                             </Button>
