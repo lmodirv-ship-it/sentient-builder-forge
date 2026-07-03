@@ -653,14 +653,28 @@ function Home() {
                           {m.imageUrl && (
                             <img src={m.imageUrl} alt="generated" className="mt-2 rounded-lg max-w-full" />
                           )}
-                          <div className="flex gap-1 mt-2 opacity-0 group-hover:opacity-100 transition">
-                            <Button variant="ghost" size="icon" className="size-7" onClick={() => copyMsg(m.text)} title={t("نسخ", "Copy")}>
+                          <div className="flex gap-1 mt-2 items-center">
+                            <Button variant="ghost" size="icon" className="size-7 opacity-0 group-hover:opacity-100 transition" onClick={() => copyMsg(m.text)} title={t("نسخ", "Copy")}>
                               <Copy className="size-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="size-7" onClick={() => speak(m.text)} title={t("استمع", "Speak")}>
+                            <Button variant="ghost" size="icon" className="size-7 opacity-0 group-hover:opacity-100 transition" onClick={() => speak(m.text)} title={t("استمع", "Speak")}>
                               <Volume2 className="size-3.5" />
                             </Button>
+                            {usedCtx[m.id] && (
+                              <>
+                                <Button variant="ghost" size="icon" className="size-7 hover:text-emerald-400" onClick={() => rateAnswer(m.id, 1)} title={t("مفيد", "Helpful")}>
+                                  <span className="text-xs">👍</span>
+                                </Button>
+                                <Button variant="ghost" size="icon" className="size-7 hover:text-red-400" onClick={() => rateAnswer(m.id, -1)} title={t("غير مفيد", "Not helpful")}>
+                                  <span className="text-xs">👎</span>
+                                </Button>
+                                <span className="text-[10px] text-muted-foreground ms-auto tabular-nums">
+                                  {usedCtx[m.id].ids.length} {t("مقطع", "psg")} · {t("قوة", "top")} {usedCtx[m.id].top} · {usedCtx[m.id].tiers.map((x) => x === "core" ? "🟣" : x === "daily" ? "🟢" : "🔵").join("")}
+                                </span>
+                              </>
+                            )}
                           </div>
+
                         </div>
                       ) : (
                         m.text
