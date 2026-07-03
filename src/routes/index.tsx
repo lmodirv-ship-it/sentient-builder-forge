@@ -29,6 +29,9 @@ import {
   projectToDoc,
 } from "@/lib/nawat-sites-memory";
 import { routeSitesQuestion, findProjects, projectsForCategoryLabel } from "@/lib/nawat-sites-router";
+import { hnBridge } from "@/lib/hn-bridge";
+import { HN_PILLARS } from "@/lib/hn-ecosystem";
+import { HNStatusPill } from "@/components/HNStatusPill";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
