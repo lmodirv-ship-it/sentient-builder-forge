@@ -448,6 +448,15 @@ function Home() {
     setInput("");
     setThinking(true);
     try {
+      // Sites router: if the question is about the user's HN sites,
+      // prepend the matched project cards to the context and use sites mode.
+      const sitesRoute = routeSitesQuestion(text);
+      const forcedSiteDocs: Doc[] = sitesRoute.isSitesQuestion
+        ? (sitesRoute.matched.length
+            ? sitesRoute.matched.map((p) => projectToDoc(p))
+            : getProjectDocs().slice(0, 6))
+        : [];
+
       // Query expansion (with graceful fallback to the raw text).
       let variants: string[] = [text];
       try {
@@ -462,12 +471,17 @@ function Home() {
       const topScore = top[0]?.score ?? 0;
       const tiersUsed = Array.from(new Set(top.map((h) => h.tier || "long")));
 
+      // Merge: forced site docs first, then retrieved docs (dedup by id).
+      const seenCtx = new Set<string>();
+      const mergedCtx = [...forcedSiteDocs, ...withN].filter((d) => (seenCtx.has(d.id) ? false : (seenCtx.add(d.id), true))).slice(0, 12);
+
       const history = baseChat.slice(-6).map((m) => ({ role: m.role, text: m.text }));
       const { text: reply } = await ask({
         data: {
           question: text,
           lang,
-          context: withN.map((h) => ({
+          mode: sitesRoute.isSitesQuestion ? "sites" : "default",
+          context: mergedCtx.map((h) => ({
             title: h.title,
             content: h.content.slice(0, 1000),
             source: h.source,
