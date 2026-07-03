@@ -419,7 +419,10 @@ function Home() {
     const allCmd = raw.match(/^\/(all|كل|الكل|فئات)\s*$/i);
     const catCmd = raw.match(/^\/(cat|category|فئة|قسم)\s+([\s\S]+)/i);
     const searchCmd = raw.match(/^\/(find|search|ابحث|بحث)\s+([\s\S]+)/i);
-    if (sitesCmd || siteCmd || tasksCmd || allCmd || catCmd || searchCmd) {
+    const trustCmd = raw.match(/^\/(trust|ثقة|ملكية|tvcc)\s*$/i);
+    const dataCmd = raw.match(/^\/(data|db|بيانات|قاعدة)\s+([\s\S]+)/i);
+    const filesCmd = raw.match(/^\/(files|cloud|ملفات|سحابة)\s+([\s\S]+)/i);
+    if (sitesCmd || siteCmd || tasksCmd || allCmd || catCmd || searchCmd || trustCmd || dataCmd || filesCmd) {
       const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
       let reply = "";
       if (sitesCmd) {
