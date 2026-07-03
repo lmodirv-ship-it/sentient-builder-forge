@@ -8,8 +8,17 @@ const Input = z.object({
 export const generateImage = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => Input.parse(i))
   .handler(async ({ data }) => {
+    // 1) Try HN's own service first (generatin.hn-groupe.org) if configured.
+    const { hnGenerateImage } = await import("./hn-clients.server");
+    const hn = await hnGenerateImage(data.prompt);
+    if (hn.ok) return { imageUrl: hn.imageUrl, error: null, via: "hn" as const };
+    if (!("notConfigured" in hn) || !hn.notConfigured) {
+      // configured but failed — log and continue to Lovable fallback
+      console.warn("[nawat-image] HN generatin failed:", hn.error);
+    }
+
     const key = process.env.LOVABLE_API_KEY;
-    if (!key) return { imageUrl: "", error: "Missing LOVABLE_API_KEY" };
+    if (!key) return { imageUrl: "", error: "Missing LOVABLE_API_KEY", via: "none" as const };
 
     const subject = data.prompt.trim();
     // Force an unambiguous image-generation instruction so chat models don't reply with text.
