@@ -384,6 +384,32 @@ function Home() {
       return;
     }
 
+    // Local slash commands for HN sites — no AI call, pure memory.
+    const sitesCmd = raw.match(/^\/(sites|مواقعي|مواقع)\s*$/i);
+    const siteCmd = raw.match(/^\/(site|موقع)\s+([\s\S]+)/i);
+    const tasksCmd = raw.match(/^\/(tasks|مهام)\s+([\s\S]+)/i);
+    if (sitesCmd || siteCmd || tasksCmd) {
+      const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+      let reply = "";
+      if (sitesCmd) {
+        reply = renderAllSites(lang);
+      } else if (siteCmd) {
+        const p = findProject(siteCmd[2]);
+        reply = p
+          ? renderProjectCard(p, lang)
+          : t(`لا أجد مشروعاً باسم "${siteCmd[2]}".`, `No project matches "${siteCmd[2]}".`);
+      } else if (tasksCmd) {
+        const p = findProject(tasksCmd[1] === "tasks" ? tasksCmd[2] : tasksCmd[2]);
+        reply = p
+          ? renderProjectTasks(p, lang)
+          : t(`لا أجد مشروعاً باسم "${tasksCmd[2]}".`, `No project matches "${tasksCmd[2]}".`);
+      }
+      const assistant: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: reply };
+      persistChat([...chat, user, assistant]);
+      setInput("");
+      return;
+    }
+
     // Expand other slash commands into natural prompts
     let text = raw;
     const cmd = raw.match(/^\/(\S+)\s*([\s\S]*)$/);
