@@ -15,6 +15,7 @@ import {
   Mic, Square, Volume2, Copy, Image as ImageIcon, FileDown, Wand2,
   FolderOpen, HardDrive,
 } from "lucide-react";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { searchTFIDF, searchHybrid, rerank, withNeighbors, chunkText, type Doc } from "@/lib/nawat-search";
 import { expandQuery } from "@/lib/nawat-query-expand.functions";
 import { extractPdfText } from "@/lib/pdf-extract";
