@@ -461,51 +461,73 @@ function Home() {
     const raw = (input || inputRef.current?.value || "").trim();
     if (!raw || thinking) return;
 
-    // Media requests → always route to HN Groupe services (image/video/audio/…)
-    // instead of using built-in generators. Nawat is a router to your own tools.
-    const imgIntent = /^\/(?:صورة|image|img)\b/i.test(raw)
-      || /\b(انشئ|أنشئ|اصنع|ولّد|ولد|اعمل|ارسم|generate|create|make|draw)\b.*\b(صور[ةه]?|image|picture|photo|illustration|logo|شعار|بوستر|poster|thumbnail)\b/i.test(raw)
-      || /\b(صور[ةه]?|image|picture|photo|logo|شعار)\b.*\b(انشئ|أنشئ|اصنع|ولّد|generate|create|make|draw)\b/i.test(raw);
-    const vidIntent = /^\/(?:فيديو|فديو|video|vid)\b/i.test(raw)
-      || /\b(انشئ|أنشئ|اصنع|ولّد|ولد|اعمل|generate|create|make|produce)\b.*\b(فيديو|فديو|video|clip|film|فلم|movie|مقطع)\b/i.test(raw)
-      || /\b(فيديو|فديو|video|clip|film|فلم|movie)\b.*\b(انشئ|أنشئ|اصنع|ولّد|generate|create|make)\b/i.test(raw);
-    if (imgIntent || vidIntent) {
+    // ── Executor: creation intents run in background via the matching HN site.
+    const exec = detectExecutor(raw);
+    if (exec) {
+      const { def, prompt } = exec;
+      const promptText = prompt || raw;
       const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
-      const promptText = raw.replace(/^\/(?:صورة|image|img|فيديو|فديو|video|vid)\s*/i, "").trim();
-      const q = promptText ? encodeURIComponent(promptText) : "";
-      const kind = vidIntent ? "video" : "image";
-      const tools = kind === "image"
-        ? [
-            { name: "HN AI Generation", url: "https://generatin.hn-groupe.org" },
-            { name: "HN AI Studio",     url: "https://ai.hn-groupe.org" },
-            { name: "HN AI Pro",        url: "https://hn-ai.pro" },
-          ]
-        : [
-            { name: "HN Video Studio",  url: "https://studio.hn-createur.com" },
-            { name: "HN Video",         url: "https://video.hn-groupe.net" },
-            { name: "HN Cinema",        url: "https://cinema.hn-groupe.org" },
-            { name: "HN Film",          url: "https://film.hn-groupe.net" },
-          ];
-      const header = kind === "image"
-        ? t("🎨 لإنشاء صورة، استخدم أدوات مجموعة HN المخصّصة:", "🎨 To generate an image, use HN Groupe's dedicated tools:")
-        : t("🎬 لإنشاء فيديو، استخدم أستوديوهات مجموعة HN:", "🎬 To create a video, use HN Groupe's studios:");
-      const lines = tools.map(({ name, url }) => {
-        const link = q ? `${url}?q=${q}` : url;
-        return `- [${name}](${link})`;
-      });
-      const promptLine = promptText
-        ? `\n\n**${t("الطلب", "Prompt")}:** ${promptText}`
-        : "";
-      const tip = t(
-        "\n\n> النواة توجّهك دائماً إلى مواقعك الخاصة بدل استخدام مولّدات خارجية.",
-        "\n\n> Nawat always routes you to your own HN sites instead of external generators.",
-      );
-      const reply = `${header}\n${lines.join("\n")}${promptLine}${tip}`;
-      const assistant: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: reply };
-      persistChat([...chat, user, assistant]);
+      const runId = crypto.randomUUID();
+      const runningMsg: ChatMsg = {
+        id: runId,
+        role: "assistant",
+        text: runningHeader(def, promptText, lang),
+        running: true,
+      };
+      const baseChat = [...chat, user, runningMsg];
+      persistChat(baseChat);
       setInput("");
+      if (inputRef.current) inputRef.current.value = "";
+
+      const finish = (patch: Partial<ChatMsg>, replyText: string) => {
+        const done: ChatMsg = {
+          id: runId,
+          role: "assistant",
+          text: replyText + stamp(def, lang),
+          running: false,
+          ...patch,
+        };
+        persistChat(baseChat.map((m) => (m.id === runId ? done : m)));
+      };
+      const fail = (err: string) => {
+        const q = promptText ? `?q=${encodeURIComponent(promptText)}` : "";
+        const msg = t(
+          `⚠️ تعذّر التنفيذ الآلي (${err}). افتح [${def.siteName}](${def.siteUrl}${q}) مباشرة.`,
+          `⚠️ Auto-run failed (${err}). Open [${def.siteName}](${def.siteUrl}${q}) directly.`,
+        );
+        persistChat(baseChat.map((m) => (m.id === runId ? { ...m, text: msg, running: false } : m)));
+      };
+
+      try {
+        if (def.id === "image") {
+          const r = await imageGen({ data: { prompt: promptText } });
+          if (r.error || !r.imageUrl) return fail(r.error || "no image");
+          finish({ imageUrl: r.imageUrl }, t(`✅ **${def.labelAr}** جاهزة.`, `✅ **${def.labelEn}** ready.`));
+        } else if (def.id === "tts") {
+          const r = await speechGen({ data: { text: promptText } });
+          if (r.error || !r.audioBase64) return fail(r.error || "no audio");
+          const url = `data:${r.mime || "audio/mpeg"};base64,${r.audioBase64}`;
+          finish({ audioUrl: url }, t(`✅ **${def.labelAr}** جاهز.`, `✅ **${def.labelEn}** ready.`));
+        } else if (def.id === "site") {
+          const r = await siteGen({ data: { prompt: promptText, lang } });
+          if (r.error || !r.html) return fail(r.error || "no html");
+          finish({ htmlPayload: r.html }, t(`✅ **${def.labelAr}** جاهز. معاينة وتنزيل بالأسفل.`, `✅ **${def.labelEn}** ready. Preview & download below.`));
+        } else {
+          // video / cv / other: route (open) instead of run — not wired to a backend yet.
+          const q = promptText ? `?q=${encodeURIComponent(promptText)}` : "";
+          const msg = t(
+            `${def.emoji} افتح [${def.siteName}](${def.siteUrl}${q}) لإتمام الطلب — التشغيل الآلي غير متوفر بعد لهذه الخدمة.`,
+            `${def.emoji} Open [${def.siteName}](${def.siteUrl}${q}) to complete the request — auto-run not wired for this service yet.`,
+          );
+          persistChat(baseChat.map((m) => (m.id === runId ? { ...m, text: msg + stamp(def, lang), running: false } : m)));
+        }
+      } catch (e: any) {
+        fail(String(e?.message || e));
+      }
       return;
     }
+
+
 
     // ── Wave 2 · Service router: /خدمة /service /افتح /open <name>
     const svcCmd = raw.match(/^\/(?:خدمة|خدمه|service|svc|افتح|open|نفّذ|نفذ|execute)\s+([\s\S]+)/i);
