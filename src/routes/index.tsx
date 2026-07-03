@@ -332,6 +332,8 @@ function Home() {
     return list;
   }, [docs, query, activeTag, activeCategory]);
 
+  const highlightTerms = useMemo(() => queryTerms(query), [query]);
+
   const send = async () => {
     const raw = input.trim();
     if (!raw || thinking) return;
