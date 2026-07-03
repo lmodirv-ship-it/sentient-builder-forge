@@ -78,12 +78,18 @@ export function projectToDoc(p: HNProject): Doc {
     .join("\n");
   const aliases = p.aliases?.length ? `\n\nنطاقات بديلة:\n${p.aliases.map((a) => `• ${a}`).join("\n")}` : "";
 
+  const pillarLine = p.pillar && p.pillar !== "app"
+    ? `\n\n🏛️ **ركيزة رسمية:** ${p.pillar === "trust-anchor" ? "مرجع الملكية (TVCC)" : p.pillar === "data-core" ? "قاعدة البيانات المركزية" : "التخزين السحابي (HN-Cloud)"}`
+    : "";
+  const stamp = `\n\n— — —\n✅ الملكية: ${HN_PILLARS.trust.name} (${HN_PILLARS.trust.url}) · 🗄️ البيانات: ${HN_PILLARS.data.name} (${HN_PILLARS.data.url}) · ☁️ الملفات: ${HN_PILLARS.files.name} (${HN_PILLARS.files.url})`;
+
   const content =
-    `${p.summary}\n\n` +
+    `${p.summary}${pillarLine}\n\n` +
     `التصنيف: ${cat.icon} ${cat.ar}\n` +
     `الرابط الرئيسي: ${p.primary}\n\n` +
     `المهام / القدرات:\n${tasks.map((x) => `• ${x}`).join("\n")}\n\n` +
-    `الواجهات (${p.interfaces.length}):\n${ifaces}${aliases}`;
+    `الواجهات (${p.interfaces.length}):\n${ifaces}${aliases}${stamp}`;
+
 
   return {
     id: `hn-project-${p.id}`,
