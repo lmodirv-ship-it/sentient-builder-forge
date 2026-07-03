@@ -108,7 +108,7 @@ async function createWindow() {
       <p class="muted">تأكد من الاتصال بالإنترنت، ثم أعد المحاولة. تم تعطيل تسريع الرسوميات ومسح كاش الخدمة لتجنب الشاشة الخضراء.</p>
       <code>${LOCAL_DATA.replace(/\\/g, "/")}</code>
       <p class="muted">${String(code)} ${String(desc)}</p>
-      <div><button onclick="location.href='${APP_URL}'">إعادة المحاولة</button><button class="ghost" onclick="require('electron').shell.openExternal('${APP_URL}')">فتح في المتصفح</button></div></div></body></html>`;
+      <div><button onclick="location.href='${APP_URL}'">إعادة المحاولة</button><button class="ghost" onclick="window.open('${APP_URL}', '_blank')">فتح في المتصفح</button></div></div></body></html>`;
     mainWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(html));
   };
 
