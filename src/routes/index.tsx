@@ -1032,12 +1032,6 @@ function Home() {
 
         </Tabs>
 
-        <p className="text-xs text-muted-foreground text-center mt-8">
-          {t(
-            "كل البيانات محفوظة في متصفحك فقط. استخدم زر «نسخ احتياطي» لحفظ ملف JSON على جهازك.",
-            "All data is stored only in this browser. Use Backup to save a JSON file to your device.",
-          )}
-        </p>
       </main>
     </div>
   );
