@@ -449,6 +449,28 @@ function Home() {
         reply = p
           ? renderProjectTasks(p, lang)
           : t(`لا أجد مشروعاً باسم "${tasksCmd[2]}".`, `No project matches "${tasksCmd[2]}".`);
+      } else if (trustCmd) {
+        const T = HN_PILLARS.trust, D = HN_PILLARS.data, F = HN_PILLARS.files;
+        reply = t(
+          `### 🏛️ ركائز منظومة HN\n\n1. **${T.name}** — ${T.purposeAr}\n   [${T.url}](${T.url})\n2. **${D.name}** — ${D.purposeAr}\n   [${D.url}](${D.url})\n3. **${F.name}** — ${F.purposeAr}\n   [${F.url}](${F.url})\n\n> ${hnBridge.identity.badgeAr} — كل مواقع HN مُثبتة الملكية عبر هذا المرجع.`,
+          `### 🏛️ HN Pillars\n\n1. **${T.name}** — ${T.purposeEn}\n   [${T.url}](${T.url})\n2. **${D.name}** — ${D.purposeEn}\n   [${D.url}](${D.url})\n3. **${F.name}** — ${F.purposeEn}\n   [${F.url}](${F.url})\n\n> ${hnBridge.identity.badgeEn}`,
+        );
+      } else if (dataCmd) {
+        const p = findProject(dataCmd[2]);
+        const id = p?.id ?? dataCmd[2].trim();
+        const url = hnBridge.db.projectSpace(id);
+        reply = t(
+          `### 🗄️ بيانات ${p?.name ?? id} على HN-DB\n\n[${url}](${url})\n\n> ${hnBridge.identity.badgeAr}`,
+          `### 🗄️ ${p?.nameEn ?? id} data on HN-DB\n\n[${url}](${url})\n\n> ${hnBridge.identity.badgeEn}`,
+        );
+      } else if (filesCmd) {
+        const p = findProject(filesCmd[2]);
+        const id = p?.id ?? filesCmd[2].trim();
+        const url = hnBridge.cloud.folder(id);
+        reply = t(
+          `### ☁️ ملفات ${p?.name ?? id} على HN-Cloud\n\n[${url}](${url})\n\n> ${hnBridge.identity.badgeAr}`,
+          `### ☁️ ${p?.nameEn ?? id} files on HN-Cloud\n\n[${url}](${url})\n\n> ${hnBridge.identity.badgeEn}`,
+        );
       }
       const assistant: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: reply };
       persistChat([...chat, user, assistant]);
