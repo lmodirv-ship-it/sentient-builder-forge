@@ -77,6 +77,7 @@ function Home() {
   const [query, setQuery] = useState("");
   const [input, setInput] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [recording, setRecording] = useState(false);
