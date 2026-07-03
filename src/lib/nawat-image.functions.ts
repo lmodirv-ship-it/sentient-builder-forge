@@ -11,64 +11,84 @@ export const generateImage = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) return { imageUrl: "", error: "Missing LOVABLE_API_KEY" };
 
-    // Expand very short/vague prompts so the model actually renders something.
-    let prompt = data.prompt.trim();
-    if (prompt.length < 12) {
-      prompt = `${prompt} — صورة فنية عالية الجودة، إضاءة سينمائية، تفاصيل دقيقة، ألوان غنية، 4K`;
-    }
+    const subject = data.prompt.trim();
+    // Force an unambiguous image-generation instruction so chat models don't reply with text.
+    const richPrompt = `Generate a high-quality, detailed image of: ${subject}. Cinematic lighting, rich colors, 4K, professional composition.`;
 
     async function tryImagesEndpoint(model: string) {
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-        body: JSON.stringify({
-          model,
-          prompt,
-          size: "1024x1024",
-          quality: "low",
-          n: 1,
-        }),
-      });
-      if (!res.ok) {
-        const t = await res.text().catch(() => "");
-        return { url: "", err: `HTTP ${res.status}: ${t.slice(0, 200)}` };
+      try {
+        const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+          body: JSON.stringify({
+            model,
+            prompt: richPrompt,
+            size: "1024x1024",
+            quality: "low",
+            n: 1,
+          }),
+        });
+        if (!res.ok) {
+          const t = await res.text().catch(() => "");
+          return { url: "", err: `${model} HTTP ${res.status}: ${t.slice(0, 200)}` };
+        }
+        const j: any = await res.json().catch(() => null);
+        const b64: string = j?.data?.[0]?.b64_json ?? "";
+        if (!b64) return { url: "", err: `${model}: empty payload` };
+        return { url: `data:image/png;base64,${b64}`, err: "" };
+      } catch (e: any) {
+        return { url: "", err: `${model}: ${String(e?.message || e)}` };
       }
-      const j: any = await res.json().catch(() => null);
-      const b64: string = j?.data?.[0]?.b64_json ?? "";
-      if (!b64) return { url: "", err: "No image returned" };
-      return { url: `data:image/png;base64,${b64}`, err: "" };
     }
 
     async function tryGeminiChat(model: string) {
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: "user", content: prompt }],
-          modalities: ["image", "text"],
-        }),
-      });
-      if (!res.ok) {
-        const t = await res.text().catch(() => "");
-        return { url: "", err: `HTTP ${res.status}: ${t.slice(0, 200)}` };
+      try {
+        const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: "user",
+                content: `You are an image generator. Do NOT reply with text. Output ONLY an image. Subject: ${subject}. Style: cinematic, high detail, 4K.`,
+              },
+            ],
+            modalities: ["image", "text"],
+          }),
+        });
+        if (!res.ok) {
+          const t = await res.text().catch(() => "");
+          return { url: "", err: `${model} HTTP ${res.status}: ${t.slice(0, 200)}` };
+        }
+        const j: any = await res.json().catch(() => null);
+        const msg = j?.choices?.[0]?.message;
+        const url: string =
+          msg?.images?.[0]?.image_url?.url ??
+          msg?.images?.[0]?.url ??
+          "";
+        return { url, err: url ? "" : `${model}: no image in response` };
+      } catch (e: any) {
+        return { url: "", err: `${model}: ${String(e?.message || e)}` };
       }
-      const j: any = await res.json().catch(() => null);
-      const url: string = j?.choices?.[0]?.message?.images?.[0]?.image_url?.url ?? "";
-      return { url, err: url ? "" : "No image returned" };
     }
 
-    // Primary: OpenAI gpt-image-2 (most reliable via images endpoint).
-    let out = await tryImagesEndpoint("openai/gpt-image-2");
-    if (out.url) return { imageUrl: out.url, error: null };
+    // Primary: OpenAI gpt-image-2.
+    const errs: string[] = [];
+    const a = await tryImagesEndpoint("openai/gpt-image-2");
+    if (a.url) return { imageUrl: a.url, error: null };
+    errs.push(a.err);
 
-    // Fallback 1: Gemini flash image via chat.
-    const g1 = await tryGeminiChat("google/gemini-2.5-flash-image");
-    if (g1.url) return { imageUrl: g1.url, error: null };
+    // Fallback: Nano Banana 2 (better instruction following than 2.5-flash).
+    const b = await tryGeminiChat("google/gemini-3.1-flash-image");
+    if (b.url) return { imageUrl: b.url, error: null };
+    errs.push(b.err);
 
-    // Fallback 2: Nano Banana 2.
-    const g2 = await tryGeminiChat("google/gemini-3.1-flash-image");
-    if (g2.url) return { imageUrl: g2.url, error: null };
+    // Last resort: 2.5-flash-image.
+    const c = await tryGeminiChat("google/gemini-2.5-flash-image");
+    if (c.url) return { imageUrl: c.url, error: null };
+    errs.push(c.err);
 
-    return { imageUrl: "", error: out.err || g1.err || g2.err || "No image returned" };
+    console.error("[nawat-image] all providers failed:", errs);
+    return { imageUrl: "", error: errs.join(" | ") };
   });

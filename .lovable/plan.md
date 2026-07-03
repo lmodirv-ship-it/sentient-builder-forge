@@ -1,32 +1,53 @@
-# Fix: "تعذّر الاتصال بنواة الذكاء" (server functions returning 500)
 
-## Root cause
+# هل يمكن تحقيق ما طلبت؟ — نعم، جزئياً الآن وكلياً بخطوات واضحة
 
-`vite.config.ts` sets `vite: { base: "./" }` (originally added for Electron `file://` builds).
+## الوضع الحالي (ما يعمل فعلاً)
+- **الكشف عن النية** يعمل: «صمم صورة / حوّل لصوت / صمم موقع» تُلتقط بواسطة `nawat-executor.ts`.
+- **التنفيذ في الخلفية + عرض النتيجة في الشات** جاهز في `routes/index.tsx` (صورة، مشغّل صوت، iframe للموقع).
+- **المزوّد الحالي للتنفيذ = Lovable AI Gateway** (نموذج داخلي)، وليس مواقع HN الفعلية. الرسالة تقول «يعمل عبر HN AI Generation» لأغراض العرض فقط.
 
-TanStack Start uses that `base` to build `TSS_SERVER_FN_BASE`, so it becomes `./_serverFn/` instead of `/_serverFn/`.
+## ما لا يمكن تلقائياً (قيود حقيقية)
+مواقعك (`generatin.hn-groupe.org`, `ai.hn-groupe.org`, `site.hn-groupe.tech`...) هي **مواقع ويب بواجهات بشرية**، وليست **APIs موثّقة**. لا يمكن للسيرفر أن «يفتح موقعاً ويضغط أزرار» ويعيد نتيجة إلا بأحد ثلاثة شروط:
 
-- The client generates URLs like `./_serverFn/<hash>`, which the browser resolves to `/./_serverFn/<hash>` (visible in the network log).
-- The server normalizes the pathname to `/_serverFn/<hash>` and checks `pathname.startsWith('./_serverFn/')` — this fails.
-- The request falls through to the page router, whose `Accept`-header check rejects it with `{"error":"Only HTML requests are supported here"}` and status 500.
+1. **يوفّر الموقع REST API** (endpoint + مفتاح) — الحل الأنظف.
+2. **يوفّر webhook** يستقبل الطلب ويعيد النتيجة على callback.
+3. **تشغيل متصفح بلا واجهة (Playwright)** على سيرفرك الخاص — غير ممكن داخل Cloudflare Worker (بيئة Lovable الحالية)، يحتاج VPS منفصل.
 
-Result: every `createServerFn` call (including `askNawat`) fails, and the chat shows "تعذّر الاتصال بنواة الذكاء. حاول مجدداً."
+## الخطة المقترحة (٣ مسارات، اختر ما يناسب)
 
-## Change
+### المسار A — تنفيذ فوري بمزوّد Lovable + بصمة HN (الوضع الحالي، محسّن)
+- إبقاء التوليد على Lovable AI (يعمل الآن).
+- توضيح للمستخدم أن «HN AI Generation» هو **الواجهة**، والنواة تنفّذ نيابة عنه.
+- إصلاح خطأ الصورة الأخير («No image returned») عبر تسجيل استجابة الـ Gateway ومعالجة `content_policy` و 402/429.
+- **الوقت:** فوري. **الفائدة:** يشتغل اليوم بدون تعديل مواقعك.
 
-Edit `vite.config.ts`: remove the `vite: { base: "./" }` block. This project is a Lovable web app served from `/`, not an Electron `file://` build, so relative base is not needed and actively breaks server functions.
+### المسار B — ربط مواقع HN عبر API حقيقي (التوصية طويلة الأمد)
+لكل موقع نضيف عميلاً (client) في `src/lib/hn-clients/`:
+- `hn-generatin.ts` → `POST https://api.generatin.hn-groupe.org/v1/image` (يحتاج endpoint + key)
+- `hn-ai-studio.ts` → TTS
+- `hn-site-builder.ts` → HTML generation
+- `hn-video.ts`, `hn-cv.ts`, ...
 
-```ts
-export default defineConfig({
-  tanstackStart: {
-    server: { entry: "server" },
-  },
-});
-```
+**متطلبات منك:**
+| الموقع | يحتاج |
+|---|---|
+| generatin.hn-groupe.org | URL الـ API + مفتاح |
+| ai.hn-groupe.org | URL + مفتاح |
+| site.hn-groupe.tech | URL + مفتاح |
+| studio.hn-createur.com | URL + مفتاح |
+| buildcv-ai.online | URL + مفتاح |
 
-## Verify
+نُخزّن المفاتيح كـ secrets (`HN_GENERATIN_KEY` …) عبر أداة الأسرار.
 
-1. Reload the preview.
-2. Send an Arabic question in the chat (e.g. "مواقعي").
-3. Expect a 200 response from `/_serverFn/<hash>` and a real answer rendered, no toast error.
-4. Network tab: request path should be `/_serverFn/...` (no leading `/./`).
+### المسار C — Job Queue غير متزامن (للمهام الطويلة كالفيديو)
+- النواة ترسل الطلب → تُنشئ `job_id` في Supabase → الموقع يرد لاحقاً على `/api/public/hn-callback`.
+- الشات يعرض «جارٍ التنفيذ» ثم يُحدَّث تلقائياً عبر realtime.
+
+## توصيتي
+1. **الآن:** تفعيل المسار A كامل + إصلاح رسالة خطأ الصورة (مسار احتياطي واضح + زر «افتح الموقع مباشرة»).
+2. **بعدها (عندما توفّر API لأي موقع):** أضيف عميل HN لذلك الموقع في `hn-clients/` وأبدّله مع Lovable AI تلقائياً في `EXECUTORS`.
+3. **للفيديو/السيرة:** المسار C عندما تجهز backends.
+
+## قرار مطلوب منك
+- **(1)** ابدأ المسار A فقط الآن (إصلاح + توضيح البصمة)؟ 
+- **(2)** أم لديك API فعلي لأحد المواقع الخمسة نبدأ بربطه في المسار B؟ إن نعم، أعطني: `base_url` + طريقة auth + مثال request/response.

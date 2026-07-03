@@ -128,6 +128,47 @@ export function detectExecutor(raw: string): { def: ExecutorDef; prompt: string 
   return null;
 }
 
+/**
+ * Extract the actual subject/topic from the user's phrase by stripping
+ * creation verbs, category nouns, and connector words. Used to detect
+ * when the user gave a command without specifying WHAT to create.
+ */
+export function extractSubject(def: ExecutorDef, raw: string): string {
+  const categoryNoun: Record<ExecutorId, RegExp> = {
+    image: /(?:صور[ةه]?|شعار|بوستر|رسم|رسمة|image|picture|photo|illustration|logo|poster|thumbnail|drawing)/gi,
+    tts: /(?:صوت|voice|audio|speech)/gi,
+    site: /(?:موقع|صفح[ةه]|واجه[ةه]|site|website|landing|page|webpage)/gi,
+    video: /(?:فيديو|فديو|فلم|مقطع|video|clip|film|movie)/gi,
+    cv: /(?:سيرة\s*ذاتيه?|سيره\s*ذاتيه?|السيرة|cv|resume|curriculum(?:\s*vitae)?)/gi,
+    content: /(?:محتوى|مقال|content|article)/gi,
+  };
+  const verbs = /(?:انشئ|أنشئ|اصنع|ولّد|ولد|اعمل|ارسم|صمم|صمّم|حو[لّ]?|اقرأ|اقرا|انطق|قل|ابن[ي]?|generate|create|make|draw|design|build|produce|render|convert)/gi;
+  const connectors = /(?:^|\s)(?:لي|لنا|لك|لهم|من\s*فضلك|رجاءً?|رجاء|please|for\s+me|for\s+us|a|an|the|new|جديد[ةه]?|واحد[ةه]?|about|عن|حول)(?=\s|$)/gi;
+  let s = raw
+    .replace(/^\/\S+\s*/i, "")
+    .replace(categoryNoun[def.id] || /(?!)/g, " ")
+    .replace(verbs, " ")
+    .replace(connectors, " ")
+    .replace(/[.,،!؟?:]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return s;
+}
+
+/** Ask the user for the missing subject in a friendly way. */
+export function subjectPrompt(def: ExecutorDef, lang: "ar" | "en"): string {
+  const isAr = lang === "ar";
+  const asks: Record<ExecutorId, [string, string]> = {
+    image: ["🖼️ ما موضوع الصورة التي تريدها؟ (مثال: «جبل عند الغروب»، «شعار لمقهى»…)", "🖼️ What should the image be about? (e.g. \"a mountain at sunset\", \"a café logo\")"],
+    tts: ["🔊 ما النص الذي أُحوّله إلى صوت؟ الصق النص كاملاً من فضلك.", "🔊 What text should I turn into speech? Please paste the full text."],
+    site: ["🧱 صف الموقع الذي تريده: الفكرة، الجمهور، الأقسام، والألوان إن أحببت.", "🧱 Describe the site: idea, audience, sections, and colors if you like."],
+    video: ["🎬 صف الفيديو: الموضوع، المدة، النبرة، واللغة.", "🎬 Describe the video: topic, duration, tone, language."],
+    cv: ["📄 من فضلك أعطني: الاسم، الوظيفة المستهدفة، الخبرات، والمهارات.", "📄 Please share: name, target role, experience, and skills."],
+    content: ["✍️ ما موضوع المحتوى ونوعه (منشور، مقال، وصف…)؟", "✍️ What's the topic and type (post, article, description…)?"],
+  };
+  return isAr ? asks[def.id][0] : asks[def.id][1];
+}
+
 /** Header line the assistant posts before running the job. */
 export function runningHeader(def: ExecutorDef, prompt: string, lang: "ar" | "en"): string {
   const isAr = lang === "ar";
