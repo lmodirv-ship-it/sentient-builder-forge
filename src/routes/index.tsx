@@ -30,6 +30,8 @@ import {
 } from "@/lib/nawat-sites-memory";
 import { routeSitesQuestion, findProjects, projectsForCategoryLabel } from "@/lib/nawat-sites-router";
 import { getCapabilityDocs, HN_CAPABILITIES_COUNT } from "@/lib/hn-capabilities";
+import { detectServiceIntent, findCapability, formatServiceReply } from "@/lib/nawat-service-router";
+import { getServiceQADocs } from "@/lib/nawat-service-qa";
 import { hnBridge } from "@/lib/hn-bridge";
 import { HN_PILLARS } from "@/lib/hn-ecosystem";
 import { HNStatusPill } from "@/components/HNStatusPill";
@@ -249,7 +251,7 @@ function Home() {
         const qa = getSitesQADocs();
         const projects = getProjectDocs();
         const caps = getCapabilityDocs();
-        const bundled = [...projects, ...caps, ...sites, ...qa];
+        const bundled = [...projects, ...caps, ...sites, ...qa, ...getServiceQADocs()];
         const ids = new Set(bundled.map(s => s.id));
         const merged = [...bundled, ...prev.filter(d => !ids.has(d.id))];
         save(K_DOCS, merged);
@@ -490,6 +492,37 @@ function Home() {
       persistChat([...chat, user, assistant]);
       setInput("");
       return;
+    }
+
+    // ── Wave 2 · Service router: /خدمة /service /افتح /open <name>
+    const svcCmd = raw.match(/^\/(?:خدمة|خدمه|service|svc|افتح|open|نفّذ|نفذ|execute)\s+([\s\S]+)/i);
+    if (svcCmd) {
+      const cap = findCapability(svcCmd[1]);
+      const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+      const reply = cap
+        ? formatServiceReply(
+            { matched: true, confidence: 1, capability: cap, role: null, provider: [...cap.providers].sort((a, b) => a.priority - b.priority)[0], actionUrl: null, alternatives: [] },
+            lang,
+            svcCmd[1],
+          )
+        : t(`لا أجد خدمة باسم "${svcCmd[1]}". جرّب /سsites أو /ابحث.`, `No service named "${svcCmd[1]}". Try /sites or /search.`);
+      persistChat([...chat, user, { id: crypto.randomUUID(), role: "assistant", text: reply }]);
+      setInput("");
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+
+    // ── Wave 2 · High-confidence natural-language service intent — skip AI.
+    if (!raw.startsWith("/")) {
+      const intent = detectServiceIntent(raw);
+      if (intent.matched && intent.confidence >= 0.7 && intent.capability) {
+        const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+        const reply = formatServiceReply(intent, lang, raw);
+        persistChat([...chat, user, { id: crypto.randomUUID(), role: "assistant", text: reply }]);
+        setInput("");
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
     }
 
     // Local slash commands for HN sites — no AI call, pure memory.
