@@ -90,6 +90,63 @@ function Highlight({ text, terms }: { text: string; terms: string[] }) {
   );
 }
 
+function NeuralBrain({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <defs>
+        <linearGradient id="filament-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="var(--primary)" />
+          <stop offset="100%" stopColor="var(--gold)" />
+        </linearGradient>
+        <filter id="filament-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      {/* Brain outline */}
+      <g stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7">
+        {/* Left hemisphere */}
+        <path d="M60,22 C45,22 32,30 26,45 C22,55 22,68 28,78 C34,90 46,98 58,100" />
+        {/* Right hemisphere */}
+        <path d="M60,22 C75,22 88,30 94,45 C98,55 98,68 92,78 C86,90 74,98 62,100" />
+        {/* Center groove */}
+        <path d="M60,22 L60,100" />
+        {/* Left inner folds */}
+        <path d="M36,42 Q44,52 38,64" opacity="0.5" />
+        <path d="M32,58 Q42,68 36,80" opacity="0.5" />
+        {/* Right inner folds */}
+        <path d="M84,42 Q76,52 82,64" opacity="0.5" />
+        <path d="M88,58 Q78,68 84,80" opacity="0.5" />
+      </g>
+      {/* Animated light filaments */}
+      <g filter="url(#filament-glow)" stroke="url(#filament-grad)" strokeWidth="1.5" strokeLinecap="round" fill="none">
+        <path d="M35,40 Q45,55 35,70" className="filament" strokeDasharray="60" strokeDashoffset="60" />
+        <path d="M45,35 Q55,50 45,80" className="filament" strokeDasharray="80" strokeDashoffset="80" style={{ animationDelay: "0.4s" }} />
+        <path d="M85,40 Q75,55 85,70" className="filament" strokeDasharray="60" strokeDashoffset="60" style={{ animationDelay: "0.8s" }} />
+        <path d="M75,35 Q65,50 75,80" className="filament" strokeDasharray="80" strokeDashoffset="80" style={{ animationDelay: "1.2s" }} />
+        <path d="M50,50 Q60,65 70,50" className="filament" strokeDasharray="50" strokeDashoffset="50" style={{ animationDelay: "1.6s" }} />
+        <path d="M40,60 Q50,75 60,65" className="filament" strokeDasharray="55" strokeDashoffset="55" style={{ animationDelay: "2s" }} />
+        <path d="M80,60 Q70,75 60,65" className="filament" strokeDasharray="55" strokeDashoffset="55" style={{ animationDelay: "2.4s" }} />
+        <path d="M60,30 Q50,45 60,60" className="filament" strokeDasharray="50" strokeDashoffset="50" style={{ animationDelay: "2.8s" }} />
+        <path d="M60,30 Q70,45 60,60" className="filament" strokeDasharray="50" strokeDashoffset="50" style={{ animationDelay: "3.2s" }} />
+      </g>
+      {/* Subtle core glow nodes */}
+      <circle cx="60" cy="60" r="3" fill="var(--gold)" opacity="0.8">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="45" cy="55" r="2" fill="var(--primary)" opacity="0.6">
+        <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2.4s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="75" cy="55" r="2" fill="var(--primary)" opacity="0.6">
+        <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2.8s" repeatCount="indefinite" />
+      </circle>
+    </svg>
+  );
+}
+
 function bumpStreak(s: Streak): Streak {
   const t = todayISO();
   if (s.last === t) return s;
