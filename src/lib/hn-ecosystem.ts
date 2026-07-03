@@ -537,3 +537,11 @@ export const HOOK_LABEL: Record<IntegrationHook, { ar: string; en: string }> = {
   "chat-bridge":      { ar: "جسر محادثة",        en: "Chat bridge" },
   "self":             { ar: "أنت هنا",           en: "You are here" },
 };
+
+// ── Pillar accessors
+export function getPillarProject(kind: HNPillar): HNProject | undefined {
+  return HN_PROJECTS.find((p) => p.pillar === kind);
+}
+export function isPillar(p: HNProject): boolean {
+  return !!p.pillar && p.pillar !== "app";
+}
