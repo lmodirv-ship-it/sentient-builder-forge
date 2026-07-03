@@ -334,6 +334,24 @@ function Home() {
       });
       const assistant: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: reply };
       persistChat([...baseChat, assistant]);
+
+      // Grow the brain: persist meaningful Q&A pairs as long-term memory.
+      const isRefusal =
+        reply.startsWith("لا أملك هذه المعلومة") ||
+        reply.startsWith("I don't have this information") ||
+        reply.startsWith("⚠️");
+      if (!isRefusal && reply.trim().length > 40) {
+        const now = Date.now();
+        const qa: Doc = {
+          id: crypto.randomUUID(),
+          title: (isAr ? "حوار: " : "Dialogue: ") + raw.slice(0, 80),
+          content: (isAr ? "س: " : "Q: ") + raw + "\n\n" + (isAr ? "ج: " : "A: ") + reply,
+          tags: ["conversation", isAr ? "حوار" : "dialogue"],
+          source: "chat",
+          createdAt: now,
+        };
+        persistDocs([qa, ...docs]);
+      }
     } catch (e: any) {
       const assistant: ChatMsg = {
         id: crypto.randomUUID(),
