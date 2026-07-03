@@ -862,7 +862,7 @@ function Home() {
                 </Button>
                 <Input value={input} onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
-                  placeholder={t("اكتب… /مواقعي · /موقع اسم · /مهام اسم · /صورة · /لخّص", "Type… /sites · /site name · /tasks name · /image · /summarize")} className="flex-1" />
+                  placeholder="" className="flex-1 caret-primary" />
                 <Button onClick={send} disabled={!input.trim() || thinking}>
                   {thinking ? t("يفكر…", "Thinking…") : t("إرسال", "Send")}
                 </Button>
