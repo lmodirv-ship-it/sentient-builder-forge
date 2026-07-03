@@ -56,6 +56,28 @@ const load = <T,>(k: string, fb: T): T => {
 const save = (k: string, v: unknown) => localStorage.setItem(k, JSON.stringify(v));
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+function escapeRegExp(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+function queryTerms(q: string): string[] {
+  return Array.from(new Set(
+    q.toLowerCase().split(/[\s،,.;:!?()\[\]"'`]+/).filter((w) => w.length >= 2)
+  )).sort((a, b) => b.length - a.length);
+}
+function Highlight({ text, terms }: { text: string; terms: string[] }) {
+  if (!terms.length || !text) return <>{text}</>;
+  const re = new RegExp(`(${terms.map(escapeRegExp).join("|")})`, "gi");
+  const parts = text.split(re);
+  return (
+    <>
+      {parts.map((p, i) =>
+        i % 2 === 1
+          ? <mark key={i} className="bg-primary/25 text-foreground rounded px-0.5">{p}</mark>
+          : <span key={i}>{p}</span>
+      )}
+    </>
+  );
+}
+
 function bumpStreak(s: Streak): Streak {
   const t = todayISO();
   if (s.last === t) return s;
@@ -309,6 +331,8 @@ function Home() {
     }
     return list;
   }, [docs, query, activeTag, activeCategory]);
+
+  const highlightTerms = useMemo(() => queryTerms(query), [query]);
 
   const send = async () => {
     const raw = input.trim();
@@ -829,14 +853,14 @@ function Home() {
                     <Card key={it.id} className="p-4 group">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold truncate">{it.title}</h4>
-                          <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap line-clamp-4">{it.content}</p>
+                          <h4 className="font-semibold truncate"><Highlight text={it.title} terms={highlightTerms} /></h4>
+                          <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap line-clamp-4"><Highlight text={it.content} terms={highlightTerms} /></p>
                           {inlineUrls.length > 0 && (
                             <div className="flex flex-wrap gap-1.5 mt-2">
                               {inlineUrls.slice(0, 12).map((u) => (
                                 <a key={u} href={u} target="_blank" rel="noreferrer noopener"
                                   className="text-xs px-2 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 truncate max-w-[220px]">
-                                  {u.replace(/^https?:\/\//, "")}
+                                  <Highlight text={u.replace(/^https?:\/\//, "")} terms={highlightTerms} />
                                 </a>
                               ))}
                               {inlineUrls.length > 12 && (
@@ -850,14 +874,14 @@ function Home() {
                                 <details key={cat.key} className="rounded-md border border-border/60 bg-card/40">
                                   <summary className="cursor-pointer text-xs px-2 py-1.5 flex items-center gap-1.5 select-none">
                                     <span>{cat.emoji}</span>
-                                    <span className="font-medium">{isAr ? cat.ar : cat.en}</span>
+                                    <span className="font-medium"><Highlight text={isAr ? cat.ar : cat.en} terms={highlightTerms} /></span>
                                     <span className="text-muted-foreground">({urls.length})</span>
                                   </summary>
                                   <div className="flex flex-wrap gap-1.5 p-2 pt-0">
                                     {urls.map((u) => (
                                       <a key={u} href={u} target="_blank" rel="noreferrer noopener"
                                         className="text-xs px-2 py-0.5 rounded-md bg-secondary/60 hover:bg-secondary text-foreground/90 border border-border/60 truncate max-w-[220px]">
-                                        {u.replace(/^https?:\/\//, "")}
+                                        <Highlight text={u.replace(/^https?:\/\//, "")} terms={highlightTerms} />
                                       </a>
                                     ))}
                                   </div>
