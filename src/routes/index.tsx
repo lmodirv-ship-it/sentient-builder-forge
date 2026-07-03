@@ -42,6 +42,8 @@ import { transcribeAudio } from "@/lib/nawat-transcribe.functions";
 import { generateImage } from "@/lib/nawat-image.functions";
 import { generateSpeech } from "@/lib/nawat-tts.functions";
 import { generateSiteHtml } from "@/lib/nawat-site-design.functions";
+import { generateVideo } from "@/lib/nawat-video.functions";
+import { generateCV } from "@/lib/nawat-cv.functions";
 import { detectExecutor, runningHeader, stamp, extractSubject, subjectPrompt } from "@/lib/nawat-executor";
 import {
   fsSupported, pickRootDir, getRootName, clearRootDir,
