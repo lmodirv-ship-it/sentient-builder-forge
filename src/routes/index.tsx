@@ -645,7 +645,7 @@ function Home() {
       </header>
 
       {/* Premium hero — greeting card with brain glyph + quick actions */}
-      <section className="max-w-6xl mx-auto px-4 pt-8 pb-6 space-y-6">
+      <section className="max-w-6xl mx-auto px-4 pt-8 pb-6 space-y-6 hidden sm:block">
         <div className="relative rounded-[2rem] overflow-hidden nawat-hero-bg border border-border/50 p-6 sm:p-10 shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--primary)_50%,transparent)]">
           <div className="absolute -top-16 -right-16 size-72 rounded-full bg-primary/25 blur-[80px]" />
           <div className="absolute -bottom-20 -left-16 size-72 rounded-full bg-[color:var(--gold)]/15 blur-[90px]" />
