@@ -213,6 +213,8 @@ function Home() {
   const expand = useServerFn(expandQuery);
   const transcribe = useServerFn(transcribeAudio);
   const imageGen = useServerFn(generateImage);
+  const speechGen = useServerFn(generateSpeech);
+  const siteGen = useServerFn(generateSiteHtml);
   const [feedback, setFeedback] = useState<Record<string, number>>(() => load<Record<string, number>>("nawat.feedback.v1", {}));
   const [usedCtx, setUsedCtx] = useState<Record<string, { ids: string[]; top: number; tiers: string[] }>>({});
   const setFb = (docId: string, delta: number) => {
