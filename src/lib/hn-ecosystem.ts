@@ -148,7 +148,10 @@ export const HN_PROJECTS: HNProject[] = [
     aliases: ["hn-db", "database", "db", "hn-groupe.org"],
 
     interfaces: [
+      iface("https://hn-groupe.org", "db-root"),
+      iface("https://www.hn-groupe.org", "db-root-www"),
       iface("https://hn-db.fun", "site"),
+
       iface("https://www.hn-db.fun", "site-www"),
       iface("https://admin.hn-db.fun", "admin"),
       iface("https://api.hn-db.fun", "api"),
