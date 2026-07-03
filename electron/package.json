@@ -1,7 +1,7 @@
 {
   "name": "nawat-desktop",
   "productName": "Nawat",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "Nawat Desktop — HN Studios",
   "main": "main.cjs",
   "author": "Nawat",

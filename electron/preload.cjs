@@ -5,5 +5,5 @@ const path = require("path");
 contextBridge.exposeInMainWorld("nawat", {
   platform: process.platform,
   dataDir: path.join(os.homedir(), "Documents", "Nawat"),
-  version: "1.6.2",
+  version: "1.6.3",
 });
