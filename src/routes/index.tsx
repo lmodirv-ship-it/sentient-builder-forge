@@ -853,8 +853,8 @@ function Home() {
                     <Card key={it.id} className="p-4 group">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold truncate">{it.title}</h4>
-                          <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap line-clamp-4">{it.content}</p>
+                          <h4 className="font-semibold truncate"><Highlight text={it.title} terms={highlightTerms} /></h4>
+                          <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap line-clamp-4"><Highlight text={it.content} terms={highlightTerms} /></p>
                           {inlineUrls.length > 0 && (
                             <div className="flex flex-wrap gap-1.5 mt-2">
                               {inlineUrls.slice(0, 12).map((u) => (
