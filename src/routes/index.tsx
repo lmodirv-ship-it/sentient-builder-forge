@@ -465,7 +465,17 @@ function Home() {
     const exec = detectExecutor(raw);
     if (exec) {
       const { def, prompt } = exec;
-      const promptText = prompt || raw;
+      const subject = extractSubject(def, raw);
+      // If user gave a command with no real subject (e.g. "صمم لي صورة"), ask instead of calling API.
+      if (["image", "tts", "site", "video", "cv", "content"].includes(def.id) && subject.length < 2) {
+        const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+        const askMsg: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: subjectPrompt(def, lang) };
+        persistChat([...chat, user, askMsg]);
+        setInput("");
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
+      const promptText = subject || prompt || raw;
       const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
       const runId = crypto.randomUUID();
       const runningMsg: ChatMsg = {
