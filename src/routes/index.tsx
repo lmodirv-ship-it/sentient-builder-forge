@@ -876,10 +876,10 @@ function Home() {
                     <div className={`max-w-[85%] rounded-3xl px-4 py-2.5 text-sm leading-relaxed ${
                       m.role === "user"
                         ? "nawat-bubble-user rounded-br-md whitespace-pre-wrap"
-                        : "nawat-glass rounded-bl-md"
+                        : "rounded-bl-md bg-transparent text-white"
                     }`}>
                       {m.role === "assistant" ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-pre:my-2 prose-headings:my-2">
+                        <div className="prose prose-sm prose-invert max-w-none prose-p:my-2 prose-pre:my-2 prose-headings:my-2 text-white prose-headings:text-white prose-strong:text-white prose-a:text-white prose-code:text-white prose-li:text-white">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text}</ReactMarkdown>
                           {m.imageUrl && (
                             <img src={m.imageUrl} alt="generated" className="mt-2 rounded-lg max-w-full" />
