@@ -1000,6 +1000,10 @@ function Home() {
               </ScrollArea>
             </div>
           </TabsContent>
+
+          <TabsContent value="network" className="mt-6">
+            <EcosystemBrowser lang={lang} />
+          </TabsContent>
         </Tabs>
 
         <p className="text-xs text-muted-foreground text-center mt-8">
