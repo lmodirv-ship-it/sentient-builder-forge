@@ -623,7 +623,7 @@ function Home() {
               <Brain className="size-5" />
               <span className="absolute inset-0 rounded-2xl animate-[pulse-ring_2.6s_ease-out_infinite]" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 hidden sm:block">
               <h1 className="text-xl font-extrabold leading-tight tracking-tight nawat-holo truncate">{t("نواة", "NAWAT")}</h1>
               <p className="text-[11px] text-muted-foreground leading-tight flex items-center gap-1.5 truncate">
                 <span className="inline-block size-1.5 shrink-0 rounded-full bg-[color:var(--gold)] shadow-[0_0_8px_var(--gold)]" />
@@ -633,7 +633,7 @@ function Home() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {streak.days > 0 && (
-              <Badge variant="secondary" className="gap-1 bg-[color:var(--gold)]/10 border border-[color:var(--gold)]/30 text-[color:var(--gold)] nawat-chip"><Flame className="size-3" />{streak.days}</Badge>
+              <Badge variant="secondary" className="hidden sm:inline-flex gap-1 bg-[color:var(--gold)]/10 border border-[color:var(--gold)]/30 text-[color:var(--gold)] nawat-chip"><Flame className="size-3" />{streak.days}</Badge>
             )}
             <Badge variant="secondary" className="hidden sm:inline-flex gap-1 bg-primary/10 border border-primary/30 text-primary nawat-chip"><Sparkles className="size-3" />{docs.length}</Badge>
             <ThemeSwitcher isAr={isAr} />
