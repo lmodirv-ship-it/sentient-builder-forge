@@ -63,7 +63,8 @@ export default function VideoStudio({ online }: { online: boolean }) {
       <Card className="p-5 space-y-4">
         <div className="flex items-center gap-2"><Film className="h-5 w-5 text-emerald-500" /><h2 className="font-bold">استوديو الفيديو</h2></div>
         <Input placeholder="عنوان المشروع (اختياري)" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <Textarea rows={6} placeholder="صف الفيديو: الموضوع، النبرة، المدة، المشاهد..." value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+        <Textarea rows={6} placeholder="صف الفيديو: الموضوع، النبرة، المدة، المشاهد... (أو اضغط «تحدّث»)" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+        <VoiceControls onTranscript={(t) => setPrompt((p) => (p ? p + " " + t : t))} speakText={prompt} lang="ar" />
         <div className="flex gap-2">
           <Button onClick={generate} disabled={busy} className="flex-1">
             {busy ? <Loader2 className="h-4 w-4 ml-1 animate-spin" /> : <Wand2 className="h-4 w-4 ml-1" />}
