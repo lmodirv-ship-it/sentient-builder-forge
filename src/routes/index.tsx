@@ -860,7 +860,7 @@ function Home() {
                               {inlineUrls.slice(0, 12).map((u) => (
                                 <a key={u} href={u} target="_blank" rel="noreferrer noopener"
                                   className="text-xs px-2 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 truncate max-w-[220px]">
-                                  {u.replace(/^https?:\/\//, "")}
+                                  <Highlight text={u.replace(/^https?:\/\//, "")} terms={highlightTerms} />
                                 </a>
                               ))}
                               {inlineUrls.length > 12 && (
