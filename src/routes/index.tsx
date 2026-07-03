@@ -15,7 +15,8 @@ import {
   Mic, Square, Volume2, Copy, Image as ImageIcon, FileDown, Wand2,
   FolderOpen, HardDrive,
 } from "lucide-react";
-import { searchTFIDF, chunkText, type Doc } from "@/lib/nawat-search";
+import { searchTFIDF, searchHybrid, rerank, withNeighbors, chunkText, type Doc } from "@/lib/nawat-search";
+import { expandQuery } from "@/lib/nawat-query-expand.functions";
 import { extractPdfText } from "@/lib/pdf-extract";
 import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
 import { getSitesDocs, SITES_COUNT, SITES_CATEGORY_COUNT, extractUrls, relatedCategoriesFor, SITE_CATEGORIES } from "@/lib/nawat-sites";
@@ -107,8 +108,23 @@ function Home() {
   const [folderName, setFolderName] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const ask = useServerFn(askNawat);
+  const expand = useServerFn(expandQuery);
   const transcribe = useServerFn(transcribeAudio);
   const imageGen = useServerFn(generateImage);
+  const [feedback, setFeedback] = useState<Record<string, number>>(() => load<Record<string, number>>("nawat.feedback.v1", {}));
+  const [usedCtx, setUsedCtx] = useState<Record<string, { ids: string[]; top: number; tiers: string[] }>>({});
+  const setFb = (docId: string, delta: number) => {
+    setFeedback((prev) => {
+      const next = { ...prev, [docId]: Math.max(-5, Math.min(5, (prev[docId] || 0) + delta)) };
+      save("nawat.feedback.v1", next);
+      return next;
+    });
+  };
+  const rateAnswer = (msgId: string, sign: 1 | -1) => {
+    const meta = usedCtx[msgId];
+    if (!meta) return;
+    for (const id of meta.ids) setFb(id, sign);
+  };
   const chatRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const jsonRef = useRef<HTMLInputElement>(null);
@@ -382,13 +398,26 @@ function Home() {
     setInput("");
     setThinking(true);
     try {
-      const hits = searchTFIDF(text, docs, 10);
-      const history = baseChat.slice(-10).map((m) => ({ role: m.role, text: m.text }));
+      // Query expansion (with graceful fallback to the raw text).
+      let variants: string[] = [text];
+      try {
+        const exp = await expand({ data: { question: text, lang } });
+        if (exp?.variants?.length) variants = exp.variants;
+      } catch { /* offline / gateway down — keep raw query */ }
+
+      // Hybrid retrieval → rerank → neighbor expansion.
+      const pool = searchHybrid(variants, docs, 20);
+      const top = rerank(text, pool, { feedback, k: 8 });
+      const withN = withNeighbors(top, docs, 1).slice(0, 12);
+      const topScore = top[0]?.score ?? 0;
+      const tiersUsed = Array.from(new Set(top.map((h) => h.tier || "long")));
+
+      const history = baseChat.slice(-6).map((m) => ({ role: m.role, text: m.text }));
       const { text: reply } = await ask({
         data: {
           question: text,
           lang,
-          context: hits.map((h) => ({
+          context: withN.map((h) => ({
             title: h.title,
             content: h.content.slice(0, 1000),
             source: h.source,
@@ -401,6 +430,11 @@ function Home() {
       });
       const assistant: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: reply };
       persistChat([...baseChat, assistant]);
+      setUsedCtx((prev) => ({
+        ...prev,
+        [assistant.id]: { ids: top.map((h) => h.id), top: Math.round(topScore * 100) / 100, tiers: tiersUsed },
+      }));
+
 
       // Grow the brain: persist meaningful Q&A pairs as long-term memory.
       const isRefusal =
@@ -619,14 +653,28 @@ function Home() {
                           {m.imageUrl && (
                             <img src={m.imageUrl} alt="generated" className="mt-2 rounded-lg max-w-full" />
                           )}
-                          <div className="flex gap-1 mt-2 opacity-0 group-hover:opacity-100 transition">
-                            <Button variant="ghost" size="icon" className="size-7" onClick={() => copyMsg(m.text)} title={t("نسخ", "Copy")}>
+                          <div className="flex gap-1 mt-2 items-center">
+                            <Button variant="ghost" size="icon" className="size-7 opacity-0 group-hover:opacity-100 transition" onClick={() => copyMsg(m.text)} title={t("نسخ", "Copy")}>
                               <Copy className="size-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="size-7" onClick={() => speak(m.text)} title={t("استمع", "Speak")}>
+                            <Button variant="ghost" size="icon" className="size-7 opacity-0 group-hover:opacity-100 transition" onClick={() => speak(m.text)} title={t("استمع", "Speak")}>
                               <Volume2 className="size-3.5" />
                             </Button>
+                            {usedCtx[m.id] && (
+                              <>
+                                <Button variant="ghost" size="icon" className="size-7 hover:text-emerald-400" onClick={() => rateAnswer(m.id, 1)} title={t("مفيد", "Helpful")}>
+                                  <span className="text-xs">👍</span>
+                                </Button>
+                                <Button variant="ghost" size="icon" className="size-7 hover:text-red-400" onClick={() => rateAnswer(m.id, -1)} title={t("غير مفيد", "Not helpful")}>
+                                  <span className="text-xs">👎</span>
+                                </Button>
+                                <span className="text-[10px] text-muted-foreground ms-auto tabular-nums">
+                                  {usedCtx[m.id].ids.length} {t("مقطع", "psg")} · {t("قوة", "top")} {usedCtx[m.id].top} · {usedCtx[m.id].tiers.map((x) => x === "core" ? "🟣" : x === "daily" ? "🟢" : "🔵").join("")}
+                                </span>
+                              </>
+                            )}
                           </div>
+
                         </div>
                       ) : (
                         m.text
