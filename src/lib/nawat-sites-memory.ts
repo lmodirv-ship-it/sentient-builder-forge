@@ -136,7 +136,13 @@ export function renderProjectCard(p: HNProject, lang: "ar" | "en" = "ar"): strin
   const taskLine = tasks.length
     ? `**${isAr ? "المهام" : "Tasks"}:** ${tasks.join(" · ")}`
     : "";
-  return [head, sum, primary, taskLine, `**${isAr ? "الواجهات" : "Interfaces"} (${p.interfaces.length}):**`, bullets].filter(Boolean).join("\n\n");
+  const stamp = isAr
+    ? `> ✅ **مُوثَّق عبر [${HN_PILLARS.trust.name}](${HN_PILLARS.trust.url})** · 🗄️ البيانات: [${HN_PILLARS.data.name}](${HN_PILLARS.data.url}) · ☁️ الملفات: [${HN_PILLARS.files.name}](${HN_PILLARS.files.url})`
+    : `> ✅ **Verified by [${HN_PILLARS.trust.name}](${HN_PILLARS.trust.url})** · 🗄️ Data: [${HN_PILLARS.data.name}](${HN_PILLARS.data.url}) · ☁️ Files: [${HN_PILLARS.files.name}](${HN_PILLARS.files.url})`;
+  const projLinks = isAr
+    ? `**${"روابط المشروع في المنظومة"}:**\n- 🗄️ [مساحة ${p.id} في HN-DB](${HN_PILLARS.data.url}/p/${encodeURIComponent(p.id)})\n- ☁️ [مجلد ${p.id} في HN-Cloud](${HN_PILLARS.files.url}/f/${encodeURIComponent(p.id)})`
+    : `**Project links in ecosystem:**\n- 🗄️ [${p.id} space on HN-DB](${HN_PILLARS.data.url}/p/${encodeURIComponent(p.id)})\n- ☁️ [${p.id} folder on HN-Cloud](${HN_PILLARS.files.url}/f/${encodeURIComponent(p.id)})`;
+  return [head, sum, primary, taskLine, `**${isAr ? "الواجهات" : "Interfaces"} (${p.interfaces.length}):**`, bullets, projLinks, stamp].filter(Boolean).join("\n\n");
 }
 
 /** Render a compact list of all projects with primary link. */
