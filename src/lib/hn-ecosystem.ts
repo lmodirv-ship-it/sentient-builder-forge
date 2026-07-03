@@ -43,6 +43,8 @@ export type HNInterface = {
   role?: string; // admin / client / driver / api / ...
 };
 
+export type HNPillar = "trust-anchor" | "data-core" | "files-core" | "app";
+
 export type HNProject = {
   id: string;
   name: string;         // ar-friendly name
@@ -53,7 +55,16 @@ export type HNProject = {
   primary: string;      // main URL
   interfaces: HNInterface[];
   aliases?: string[];   // alternate domains (typos/variants)
+  pillar?: HNPillar;    // trust-anchor / data-core / files-core / app (default: app)
 };
+
+// ── HN Infrastructure pillars (single source of truth for the whole ecosystem)
+export const HN_PILLARS = {
+  trust:  { id: "tvcc",     url: "https://hn-driver.online",  name: "TVCC",     purposeAr: "إثبات الملكية والهوية الموحّدة", purposeEn: "Ownership & unified identity" },
+  data:   { id: "hn-db",    url: "https://hn-groupe.org",     name: "HN-DB",    purposeAr: "قاعدة البيانات المركزية",       purposeEn: "Central database" },
+  files:  { id: "hn-cloud", url: "https://hn-groupe.site",    name: "HN-Cloud", purposeAr: "التخزين السحابي (VPS خاص)",      purposeEn: "Cloud storage (private VPS)" },
+} as const;
+
 
 // helper
 const iface = (url: string, role?: string): HNInterface => ({ url, role });
