@@ -283,9 +283,32 @@ function Home() {
   const visible = useMemo(() => {
     let list = docs;
     if (activeTag) list = list.filter((d) => d.tags.includes(activeTag));
-    if (query.trim()) list = searchTFIDF(query, list, 100);
+    if (activeCategory) {
+      list = list.filter((d) =>
+        relatedCategoriesFor({ id: d.id, tags: d.tags, content: d.content, title: d.title })
+          .some((c) => c.key === activeCategory)
+      );
+    }
+    const q = query.trim().toLowerCase();
+    if (q) {
+      // Broaden: title / content / tags / URLs / category names all count as matches.
+      const substr = list.filter((d) => {
+        const cats = relatedCategoriesFor({ id: d.id, tags: d.tags, content: d.content, title: d.title });
+        const hay = [
+          d.title,
+          d.content,
+          d.tags.join(" "),
+          extractUrls(d.content).join(" "),
+          cats.map((c) => `${c.key} ${c.ar} ${c.en}`).join(" "),
+        ].join(" ").toLowerCase();
+        return hay.includes(q);
+      });
+      const ranked = searchTFIDF(query, list, 100);
+      const seen = new Set<string>();
+      list = [...ranked, ...substr].filter((d) => (seen.has(d.id) ? false : (seen.add(d.id), true)));
+    }
     return list;
-  }, [docs, query, activeTag]);
+  }, [docs, query, activeTag, activeCategory]);
 
   const send = async () => {
     const raw = input.trim();
