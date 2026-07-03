@@ -218,6 +218,8 @@ function Home() {
   const imageGen = useServerFn(generateImage);
   const speechGen = useServerFn(generateSpeech);
   const siteGen = useServerFn(generateSiteHtml);
+  const videoGen = useServerFn(generateVideo);
+  const cvGen = useServerFn(generateCV);
   const [feedback, setFeedback] = useState<Record<string, number>>(() => load<Record<string, number>>("nawat.feedback.v1", {}));
   const [usedCtx, setUsedCtx] = useState<Record<string, { ids: string[]; top: number; tiers: string[] }>>({});
   const setFb = (docId: string, delta: number) => {
