@@ -25,12 +25,16 @@ const BUTTONS: BtnDef[] = [
 ];
 
 export function DevEnginePanel() {
+  const [mounted, setMounted] = useState(false);
   const [status, setStatus] = useState(engineStatus());
   const [openLogs, setOpenLogs] = useState(false);
-  const [logs, setLogs] = useState<LogEntry[]>(() => (typeof window !== "undefined" ? getLogs() : []));
+  const [logs, setLogs] = useState<LogEntry[]>([]);
 
+  useEffect(() => { setMounted(true); setLogs(getLogs()); }, []);
   useEffect(() => subscribeEngine(setStatus), []);
   useEffect(() => subscribeLogs(() => setLogs(getLogs())), []);
+
+  if (!mounted) return null;
 
   async function toggle(mode: DevMode) {
     // If this mode is running → stop. If another mode is running → stop it, then start new. Else start.
