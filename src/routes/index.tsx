@@ -483,7 +483,7 @@ function Home() {
           mode: sitesRoute.isSitesQuestion ? "sites" : "default",
           context: mergedCtx.map((h) => ({
             title: h.title,
-            content: h.content.slice(0, 1000),
+            content: h.content.slice(0, h.tags?.includes("site") ? 3000 : 1000),
             source: h.source,
             date: h.createdAt ? new Date(h.createdAt).toISOString().slice(0, 10) : undefined,
             tags: h.tags,
