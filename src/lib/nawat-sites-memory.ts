@@ -151,3 +151,31 @@ export function renderProjectTasks(p: HNProject, lang: "ar" | "en" = "ar"): stri
     : isAr ? "_لا مهام مسجّلة._" : "_No tasks recorded._";
   return `${head}\n\n${body}\n\n[${p.primary.replace(/^https?:\/\//, "")}](${p.primary})`;
 }
+
+/** Render categories with counts. */
+export function renderAllCategories(lang: "ar" | "en" = "ar"): string {
+  const isAr = lang === "ar";
+  const head = isAr ? `### 🗂️ فئات مشاريعي` : `### 🗂️ Project categories`;
+  const counts = new Map<HNCategory, number>();
+  HN_PROJECTS.forEach((p) => counts.set(p.category, (counts.get(p.category) || 0) + 1));
+  const rows = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, n]) => {
+      const lbl = CATEGORY_LABEL[k];
+      return `- ${lbl.icon} **${isAr ? lbl.ar : lbl.en}** — ${n} ${isAr ? "مشروع" : "project(s)"}`;
+    })
+    .join("\n");
+  return `${head}\n\n${rows}`;
+}
+
+/** Render a compact list of matched projects. */
+export function renderProjectList(list: HNProject[], lang: "ar" | "en" = "ar", title?: string): string {
+  const isAr = lang === "ar";
+  if (!list.length) return isAr ? "_لا نتائج._" : "_No results._";
+  const head = title ? `### ${title}` : "";
+  const rows = list.map((p) => {
+    const cat = CATEGORY_LABEL[p.category];
+    return `- ${cat.icon} **${isAr ? p.name : p.nameEn}** — [${p.primary.replace(/^https?:\/\//, "")}](${p.primary}) · _${p.interfaces.length} ${isAr ? "واجهة" : "iface"}_`;
+  }).join("\n");
+  return [head, rows].filter(Boolean).join("\n\n");
+}

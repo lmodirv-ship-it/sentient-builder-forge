@@ -25,7 +25,10 @@ import { getSitesQADocs, SITES_QA_COUNT } from "@/lib/nawat-sites-qa";
 import {
   getProjectDocs, HN_PROJECT_DOC_COUNT, findProject,
   renderAllSites, renderProjectCard, renderProjectTasks,
+  renderAllCategories, renderProjectList,
+  projectToDoc,
 } from "@/lib/nawat-sites-memory";
+import { routeSitesQuestion, findProjects, projectsForCategoryLabel } from "@/lib/nawat-sites-router";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
@@ -388,11 +391,26 @@ function Home() {
     const sitesCmd = raw.match(/^\/(sites|مواقعي|مواقع)\s*$/i);
     const siteCmd = raw.match(/^\/(site|موقع)\s+([\s\S]+)/i);
     const tasksCmd = raw.match(/^\/(tasks|مهام)\s+([\s\S]+)/i);
-    if (sitesCmd || siteCmd || tasksCmd) {
+    const allCmd = raw.match(/^\/(all|كل|الكل|فئات)\s*$/i);
+    const catCmd = raw.match(/^\/(cat|category|فئة|قسم)\s+([\s\S]+)/i);
+    const searchCmd = raw.match(/^\/(find|search|ابحث|بحث)\s+([\s\S]+)/i);
+    if (sitesCmd || siteCmd || tasksCmd || allCmd || catCmd || searchCmd) {
       const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
       let reply = "";
       if (sitesCmd) {
         reply = renderAllSites(lang);
+      } else if (allCmd) {
+        reply = renderAllCategories(lang);
+      } else if (catCmd) {
+        const { key, projects } = projectsForCategoryLabel(catCmd[2]);
+        reply = key
+          ? renderProjectList(projects, lang, `${t("فئة", "Category")}: ${catCmd[2]} — ${projects.length}`)
+          : t(`لا أعرف فئة باسم "${catCmd[2]}".`, `No category "${catCmd[2]}".`);
+      } else if (searchCmd) {
+        const list = findProjects(searchCmd[2], 10);
+        reply = list.length
+          ? renderProjectList(list, lang, `${t("نتائج", "Results")}: "${searchCmd[2]}" — ${list.length}`)
+          : t(`لا أجد مشروعاً يطابق "${searchCmd[2]}".`, `No project matches "${searchCmd[2]}".`);
       } else if (siteCmd) {
         const p = findProject(siteCmd[2]);
         reply = p
@@ -430,6 +448,15 @@ function Home() {
     setInput("");
     setThinking(true);
     try {
+      // Sites router: if the question is about the user's HN sites,
+      // prepend the matched project cards to the context and use sites mode.
+      const sitesRoute = routeSitesQuestion(text);
+      const forcedSiteDocs: Doc[] = sitesRoute.isSitesQuestion
+        ? (sitesRoute.matched.length
+            ? sitesRoute.matched.map((p) => projectToDoc(p))
+            : getProjectDocs().slice(0, 6))
+        : [];
+
       // Query expansion (with graceful fallback to the raw text).
       let variants: string[] = [text];
       try {
@@ -444,14 +471,19 @@ function Home() {
       const topScore = top[0]?.score ?? 0;
       const tiersUsed = Array.from(new Set(top.map((h) => h.tier || "long")));
 
+      // Merge: forced site docs first, then retrieved docs (dedup by id).
+      const seenCtx = new Set<string>();
+      const mergedCtx = [...forcedSiteDocs, ...withN].filter((d) => (seenCtx.has(d.id) ? false : (seenCtx.add(d.id), true))).slice(0, 12);
+
       const history = baseChat.slice(-6).map((m) => ({ role: m.role, text: m.text }));
       const { text: reply } = await ask({
         data: {
           question: text,
           lang,
-          context: withN.map((h) => ({
+          mode: sitesRoute.isSitesQuestion ? "sites" : "default",
+          context: mergedCtx.map((h) => ({
             title: h.title,
-            content: h.content.slice(0, 1000),
+            content: h.content.slice(0, h.tags?.includes("site") ? 3000 : 1000),
             source: h.source,
             date: h.createdAt ? new Date(h.createdAt).toISOString().slice(0, 10) : undefined,
             tags: h.tags,

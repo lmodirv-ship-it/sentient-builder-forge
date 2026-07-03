@@ -21,6 +21,7 @@ const Input = z.object({
     .array(z.object({ role: z.enum(["user", "assistant"]), text: z.string() }))
     .max(20)
     .default([]),
+  mode: z.enum(["default", "sites"]).default("default"),
 });
 
 export const askNawat = createServerFn({ method: "POST" })
@@ -42,6 +43,64 @@ export const askNawat = createServerFn({ method: "POST" })
     // Hard rule: if there are no memory passages at all, refuse without calling the model.
     if (!data.context.length) {
       return { text: isAr ? noMemoryAr : noMemoryEn };
+    }
+
+    // ── Sites mode: dedicated prompt that answers freely from the provided
+    //    project cards (still no fabrication) and enforces Markdown links.
+    if (data.mode === "sites") {
+      const sysSites = isAr
+        ? `أنت «نواة» — مساعد المستخدم للإجابة على كل ما يخص مواقعه ومشاريعه داخل منظومة HN.
+
+قواعد الإجابة:
+1. اعتمد فقط على «بطاقات المشاريع» أدناه — لا اختراع، لا معرفة عامة.
+2. كل رابط يجب أن يكون بصيغة Markdown [النص](https://...) قابل للنقر.
+3. إذا سُئل عن مشروع محدد أعطِ بالترتيب:
+   • اسم المشروع + الرابط الرئيسي (سطر واحد).
+   • فقرة تعريفية قصيرة.
+   • **المهام/القدرات** كنقاط.
+   • **الواجهات** كجدول أو قائمة روابط مصنّفة بالدور (admin / client / driver / api …).
+   • **اقتراح ذكي** في سطر واحد (فتح الأدمن، فتح API…).
+4. إذا سُئل «أي موقع يفعل X» أو «مواقع X»: اذكر كل المشاريع المطابقة كقائمة قصيرة مع الرابط الرئيسي لكل واحد.
+5. إذا كان السؤال مقارنة، ابنِ جدولاً موجزاً.
+6. إذا لم يوجد المشروع فعلاً في البطاقات: قل صراحةً "لا أجد هذا المشروع ضمن مواقعي المسجّلة" واقترح أقرب المتوفر.
+7. عربية فصحى مختصرة، بدون حشو.`
+        : `You are "Nawat" — the user's assistant for anything about their HN sites/projects.
+
+Rules:
+1. Use only the "project cards" below. No invention.
+2. Every URL must be a Markdown link [text](https://...).
+3. For a single project answer in order:
+   • Name + primary URL.
+   • Short description.
+   • **Tasks/capabilities** as bullets.
+   • **Interfaces** as a table or role-labeled list (admin / client / driver / api …).
+   • **Smart suggestion** (open admin, open API…).
+4. For "which site does X" or "sites for X": list every matching project with primary URL.
+5. For comparisons, produce a compact table.
+6. If a project truly isn't in the cards: say "I don't find this project in my registered sites" and suggest the closest match.
+7. Be concise.`;
+
+      const ctxSites =
+        (isAr ? "بطاقات المشاريع المتاحة:\n" : "Available project cards:\n") +
+        data.context.map((c, i) => `[${i + 1}] ${c.title}${c.source ? ` — ${c.source}` : ""}\n${c.content}`).join("\n\n");
+
+      const msgs = [
+        { role: "system" as const, content: sysSites },
+        { role: "system" as const, content: ctxSites },
+        ...data.history.map((m) => ({ role: m.role, content: m.text })),
+        { role: "user" as const, content: data.question },
+      ];
+
+      try {
+        const { text } = await generateText({ model, messages: msgs });
+        return { text };
+      } catch (e: any) {
+        const msg = String(e?.message || e);
+        const status = e?.statusCode || e?.status;
+        if (status === 429 || /rate.?limit/i.test(msg)) return { text: isAr ? "⚠️ تم تجاوز حد الطلبات." : "⚠️ Rate limit." };
+        if (status === 402 || /payment required|credits?/i.test(msg)) return { text: isAr ? "⚠️ نفد رصيد الذكاء الاصطناعي." : "⚠️ AI credits exhausted." };
+        return { text: (isAr ? "⚠️ خطأ: " : "⚠️ Error: ") + msg };
+      }
     }
 
     const sys = isAr
