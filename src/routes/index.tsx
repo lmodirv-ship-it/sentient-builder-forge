@@ -919,6 +919,36 @@ function Home() {
                           {m.imageUrl && (
                             <img src={m.imageUrl} alt="generated" className="mt-2 rounded-lg max-w-full" />
                           )}
+                          {m.audioUrl && (
+                            <audio controls src={m.audioUrl} className="mt-2 w-full" />
+                          )}
+                          {m.htmlPayload && (
+                            <div className="mt-2 space-y-2">
+                              <iframe
+                                title="site-preview"
+                                srcDoc={m.htmlPayload}
+                                className="w-full h-96 rounded-lg border border-white/20 bg-white"
+                                sandbox="allow-scripts"
+                              />
+                              <div className="flex gap-2">
+                                <a
+                                  href={`data:text/html;charset=utf-8,${encodeURIComponent(m.htmlPayload)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-xs underline"
+                                >
+                                  {t("افتح في تبويب جديد", "Open in new tab")}
+                                </a>
+                                <a
+                                  href={`data:text/html;charset=utf-8,${encodeURIComponent(m.htmlPayload)}`}
+                                  download="hn-site.html"
+                                  className="text-xs underline"
+                                >
+                                  {t("تنزيل .html", "Download .html")}
+                                </a>
+                              </div>
+                            </div>
+                          )}
                           <div className="flex gap-1 mt-2 items-center">
                             <Button variant="ghost" size="icon" className="size-7 opacity-0 group-hover:opacity-100 transition hover:text-red-400" onClick={() => removeMsg(m.id)} title={t("حذف", "Delete")}>
                               <Trash2 className="size-3.5" />
