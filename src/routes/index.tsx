@@ -29,6 +29,9 @@ import {
   projectToDoc,
 } from "@/lib/nawat-sites-memory";
 import { routeSitesQuestion, findProjects, projectsForCategoryLabel } from "@/lib/nawat-sites-router";
+import { hnBridge } from "@/lib/hn-bridge";
+import { HN_PILLARS } from "@/lib/hn-ecosystem";
+import { HNStatusPill } from "@/components/HNStatusPill";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
@@ -416,7 +419,10 @@ function Home() {
     const allCmd = raw.match(/^\/(all|كل|الكل|فئات)\s*$/i);
     const catCmd = raw.match(/^\/(cat|category|فئة|قسم)\s+([\s\S]+)/i);
     const searchCmd = raw.match(/^\/(find|search|ابحث|بحث)\s+([\s\S]+)/i);
-    if (sitesCmd || siteCmd || tasksCmd || allCmd || catCmd || searchCmd) {
+    const trustCmd = raw.match(/^\/(trust|ثقة|ملكية|tvcc)\s*$/i);
+    const dataCmd = raw.match(/^\/(data|db|بيانات|قاعدة)\s+([\s\S]+)/i);
+    const filesCmd = raw.match(/^\/(files|cloud|ملفات|سحابة)\s+([\s\S]+)/i);
+    if (sitesCmd || siteCmd || tasksCmd || allCmd || catCmd || searchCmd || trustCmd || dataCmd || filesCmd) {
       const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
       let reply = "";
       if (sitesCmd) {
@@ -443,6 +449,28 @@ function Home() {
         reply = p
           ? renderProjectTasks(p, lang)
           : t(`لا أجد مشروعاً باسم "${tasksCmd[2]}".`, `No project matches "${tasksCmd[2]}".`);
+      } else if (trustCmd) {
+        const T = HN_PILLARS.trust, D = HN_PILLARS.data, F = HN_PILLARS.files;
+        reply = t(
+          `### 🏛️ ركائز منظومة HN\n\n1. **${T.name}** — ${T.purposeAr}\n   [${T.url}](${T.url})\n2. **${D.name}** — ${D.purposeAr}\n   [${D.url}](${D.url})\n3. **${F.name}** — ${F.purposeAr}\n   [${F.url}](${F.url})\n\n> ${hnBridge.identity.badgeAr} — كل مواقع HN مُثبتة الملكية عبر هذا المرجع.`,
+          `### 🏛️ HN Pillars\n\n1. **${T.name}** — ${T.purposeEn}\n   [${T.url}](${T.url})\n2. **${D.name}** — ${D.purposeEn}\n   [${D.url}](${D.url})\n3. **${F.name}** — ${F.purposeEn}\n   [${F.url}](${F.url})\n\n> ${hnBridge.identity.badgeEn}`,
+        );
+      } else if (dataCmd) {
+        const p = findProject(dataCmd[2]);
+        const id = p?.id ?? dataCmd[2].trim();
+        const url = hnBridge.db.projectSpace(id);
+        reply = t(
+          `### 🗄️ بيانات ${p?.name ?? id} على HN-DB\n\n[${url}](${url})\n\n> ${hnBridge.identity.badgeAr}`,
+          `### 🗄️ ${p?.nameEn ?? id} data on HN-DB\n\n[${url}](${url})\n\n> ${hnBridge.identity.badgeEn}`,
+        );
+      } else if (filesCmd) {
+        const p = findProject(filesCmd[2]);
+        const id = p?.id ?? filesCmd[2].trim();
+        const url = hnBridge.cloud.folder(id);
+        reply = t(
+          `### ☁️ ملفات ${p?.name ?? id} على HN-Cloud\n\n[${url}](${url})\n\n> ${hnBridge.identity.badgeAr}`,
+          `### ☁️ ${p?.nameEn ?? id} files on HN-Cloud\n\n[${url}](${url})\n\n> ${hnBridge.identity.badgeEn}`,
+        );
       }
       const assistant: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: reply };
       persistChat([...chat, user, assistant]);
@@ -636,6 +664,7 @@ function Home() {
               <Badge variant="secondary" className="hidden sm:inline-flex gap-1 bg-[color:var(--gold)]/10 border border-[color:var(--gold)]/30 text-[color:var(--gold)] nawat-chip"><Flame className="size-3" />{streak.days}</Badge>
             )}
             <Badge variant="secondary" className="hidden sm:inline-flex gap-1 bg-primary/10 border border-primary/30 text-primary nawat-chip"><Sparkles className="size-3" />{docs.length}</Badge>
+            <HNStatusPill isAr={isAr} />
             <ThemeSwitcher isAr={isAr} />
             <Button variant="outline" size="sm" onClick={() => setLang(isAr ? "en" : "ar")}>
               <Languages className="size-4" /> {isAr ? "EN" : "ع"}

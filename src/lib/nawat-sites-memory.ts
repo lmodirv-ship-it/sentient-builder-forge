@@ -1,7 +1,9 @@
 // Build Nawat memory docs from HN_PROJECTS: one rich Doc per project with
 // summary + primary url + interfaces + inferred tasks. `tier: "core"`.
 import type { Doc } from "./nawat-search";
-import { HN_PROJECTS, CATEGORY_LABEL, type HNProject, type HNCategory } from "./hn-ecosystem";
+import { HN_PROJECTS, CATEGORY_LABEL, HN_PILLARS, type HNProject, type HNCategory } from "./hn-ecosystem";
+import { hnInfrastructureCard } from "./hn-bridge";
+
 
 const CATEGORY_TASKS_AR: Record<HNCategory, string[]> = {
   transport:  ["طلب رحلة", "طلب توصيل", "إدارة السائقين", "مركز الاتصال", "متابعة الطلبات"],
@@ -76,12 +78,18 @@ export function projectToDoc(p: HNProject): Doc {
     .join("\n");
   const aliases = p.aliases?.length ? `\n\nنطاقات بديلة:\n${p.aliases.map((a) => `• ${a}`).join("\n")}` : "";
 
+  const pillarLine = p.pillar && p.pillar !== "app"
+    ? `\n\n🏛️ **ركيزة رسمية:** ${p.pillar === "trust-anchor" ? "مرجع الملكية (TVCC)" : p.pillar === "data-core" ? "قاعدة البيانات المركزية" : "التخزين السحابي (HN-Cloud)"}`
+    : "";
+  const stamp = `\n\n— — —\n✅ الملكية: ${HN_PILLARS.trust.name} (${HN_PILLARS.trust.url}) · 🗄️ البيانات: ${HN_PILLARS.data.name} (${HN_PILLARS.data.url}) · ☁️ الملفات: ${HN_PILLARS.files.name} (${HN_PILLARS.files.url})`;
+
   const content =
-    `${p.summary}\n\n` +
+    `${p.summary}${pillarLine}\n\n` +
     `التصنيف: ${cat.icon} ${cat.ar}\n` +
     `الرابط الرئيسي: ${p.primary}\n\n` +
     `المهام / القدرات:\n${tasks.map((x) => `• ${x}`).join("\n")}\n\n` +
-    `الواجهات (${p.interfaces.length}):\n${ifaces}${aliases}`;
+    `الواجهات (${p.interfaces.length}):\n${ifaces}${aliases}${stamp}`;
+
 
   return {
     id: `hn-project-${p.id}`,
@@ -95,10 +103,11 @@ export function projectToDoc(p: HNProject): Doc {
 }
 
 export function getProjectDocs(): Doc[] {
-  return HN_PROJECTS.map(projectToDoc);
+  const infra = hnInfrastructureCard() as unknown as Doc;
+  return [infra, ...HN_PROJECTS.map(projectToDoc)];
 }
 
-export const HN_PROJECT_DOC_COUNT = HN_PROJECTS.length;
+export const HN_PROJECT_DOC_COUNT = HN_PROJECTS.length + 1;
 
 /** Find a project by name / id / alias fragment (loose match). */
 export function findProject(needle: string): HNProject | null {
@@ -127,7 +136,13 @@ export function renderProjectCard(p: HNProject, lang: "ar" | "en" = "ar"): strin
   const taskLine = tasks.length
     ? `**${isAr ? "المهام" : "Tasks"}:** ${tasks.join(" · ")}`
     : "";
-  return [head, sum, primary, taskLine, `**${isAr ? "الواجهات" : "Interfaces"} (${p.interfaces.length}):**`, bullets].filter(Boolean).join("\n\n");
+  const stamp = isAr
+    ? `> ✅ **مُوثَّق عبر [${HN_PILLARS.trust.name}](${HN_PILLARS.trust.url})** · 🗄️ البيانات: [${HN_PILLARS.data.name}](${HN_PILLARS.data.url}) · ☁️ الملفات: [${HN_PILLARS.files.name}](${HN_PILLARS.files.url})`
+    : `> ✅ **Verified by [${HN_PILLARS.trust.name}](${HN_PILLARS.trust.url})** · 🗄️ Data: [${HN_PILLARS.data.name}](${HN_PILLARS.data.url}) · ☁️ Files: [${HN_PILLARS.files.name}](${HN_PILLARS.files.url})`;
+  const projLinks = isAr
+    ? `**${"روابط المشروع في المنظومة"}:**\n- 🗄️ [مساحة ${p.id} في HN-DB](${HN_PILLARS.data.url}/p/${encodeURIComponent(p.id)})\n- ☁️ [مجلد ${p.id} في HN-Cloud](${HN_PILLARS.files.url}/f/${encodeURIComponent(p.id)})`
+    : `**Project links in ecosystem:**\n- 🗄️ [${p.id} space on HN-DB](${HN_PILLARS.data.url}/p/${encodeURIComponent(p.id)})\n- ☁️ [${p.id} folder on HN-Cloud](${HN_PILLARS.files.url}/f/${encodeURIComponent(p.id)})`;
+  return [head, sum, primary, taskLine, `**${isAr ? "الواجهات" : "Interfaces"} (${p.interfaces.length}):**`, bullets, projLinks, stamp].filter(Boolean).join("\n\n");
 }
 
 /** Render a compact list of all projects with primary link. */

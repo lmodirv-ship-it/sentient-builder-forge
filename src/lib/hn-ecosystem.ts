@@ -43,6 +43,8 @@ export type HNInterface = {
   role?: string; // admin / client / driver / api / ...
 };
 
+export type HNPillar = "trust-anchor" | "data-core" | "files-core" | "app";
+
 export type HNProject = {
   id: string;
   name: string;         // ar-friendly name
@@ -53,12 +55,53 @@ export type HNProject = {
   primary: string;      // main URL
   interfaces: HNInterface[];
   aliases?: string[];   // alternate domains (typos/variants)
+  pillar?: HNPillar;    // trust-anchor / data-core / files-core / app (default: app)
 };
+
+// ── HN Infrastructure pillars (single source of truth for the whole ecosystem)
+export const HN_PILLARS = {
+  trust:  { id: "tvcc",     url: "https://hn-driver.online",  name: "TVCC",     purposeAr: "إثبات الملكية والهوية الموحّدة", purposeEn: "Ownership & unified identity" },
+  data:   { id: "hn-db",    url: "https://hn-groupe.org",     name: "HN-DB",    purposeAr: "قاعدة البيانات المركزية",       purposeEn: "Central database" },
+  files:  { id: "hn-cloud", url: "https://hn-groupe.site",    name: "HN-Cloud", purposeAr: "التخزين السحابي (VPS خاص)",      purposeEn: "Cloud storage (private VPS)" },
+} as const;
+
 
 // helper
 const iface = (url: string, role?: string): HNInterface => ({ url, role });
 
 export const HN_PROJECTS: HNProject[] = [
+  {
+    id: "tvcc",
+    name: "TVCC — مرجع إثبات الملكية",
+    nameEn: "TVCC — Ownership Trust Anchor",
+    category: "portal",
+    pillar: "trust-anchor",
+    summary: "الركيزة #1 لمنظومة HN: تُثبت ملكية جميع المواقع والنطاقات وتوحّد الهوية عبرها.",
+    summaryEn: "HN pillar #1: proves ownership of every HN domain and unifies identity across the ecosystem.",
+    primary: "https://hn-driver.online",
+    aliases: ["tvcc", "trust", "ownership"],
+    interfaces: [
+      iface("https://hn-driver.online", "trust-anchor"),
+      iface("https://www.hn-driver.online", "trust-anchor-www"),
+    ],
+  },
+  {
+    id: "hn-cloud",
+    name: "HN-Cloud — التخزين السحابي (VPS)",
+    nameEn: "HN-Cloud — Private VPS Storage",
+    category: "database",
+    pillar: "files-core",
+    summary: "الركيزة #3 لمنظومة HN: تخزين الملفات السحابي على السيرفر الخاص (VPS). كل ملف/نسخة احتياطية يُحفظ هنا.",
+    summaryEn: "HN pillar #3: cloud file storage on the private VPS. All files & backups live here.",
+    primary: "https://hn-groupe.site",
+    aliases: ["cloud", "hn-cloud", "storage", "vps"],
+    interfaces: [
+      iface("https://hn-groupe.site", "cloud-root"),
+      iface("https://www.hn-groupe.site", "cloud-root-www"),
+      iface("https://cloud.hn-createur.com", "cloud-createur"),
+    ],
+  },
+
   {
     id: "hn-driver",
     name: "HN Driver — منصة النقل والتوصيل",
@@ -95,14 +138,20 @@ export const HN_PROJECTS: HNProject[] = [
   },
   {
     id: "hn-db",
-    name: "HN DB — منصة قواعد البيانات",
-    nameEn: "HN DB — Database Platform",
+    name: "HN-DB — قاعدة البيانات المركزية",
+    nameEn: "HN-DB — Central Database",
     category: "database",
-    summary: "منصة قواعد بيانات كاملة مع API ومصادقة وملفات وذكاء اصطناعي وحالة.",
-    summaryEn: "Full DB platform: API, auth, files, AI, users, status, websockets.",
-    primary: "https://hn-db.fun",
+    pillar: "data-core",
+    summary: "الركيزة #2 لمنظومة HN: قاعدة البيانات المركزية لكل الخدمات (API، مصادقة، ملفات، AI، حالة). النطاق الرئيسي المعتمد: hn-groupe.org.",
+    summaryEn: "HN pillar #2: central database for every service (API, auth, files, AI, status). Official domain: hn-groupe.org.",
+    primary: "https://hn-groupe.org",
+    aliases: ["hn-db", "database", "db", "hn-groupe.org"],
+
     interfaces: [
+      iface("https://hn-groupe.org", "db-root"),
+      iface("https://www.hn-groupe.org", "db-root-www"),
       iface("https://hn-db.fun", "site"),
+
       iface("https://www.hn-db.fun", "site-www"),
       iface("https://admin.hn-db.fun", "admin"),
       iface("https://api.hn-db.fun", "api"),
@@ -488,3 +537,11 @@ export const HOOK_LABEL: Record<IntegrationHook, { ar: string; en: string }> = {
   "chat-bridge":      { ar: "جسر محادثة",        en: "Chat bridge" },
   "self":             { ar: "أنت هنا",           en: "You are here" },
 };
+
+// ── Pillar accessors
+export function getPillarProject(kind: HNPillar): HNProject | undefined {
+  return HN_PROJECTS.find((p) => p.pillar === kind);
+}
+export function isPillar(p: HNProject): boolean {
+  return !!p.pillar && p.pillar !== "app";
+}
