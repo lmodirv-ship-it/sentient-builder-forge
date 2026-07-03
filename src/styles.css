@@ -282,3 +282,34 @@
 .filament {
   animation: filament-travel 2.6s linear infinite;
 }
+
+@keyframes brain-pulse {
+  0%, 100% { opacity: 0.06; transform: scale(1); }
+  50% { opacity: 0.12; transform: scale(1.03); }
+}
+
+@keyframes lightning-flash {
+  0%, 90%, 100% { opacity: 0; }
+  92% { opacity: 0.8; }
+  94% { opacity: 0.2; }
+  96% { opacity: 1; }
+  98% { opacity: 0.3; }
+}
+
+@keyframes core-glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 20px color-mix(in oklab, var(--primary) 40%, transparent)); }
+  50% { filter: drop-shadow(0 0 50px color-mix(in oklab, var(--primary) 80%, transparent)); }
+}
+
+.brain-bg {
+  animation: brain-pulse 4s ease-in-out infinite;
+}
+
+.lightning-bolt {
+  animation: lightning-flash 3s ease-in-out infinite;
+  animation-delay: calc(var(--bolt-index, 0) * 0.7s);
+}
+
+.brain-glow {
+  animation: core-glow-pulse 3s ease-in-out infinite;
+}
