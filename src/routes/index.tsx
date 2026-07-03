@@ -655,13 +655,17 @@ function Home() {
                   </Button>
                 </div>
                 <Button variant="secondary" className="w-full" onClick={() => {
-                  if (confirm(t(`سيُضاف ${SEED_COUNT} مفهوماً جاهزاً إلى ذاكرتك. متابعة؟`, `${SEED_COUNT} ready-made concepts will be added. Continue?`))) {
-                    persistDocs([...getSeedDocs(), ...docs]);
-                  }
+                  const sites = getSitesDocs();
+                  const ids = new Set(sites.map(s => s.id));
+                  persistDocs([...sites, ...docs.filter(d => !ids.has(d.id))]);
                 }}>
-                  <Library className="size-4" /> {t(`حمّل المكتبة الأساسية (${SEED_COUNT})`, `Load starter library (${SEED_COUNT})`)}
+                  <Library className="size-4" /> {t(
+                    `حدّث فهرس مواقعي (${SITES_COUNT} في ${SITES_CATEGORY_COUNT} تصنيفاً)`,
+                    `Refresh my sites index (${SITES_COUNT} in ${SITES_CATEGORY_COUNT} categories)`
+                  )}
                 </Button>
               </div>
+
 
               <div className="pt-3 border-t border-border space-y-2">
                 <h4 className="text-sm font-semibold flex items-center gap-2">
