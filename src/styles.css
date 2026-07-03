@@ -272,3 +272,13 @@
   0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 55%, transparent); }
   50% { box-shadow: 0 0 0 12px color-mix(in oklab, var(--primary) 0%, transparent); }
 }
+
+@keyframes filament-travel {
+  0% { stroke-dashoffset: 0; opacity: 0.25; }
+  40% { opacity: 1; }
+  100% { stroke-dashoffset: -128; opacity: 0.25; }
+}
+
+.filament {
+  animation: filament-travel 2.6s linear infinite;
+}

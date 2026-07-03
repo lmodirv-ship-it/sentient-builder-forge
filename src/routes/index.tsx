@@ -122,16 +122,16 @@ function NeuralBrain({ className }: { className?: string }) {
         <path d="M88,58 Q78,68 84,80" opacity="0.5" />
       </g>
       {/* Animated light filaments */}
-      <g filter="url(#filament-glow)" stroke="url(#filament-grad)" strokeWidth="1.5" strokeLinecap="round" fill="none">
-        <path d="M35,40 Q45,55 35,70" className="filament" strokeDasharray="60" strokeDashoffset="60" />
-        <path d="M45,35 Q55,50 45,80" className="filament" strokeDasharray="80" strokeDashoffset="80" style={{ animationDelay: "0.4s" }} />
-        <path d="M85,40 Q75,55 85,70" className="filament" strokeDasharray="60" strokeDashoffset="60" style={{ animationDelay: "0.8s" }} />
-        <path d="M75,35 Q65,50 75,80" className="filament" strokeDasharray="80" strokeDashoffset="80" style={{ animationDelay: "1.2s" }} />
-        <path d="M50,50 Q60,65 70,50" className="filament" strokeDasharray="50" strokeDashoffset="50" style={{ animationDelay: "1.6s" }} />
-        <path d="M40,60 Q50,75 60,65" className="filament" strokeDasharray="55" strokeDashoffset="55" style={{ animationDelay: "2s" }} />
-        <path d="M80,60 Q70,75 60,65" className="filament" strokeDasharray="55" strokeDashoffset="55" style={{ animationDelay: "2.4s" }} />
-        <path d="M60,30 Q50,45 60,60" className="filament" strokeDasharray="50" strokeDashoffset="50" style={{ animationDelay: "2.8s" }} />
-        <path d="M60,30 Q70,45 60,60" className="filament" strokeDasharray="50" strokeDashoffset="50" style={{ animationDelay: "3.2s" }} />
+      <g filter="url(#filament-glow)" stroke="url(#filament-grad)" strokeWidth="1.8" strokeLinecap="round" fill="none">
+        <path d="M35,40 Q45,55 35,70" className="filament" strokeDasharray="18 110" style={{ animationDelay: "0s" }} />
+        <path d="M45,35 Q55,50 45,80" className="filament" strokeDasharray="18 110" style={{ animationDelay: "0.4s" }} />
+        <path d="M85,40 Q75,55 85,70" className="filament" strokeDasharray="18 110" style={{ animationDelay: "0.8s" }} />
+        <path d="M75,35 Q65,50 75,80" className="filament" strokeDasharray="18 110" style={{ animationDelay: "1.2s" }} />
+        <path d="M50,50 Q60,65 70,50" className="filament" strokeDasharray="18 110" style={{ animationDelay: "1.6s" }} />
+        <path d="M40,60 Q50,75 60,65" className="filament" strokeDasharray="18 110" style={{ animationDelay: "2s" }} />
+        <path d="M80,60 Q70,75 60,65" className="filament" strokeDasharray="18 110" style={{ animationDelay: "2.4s" }} />
+        <path d="M60,30 Q50,45 60,60" className="filament" strokeDasharray="18 110" style={{ animationDelay: "2.8s" }} />
+        <path d="M60,30 Q70,45 60,60" className="filament" strokeDasharray="18 110" style={{ animationDelay: "3.2s" }} />
       </g>
       {/* Subtle core glow nodes */}
       <circle cx="60" cy="60" r="3" fill="var(--gold)" opacity="0.8">
