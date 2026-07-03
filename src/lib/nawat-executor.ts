@@ -19,6 +19,18 @@ export type ExecutorDef = {
 
 const strip = (raw: string, re: RegExp) => raw.replace(re, "").trim();
 
+// Arabic verbs (creation) and English equivalents.
+const AR_CREATE = "(?:انشئ|أنشئ|اصنع|ولّد|ولد|اعمل|ارسم|صمم|صمّم|حو[لّ]?|اقرأ|اقرا|انطق|قل|ابن[ي]?)";
+const EN_CREATE = "\\b(?:generate|create|make|draw|design|build|produce|render|convert)\\b";
+const AR_IMAGE = "(?:صور[ةه]?|شعار|بوستر|رسم|رسمة)";
+const EN_IMAGE = "\\b(?:image|picture|photo|illustration|logo|poster|thumbnail|drawing)\\b";
+const AR_VIDEO = "(?:فيديو|فديو|فلم|مقطع)";
+const EN_VIDEO = "\\b(?:video|clip|film|movie)\\b";
+const AR_SITE = "(?:موقع|صفح[ةه]|واجه[ةه])";
+const EN_SITE = "\\b(?:site|website|landing|page|webpage)\\b";
+const AR_CV = "(?:سيرة\\s*ذاتيه?|سيره\\s*ذاتيه?|السيرة)";
+const EN_CV = "\\b(?:cv|resume|curriculum)\\b";
+
 export const EXECUTORS: ExecutorDef[] = [
   {
     id: "image",
@@ -30,8 +42,10 @@ export const EXECUTORS: ExecutorDef[] = [
     emoji: "🖼️",
     match: [
       /^\/(?:صورة|image|img)\b/i,
-      /\b(انشئ|أنشئ|اصنع|ولّد|ولد|اعمل|ارسم|صمم|generate|create|make|draw|design)\b.*\b(صور[ةه]?|image|picture|photo|illustration|logo|شعار|بوستر|poster|thumbnail)\b/i,
-      /\b(صور[ةه]?|logo|شعار)\b.*\b(انشئ|أنشئ|اصنع|ولّد|صمم|generate|create|make|draw)\b/i,
+      new RegExp(`${AR_CREATE}.{0,30}${AR_IMAGE}`, "i"),
+      new RegExp(`${AR_IMAGE}.{0,30}${AR_CREATE}`, "i"),
+      new RegExp(`${EN_CREATE}.{0,30}${EN_IMAGE}`, "i"),
+      new RegExp(`${EN_IMAGE}.{0,30}${EN_CREATE}`, "i"),
     ],
     cleanPrompt: (raw) => strip(raw, /^\/(?:صورة|image|img)\s*/i),
   },
@@ -45,15 +59,16 @@ export const EXECUTORS: ExecutorDef[] = [
     emoji: "🔊",
     match: [
       /^\/(?:صوت|نطق|tts|speak)\b/i,
-      /\bحو[لّ]?\b.*\b(?:الى|إلى|to)\b.*\bصوت\b/i,
-      /\bاقرأ|اقرا|انطق|قل\b.*\bبصوت\b/i,
-      /\b(text[-\s]?to[-\s]?speech|read\s+aloud|say\s+this|voice\s+over)\b/i,
-      /\bنص\s+الى\s+صوت\b/i,
+      /حو[لّ]?.{0,20}(?:الى|إلى|to).{0,20}صوت/i,
+      /(?:اقرأ|اقرا|انطق|قل).{0,30}بصوت/i,
+      /نص\s*(?:الى|إلى)\s*صوت/i,
+      /\b(?:text[-\s]?to[-\s]?speech|read\s+aloud|say\s+this|voice\s+over)\b/i,
     ],
     cleanPrompt: (raw) =>
       strip(raw, /^\/(?:صوت|نطق|tts|speak)\s*/i)
         .replace(/^\s*(?:حو[لّ]?|اقرأ|اقرا|انطق|قل|read\s+aloud|say)\s*/i, "")
-        .replace(/^\s*(?:هذا\s+النص|النص\s+التالي|the\s+following|this\s+text)\s*[:：-]?\s*/i, ""),
+        .replace(/^\s*(?:هذا\s+النص|النص\s+التالي|the\s+following|this\s+text)\s*[:：-]?\s*/i, "")
+        .replace(/\s*(?:الى|إلى|to)\s*صوت\s*/i, ""),
   },
   {
     id: "site",
@@ -65,8 +80,9 @@ export const EXECUTORS: ExecutorDef[] = [
     emoji: "🧱",
     match: [
       /^\/(?:موقع|site)\b/i,
-      /\b(صمم|أنشئ|انشئ|اصنع|اعمل|ابن[ي]?|build|create|design|make)\b.*\b(موقع|صفح[ةه]|landing|website|site|page)\b/i,
-      /\b(موقع|صفح[ةه]|landing|website)\b.*\b(صمم|أنشئ|انشئ|صمّم|design|build|create)\b/i,
+      new RegExp(`${AR_CREATE}.{0,30}${AR_SITE}`, "i"),
+      new RegExp(`${AR_SITE}.{0,30}${AR_CREATE}`, "i"),
+      new RegExp(`${EN_CREATE}.{0,30}${EN_SITE}`, "i"),
     ],
     cleanPrompt: (raw) => strip(raw, /^\/(?:موقع|site)\s*/i),
   },
@@ -80,7 +96,8 @@ export const EXECUTORS: ExecutorDef[] = [
     emoji: "🎬",
     match: [
       /^\/(?:فيديو|فديو|video|vid)\b/i,
-      /\b(انشئ|أنشئ|اصنع|ولّد|اعمل|generate|create|make|produce)\b.*\b(فيديو|فديو|video|clip|film|فلم|movie|مقطع)\b/i,
+      new RegExp(`${AR_CREATE}.{0,30}${AR_VIDEO}`, "i"),
+      new RegExp(`${EN_CREATE}.{0,30}${EN_VIDEO}`, "i"),
     ],
     cleanPrompt: (raw) => strip(raw, /^\/(?:فيديو|فديو|video|vid)\s*/i),
   },
@@ -94,7 +111,8 @@ export const EXECUTORS: ExecutorDef[] = [
     emoji: "📄",
     match: [
       /^\/(?:cv|سيرة|resume)\b/i,
-      /\b(انشئ|أنشئ|اصنع|اعمل|صمم|build|create|make)\b.*\b(cv|سيرة\s*ذاتيه?|resume|curriculum)\b/i,
+      new RegExp(`${AR_CREATE}.{0,30}${AR_CV}`, "i"),
+      new RegExp(`${EN_CREATE}.{0,30}${EN_CV}`, "i"),
     ],
     cleanPrompt: (raw) => strip(raw, /^\/(?:cv|سيرة|resume)\s*/i),
   },
