@@ -638,6 +638,7 @@ function Home() {
   };
 
   const clearChat = () => persistChat([]);
+  const removeMsg = (id: string) => persistChat(chat.filter((m) => m.id !== id));
 
   // ===== Voice input (MediaRecorder → AI transcription) =====
   const startRec = async () => {
