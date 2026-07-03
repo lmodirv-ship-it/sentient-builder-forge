@@ -128,6 +128,11 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  if (typeof window !== "undefined") {
+    // Register the offline SW once on client boot.
+    import("@/lib/register-sw").then((m) => m.registerNawatSW()).catch(() => {});
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
@@ -135,3 +140,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
