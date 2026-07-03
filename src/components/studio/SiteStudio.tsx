@@ -10,6 +10,7 @@ import { generateSiteHtml } from "@/lib/nawat-site-design.functions";
 import { saveProject, localSiteTemplate } from "@/lib/studio-projects";
 import { cacheKey, getCached, setCached } from "@/lib/studio-cache";
 import { downloadBlob } from "./shared";
+import { VoiceControls } from "@/components/VoiceControls";
 
 export default function SiteStudio({ online }: { online: boolean }) {
   const runSite = useServerFn(generateSiteHtml);
@@ -75,7 +76,8 @@ export default function SiteStudio({ online }: { online: boolean }) {
       <Card className="p-5 space-y-4">
         <div className="flex items-center gap-2"><Globe className="h-5 w-5 text-emerald-500" /><h2 className="font-bold">استوديو المواقع</h2></div>
         <Input placeholder="عنوان المشروع (اختياري)" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <Textarea rows={6} placeholder="صف الموقع: الفكرة، الجمهور، الأقسام، والألوان..." value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+        <Textarea rows={6} placeholder="صف الموقع: الفكرة، الجمهور، الأقسام، والألوان... (أو اضغط «تحدّث»)" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+        <VoiceControls onTranscript={(t) => setPrompt((p) => (p ? p + " " + t : t))} speakText={prompt} lang={lang} />
         <div className="flex gap-2">
           <Button variant={lang === "ar" ? "default" : "outline"} size="sm" onClick={() => setLang("ar")}>العربية</Button>
           <Button variant={lang === "en" ? "default" : "outline"} size="sm" onClick={() => setLang("en")}>English</Button>

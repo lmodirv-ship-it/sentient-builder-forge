@@ -10,6 +10,7 @@ import { generateCV } from "@/lib/nawat-cv.functions";
 import { saveProject } from "@/lib/studio-projects";
 import { cacheKey, getCached, setCached } from "@/lib/studio-cache";
 import { downloadBlob } from "./shared";
+import { VoiceControls } from "@/components/VoiceControls";
 
 function localCVTemplate(prompt: string, lang: "ar" | "en"): string {
   const isAr = lang === "ar";
@@ -70,7 +71,8 @@ export default function CVStudio({ online }: { online: boolean }) {
       <Card className="p-5 space-y-4">
         <div className="flex items-center gap-2"><FileText className="h-5 w-5 text-emerald-500" /><h2 className="font-bold">استوديو السيرة الذاتية</h2></div>
         <Input placeholder="عنوان المشروع (اختياري)" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <Textarea rows={8} placeholder="الاسم: ...&#10;الوظيفة المستهدفة: ...&#10;الخبرات: ...&#10;التعليم: ...&#10;المهارات: ..." value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+        <Textarea rows={8} placeholder="الاسم: ...&#10;الوظيفة المستهدفة: ...&#10;الخبرات: ...&#10;التعليم: ...&#10;المهارات: ... (أو تحدّث)" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+        <VoiceControls onTranscript={(t) => setPrompt((p) => (p ? p + "\n" + t : t))} speakText={prompt} lang={lang} />
         <div className="flex gap-2">
           <Button variant={lang === "ar" ? "default" : "outline"} size="sm" onClick={() => setLang("ar")}>العربية</Button>
           <Button variant={lang === "en" ? "default" : "outline"} size="sm" onClick={() => setLang("en")}>English</Button>

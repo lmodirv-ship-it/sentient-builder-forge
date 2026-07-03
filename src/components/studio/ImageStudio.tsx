@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { generateImage } from "@/lib/nawat-image.functions";
 import { saveProject, localImageSVG } from "@/lib/studio-projects";
 import { cacheKey, getCached, setCached } from "@/lib/studio-cache";
+import { VoiceControls } from "@/components/VoiceControls";
 
 export default function ImageStudio({ online }: { online: boolean }) {
   const runImage = useServerFn(generateImage);
@@ -65,7 +66,8 @@ export default function ImageStudio({ online }: { online: boolean }) {
           <Button variant={kind === "logo" ? "default" : "outline"} size="sm" onClick={() => setKind("logo")}>شعار</Button>
         </div>
         <Input placeholder="عنوان المشروع (اختياري)" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <Textarea rows={5} placeholder={kind === "logo" ? "شعار لـ ..." : "وصف الصورة"} value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+        <Textarea rows={5} placeholder={kind === "logo" ? "شعار لـ ... (أو تحدّث)" : "وصف الصورة (أو تحدّث)"} value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+        <VoiceControls onTranscript={(t) => setPrompt((p) => (p ? p + " " + t : t))} speakText={prompt} lang="ar" />
         <div className="flex gap-2">
           <Button onClick={generate} disabled={busy} className="flex-1">
             {busy ? <Loader2 className="h-4 w-4 ml-1 animate-spin" /> : <Wand2 className="h-4 w-4 ml-1" />}
