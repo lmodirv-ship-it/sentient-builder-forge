@@ -1,4 +1,5 @@
 // TF-IDF style local retrieval — fully offline.
+export type MemoryTier = "daily" | "long" | "core";
 export type Doc = {
   id: string;
   title: string;
@@ -6,6 +7,8 @@ export type Doc = {
   tags: string[];
   source?: string;
   createdAt: number;
+  /** daily = ephemeral notes/tasks · long = projects/decisions/books · core = vision/principles (never expire) */
+  tier?: MemoryTier;
 };
 
 const STOP = new Set([
