@@ -137,11 +137,17 @@ function Home() {
     const base = (content.trim() || title.trim());
     const chunks = chunkText(base);
     const tagArr = tags.split(",").map((x) => x.trim()).filter(Boolean);
+    // Tier inferred from tags: #core / #جوهر → core, #daily / #يومي → daily, else long-term.
+    const tagSet = new Set(tagArr.map((x) => x.toLowerCase()));
+    const tier: "daily" | "long" | "core" =
+      tagSet.has("core") || tagSet.has("جوهر") || tagSet.has("مبدأ") || tagSet.has("رؤية") ? "core"
+      : tagSet.has("daily") || tagSet.has("يومي") || tagSet.has("مهمة") || tagSet.has("task") ? "daily"
+      : "long";
     const now = Date.now();
     const newDocs: Doc[] = chunks.map((c, i) => ({
       id: crypto.randomUUID(),
       title: chunks.length > 1 ? `${title.trim() || "ملاحظة"} (${i + 1}/${chunks.length})` : (title.trim() || c.slice(0, 60)),
-      content: c, tags: tagArr, createdAt: now + i,
+      content: c, tags: tagArr, createdAt: now + i, tier,
     }));
     persistDocs([...newDocs, ...docs]);
     setTitle(""); setContent(""); setTags("");
@@ -328,6 +334,7 @@ function Home() {
             source: h.source,
             date: h.createdAt ? new Date(h.createdAt).toISOString().slice(0, 10) : undefined,
             tags: h.tags,
+            tier: h.tier,
           })),
           history,
         },
@@ -349,6 +356,7 @@ function Home() {
           tags: ["conversation", isAr ? "حوار" : "dialogue"],
           source: "chat",
           createdAt: now,
+          tier: "long",
         };
         persistDocs([qa, ...docs]);
       }
