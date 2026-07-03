@@ -142,7 +142,7 @@ async function createWindow() {
             type: "info",
             title: "حول نواة",
             message: "نواة — Nawat Desktop",
-            detail: `الإصدار: 1.6.2\nالخادم: ${APP_URL}\nالبيانات المحلية: ${LOCAL_DATA}`,
+            detail: `الإصدار: 1.6.3\nالخادم: ${APP_URL}\nالبيانات المحلية: ${LOCAL_DATA}`,
           }),
         },
         { type: "separator" },
