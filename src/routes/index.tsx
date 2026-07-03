@@ -316,13 +316,19 @@ function Home() {
     setInput("");
     setThinking(true);
     try {
-      const hits = searchTFIDF(text, docs, 6);
+      const hits = searchTFIDF(text, docs, 10);
       const history = baseChat.slice(-10).map((m) => ({ role: m.role, text: m.text }));
       const { text: reply } = await ask({
         data: {
           question: text,
           lang,
-          context: hits.map((h) => ({ title: h.title, content: h.content.slice(0, 800) })),
+          context: hits.map((h) => ({
+            title: h.title,
+            content: h.content.slice(0, 1000),
+            source: h.source,
+            date: h.createdAt ? new Date(h.createdAt).toISOString().slice(0, 10) : undefined,
+            tags: h.tags,
+          })),
           history,
         },
       });
