@@ -6,42 +6,20 @@ const Input = z.object({
   lang: z.enum(["ar", "en"]).default("ar"),
 });
 
-/** CV generation via BuildCV AI. Falls back to Lovable AI (HTML CV) if HN not configured. */
+/** CV generation — BuildCV AI only (buildcv-ai.online). No external fallback. */
 export const generateCV = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => Input.parse(i))
   .handler(async ({ data }) => {
     const { hnBuildCV } = await import("./hn-clients.server");
-    const hn = await hnBuildCV(data.prompt, data.lang);
-    if (hn.ok) return { html: hn.html, pdfUrl: hn.pdfUrl ?? null, error: null };
-    if (!("notConfigured" in hn) || !hn.notConfigured) console.warn("[nawat-cv] HN failed:", hn.error);
+    const { bestUrlFor } = await import("./hn-manifest");
+    const { url: hnUrl } = bestUrlFor("cv-build", data.prompt);
 
-    // Lovable fallback: generate a self-contained HTML CV.
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) return { html: "", pdfUrl: null, error: "Missing LOVABLE_API_KEY" };
-    const sys = data.lang === "ar"
-      ? `أنت مصمم سِيَر ذاتية احترافية. أنتج ملف HTML واحد كامل مستقل يستعمل Tailwind CDN. RTL عربي. تصميم أنيق ومقروء وقابل للطباعة (A4). ابدأ بـ <!DOCTYPE html>.`
-      : `You are a professional CV designer. Output ONE self-contained HTML file using Tailwind CDN. Elegant, printable (A4). Start with <!DOCTYPE html>.`;
-    try {
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: sys },
-            { role: "user", content: data.prompt },
-          ],
-        }),
-      });
-      if (!res.ok) {
-        const t = await res.text().catch(() => "");
-        return { html: "", pdfUrl: null, error: `HTTP ${res.status}: ${t.slice(0, 200)}` };
-      }
-      const j: any = await res.json();
-      let html: string = j?.choices?.[0]?.message?.content ?? "";
-      html = html.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim();
-      return { html, pdfUrl: null, error: html ? null : "Empty response" };
-    } catch (e: any) {
-      return { html: "", pdfUrl: null, error: String(e?.message || e) };
-    }
+    const hn = await hnBuildCV(data.prompt, data.lang);
+    if (hn.ok) return { html: hn.html, pdfUrl: hn.pdfUrl ?? null, error: null, hnUrl };
+
+    const reason =
+      "notConfigured" in hn && hn.notConfigured
+        ? "BuildCV AI غير مُهيّأ (أضف HN_BUILDCV_API_KEY أو HN_API_KEY)."
+        : hn.error;
+    return { html: "", pdfUrl: null, error: reason, hnUrl };
   });

@@ -1,53 +1,46 @@
+# نسخة Windows جاهزة للتشغيل + حقن HN
 
-# هل يمكن تحقيق ما طلبت؟ — نعم، جزئياً الآن وكلياً بخطوات واضحة
+الهدف: ملف مضغوط `Nawat-Windows.zip` فيه `Nawat.exe` تشغّله مباشرة على ويندوز بدون أي بناء أو تنصيب.
 
-## الوضع الحالي (ما يعمل فعلاً)
-- **الكشف عن النية** يعمل: «صمم صورة / حوّل لصوت / صمم موقع» تُلتقط بواسطة `nawat-executor.ts`.
-- **التنفيذ في الخلفية + عرض النتيجة في الشات** جاهز في `routes/index.tsx` (صورة، مشغّل صوت، iframe للموقع).
-- **المزوّد الحالي للتنفيذ = Lovable AI Gateway** (نموذج داخلي)، وليس مواقع HN الفعلية. الرسالة تقول «يعمل عبر HN AI Generation» لأغراض العرض فقط.
+## المرحلة أ — حقن مصادر HN (شرط لعمل الـ exe فعلياً)
 
-## ما لا يمكن تلقائياً (قيود حقيقية)
-مواقعك (`generatin.hn-groupe.org`, `ai.hn-groupe.org`, `site.hn-groupe.tech`...) هي **مواقع ويب بواجهات بشرية**، وليست **APIs موثّقة**. لا يمكن للسيرفر أن «يفتح موقعاً ويضغط أزرار» ويعيد نتيجة إلا بأحد ثلاثة شروط:
+1. `src/data/hn-manifest.json` — كامل المانيفست (152 موقع / 27 مشروع / `HN_API_KEY` موحّد).
+2. `src/lib/hn-manifest.ts` — Helpers: `resolveUrl` · `resolveKey` · `projectsByCapability` · `bestUrlFor`.
+3. توحيد `hn-clients.server.ts` ليقرأ من المانيفست.
+4. حذف كل Fallback خارجي من كل الدوال (`nawat-image/tts/site/cv/video/ai/ocr/transcribe/query-expand`) — HN فقط. عند الفشل: بطاقة "افتح على HN".
+5. `HNStatusPill` + صفحة `/hn` تعرض الحالة الحقيقية لكل خدمة.
+6. تحديث الدستور: "HN مصدر حصري".
 
-1. **يوفّر الموقع REST API** (endpoint + مفتاح) — الحل الأنظف.
-2. **يوفّر webhook** يستقبل الطلب ويعيد النتيجة على callback.
-3. **تشغيل متصفح بلا واجهة (Playwright)** على سيرفرك الخاص — غير ممكن داخل Cloudflare Worker (بيئة Lovable الحالية)، يحتاج VPS منفصل.
+## المرحلة ب — بناء exe جاهز
 
-## الخطة المقترحة (٣ مسارات، اختر ما يناسب)
+1. تثبيت أدوات التحزيم في الصندوق: `bun add -d electron @electron/packager`.
+2. ضبط `vite.config.ts` (`base: './'`) و`package.json` (`main: electron/main.cjs`).
+3. `bunx vite build` ثم:
+   ```bash
+   npx @electron/packager . "Nawat" \
+     --platform=win32 --arch=x64 \
+     --out=/tmp/electron-release --overwrite \
+     --ignore='node_modules' --ignore='^/src' \
+     --ignore='^/public' --ignore='^/electron-release'
+   ```
+4. ضغط الناتج مباشرة إلى `/mnt/documents/Nawat-Windows.zip` (يحتوي مجلد فيه `Nawat.exe` وكل ملفات Electron).
+5. تضمين `.env.example` بجانب `Nawat.exe` مع `HN_API_KEY=` والمتغيرات الاختيارية لكل مشروع.
+6. تسليم الملف عبر `<presentation-artifact>` — يظهر لك زر تنزيل مباشر.
 
-### المسار A — تنفيذ فوري بمزوّد Lovable + بصمة HN (الوضع الحالي، محسّن)
-- إبقاء التوليد على Lovable AI (يعمل الآن).
-- توضيح للمستخدم أن «HN AI Generation» هو **الواجهة**، والنواة تنفّذ نيابة عنه.
-- إصلاح خطأ الصورة الأخير («No image returned») عبر تسجيل استجابة الـ Gateway ومعالجة `content_policy` و 402/429.
-- **الوقت:** فوري. **الفائدة:** يشتغل اليوم بدون تعديل مواقعك.
+### طريقة الاستخدام على ويندوز
+- فك الضغط.
+- (اختياري) ضع `HN_API_KEY` في ملف `.env` بجوار `Nawat.exe`.
+- انقر مزدوجاً على `Nawat.exe` — يفتح التطبيق فوراً بدون تنصيب.
 
-### المسار B — ربط مواقع HN عبر API حقيقي (التوصية طويلة الأمد)
-لكل موقع نضيف عميلاً (client) في `src/lib/hn-clients/`:
-- `hn-generatin.ts` → `POST https://api.generatin.hn-groupe.org/v1/image` (يحتاج endpoint + key)
-- `hn-ai-studio.ts` → TTS
-- `hn-site-builder.ts` → HTML generation
-- `hn-video.ts`, `hn-cv.ts`, ...
+### قيود واقعية (شفافية)
+- لا يمكن إصدار `.exe` installer موقّع رقمياً داخل هذا الصندوق (يحتاج `electron-builder` + توقيع Windows).
+- الحل المُقدّم: مجلد Portable فيه `Nawat.exe` يعمل مباشرة — لا تنصيب، لا Admin.
+- الحجم المتوقع: ~180–220 ميغا (Electron runtime مضمّن).
 
-**متطلبات منك:**
-| الموقع | يحتاج |
-|---|---|
-| generatin.hn-groupe.org | URL الـ API + مفتاح |
-| ai.hn-groupe.org | URL + مفتاح |
-| site.hn-groupe.tech | URL + مفتاح |
-| studio.hn-createur.com | URL + مفتاح |
-| buildcv-ai.online | URL + مفتاح |
+## معايير القبول
+1. `Nawat-Windows.zip` موجود على `/mnt/documents/` مع زر تنزيل.
+2. فك الضغط على ويندوز + نقرة مزدوجة = التطبيق يفتح.
+3. كل خدمة تمر عبر مانيفست HN.
+4. `rg "ai.gateway.lovable.dev" src/` = 0.
 
-نُخزّن المفاتيح كـ secrets (`HN_GENERATIN_KEY` …) عبر أداة الأسرار.
-
-### المسار C — Job Queue غير متزامن (للمهام الطويلة كالفيديو)
-- النواة ترسل الطلب → تُنشئ `job_id` في Supabase → الموقع يرد لاحقاً على `/api/public/hn-callback`.
-- الشات يعرض «جارٍ التنفيذ» ثم يُحدَّث تلقائياً عبر realtime.
-
-## توصيتي
-1. **الآن:** تفعيل المسار A كامل + إصلاح رسالة خطأ الصورة (مسار احتياطي واضح + زر «افتح الموقع مباشرة»).
-2. **بعدها (عندما توفّر API لأي موقع):** أضيف عميل HN لذلك الموقع في `hn-clients/` وأبدّله مع Lovable AI تلقائياً في `EXECUTORS`.
-3. **للفيديو/السيرة:** المسار C عندما تجهز backends.
-
-## قرار مطلوب منك
-- **(1)** ابدأ المسار A فقط الآن (إصلاح + توضيح البصمة)؟ 
-- **(2)** أم لديك API فعلي لأحد المواقع الخمسة نبدأ بربطه في المسار B؟ إن نعم، أعطني: `base_url` + طريقة auth + مثال request/response.
+سأنفذ المرحلتين تلقائياً في تحويلة واحدة عند الموافقة.
