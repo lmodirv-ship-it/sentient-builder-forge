@@ -40,6 +40,9 @@ import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
 import { transcribeAudio } from "@/lib/nawat-transcribe.functions";
 import { generateImage } from "@/lib/nawat-image.functions";
+import { generateSpeech } from "@/lib/nawat-tts.functions";
+import { generateSiteHtml } from "@/lib/nawat-site-design.functions";
+import { detectExecutor, runningHeader, stamp } from "@/lib/nawat-executor";
 import {
   fsSupported, pickRootDir, getRootName, clearRootDir,
   saveSnapshot, loadSnapshot, saveOriginalFile,
@@ -57,7 +60,15 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type ChatMsg = { id: string; role: "user" | "assistant"; text: string; imageUrl?: string };
+type ChatMsg = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  imageUrl?: string;
+  audioUrl?: string;
+  htmlPayload?: string;
+  running?: boolean;
+};
 type Streak = { last: string; days: number };
 
 const K_DOCS = "nawat.docs.v2";
