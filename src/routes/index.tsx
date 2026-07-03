@@ -764,13 +764,36 @@ function Home() {
               <div className="relative">
                 <Search className="size-4 absolute top-1/2 -translate-y-1/2 start-3 text-muted-foreground" />
                 <Input value={query} onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t("ابحث في ذاكرتك…", "Search your memory…")} className="ps-9" />
+                  placeholder={t("ابحث بالاسم، الوسم، الرابط، أو التصنيف…", "Search by name, tag, URL, or category…")} className="ps-9 pe-9" />
+                {(query || activeTag || activeCategory) && (
+                  <button type="button"
+                    onClick={() => { setQuery(""); setActiveTag(null); setActiveCategory(null); }}
+                    className="absolute top-1/2 -translate-y-1/2 end-2 text-xs text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded">
+                    ×
+                  </button>
+                )}
               </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant={activeCategory === null ? "default" : "secondary"} className="cursor-pointer"
+                  onClick={() => setActiveCategory(null)}>
+                  🌐 {t("كل التصنيفات", "All categories")}
+                </Badge>
+                {SITE_CATEGORIES.map((c) => (
+                  <Badge key={c.key} variant={activeCategory === c.key ? "default" : "secondary"}
+                    className="cursor-pointer"
+                    onClick={() => setActiveCategory(activeCategory === c.key ? null : c.key)}>
+                    <span className="me-1">{c.emoji}</span>{isAr ? c.ar : c.en}
+                    <span className="opacity-60 ms-1">{c.urls.length}</span>
+                  </Badge>
+                ))}
+              </div>
+
               {allTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   <Badge variant={activeTag === null ? "default" : "secondary"} className="cursor-pointer"
                     onClick={() => setActiveTag(null)}>
-                    <TagIcon className="size-3" /> {t("الكل", "All")}
+                    <TagIcon className="size-3" /> {t("كل الوسوم", "All tags")}
                   </Badge>
                   {allTags.map(([tg, n]) => (
                     <Badge key={tg} variant={activeTag === tg ? "default" : "secondary"}
@@ -780,6 +803,11 @@ function Home() {
                   ))}
                 </div>
               )}
+
+              <div className="text-xs text-muted-foreground">
+                {t(`${visible.length} نتيجة من ${docs.length}`, `${visible.length} of ${docs.length} results`)}
+              </div>
+
               <ScrollArea className="h-[50vh] pr-2">
                 <div className="space-y-2">
                   {visible.length === 0 && (
