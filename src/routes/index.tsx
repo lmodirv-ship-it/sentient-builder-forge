@@ -56,6 +56,28 @@ const load = <T,>(k: string, fb: T): T => {
 const save = (k: string, v: unknown) => localStorage.setItem(k, JSON.stringify(v));
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+function escapeRegExp(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+function queryTerms(q: string): string[] {
+  return Array.from(new Set(
+    q.toLowerCase().split(/[\s،,.;:!?()\[\]"'`]+/).filter((w) => w.length >= 2)
+  )).sort((a, b) => b.length - a.length);
+}
+function Highlight({ text, terms }: { text: string; terms: string[] }) {
+  if (!terms.length || !text) return <>{text}</>;
+  const re = new RegExp(`(${terms.map(escapeRegExp).join("|")})`, "gi");
+  const parts = text.split(re);
+  return (
+    <>
+      {parts.map((p, i) =>
+        i % 2 === 1
+          ? <mark key={i} className="bg-primary/25 text-foreground rounded px-0.5">{p}</mark>
+          : <span key={i}>{p}</span>
+      )}
+    </>
+  );
+}
+
 function bumpStreak(s: Streak): Streak {
   const t = todayISO();
   if (s.last === t) return s;
