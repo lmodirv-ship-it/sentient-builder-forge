@@ -138,12 +138,15 @@ export const HN_PROJECTS: HNProject[] = [
   },
   {
     id: "hn-db",
-    name: "HN DB — منصة قواعد البيانات",
-    nameEn: "HN DB — Database Platform",
+    name: "HN-DB — قاعدة البيانات المركزية",
+    nameEn: "HN-DB — Central Database",
     category: "database",
-    summary: "منصة قواعد بيانات كاملة مع API ومصادقة وملفات وذكاء اصطناعي وحالة.",
-    summaryEn: "Full DB platform: API, auth, files, AI, users, status, websockets.",
-    primary: "https://hn-db.fun",
+    pillar: "data-core",
+    summary: "الركيزة #2 لمنظومة HN: قاعدة البيانات المركزية لكل الخدمات (API، مصادقة، ملفات، AI، حالة). النطاق الرئيسي المعتمد: hn-groupe.org.",
+    summaryEn: "HN pillar #2: central database for every service (API, auth, files, AI, status). Official domain: hn-groupe.org.",
+    primary: "https://hn-groupe.org",
+    aliases: ["hn-db", "database", "db", "hn-groupe.org"],
+
     interfaces: [
       iface("https://hn-db.fun", "site"),
       iface("https://www.hn-db.fun", "site-www"),
