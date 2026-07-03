@@ -13,9 +13,8 @@ import {
   Brain, Sparkles, Plus, Search, Trash2, MessageSquare, BookOpen, Languages,
   Upload, Download, FileUp, Flame, Tag as TagIcon, Library,
   Mic, Square, Volume2, Copy, Image as ImageIcon, FileDown, Wand2,
-  FolderOpen, HardDrive, Network,
+  FolderOpen, HardDrive,
 } from "lucide-react";
-import { EcosystemBrowser } from "@/components/EcosystemBrowser";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { searchTFIDF, searchHybrid, rerank, withNeighbors, chunkText, type Doc } from "@/lib/nawat-search";
 import { expandQuery } from "@/lib/nawat-query-expand.functions";
@@ -23,6 +22,10 @@ import { extractPdfText } from "@/lib/pdf-extract";
 import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
 import { getSitesDocs, SITES_COUNT, SITES_CATEGORY_COUNT, extractUrls, relatedCategoriesFor, SITE_CATEGORIES } from "@/lib/nawat-sites";
 import { getSitesQADocs, SITES_QA_COUNT } from "@/lib/nawat-sites-qa";
+import {
+  getProjectDocs, HN_PROJECT_DOC_COUNT, findProject,
+  renderAllSites, renderProjectCard, renderProjectTasks,
+} from "@/lib/nawat-sites-memory";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
