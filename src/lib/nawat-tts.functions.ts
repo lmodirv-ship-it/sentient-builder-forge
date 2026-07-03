@@ -9,6 +9,12 @@ const Input = z.object({
 export const generateSpeech = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => Input.parse(i))
   .handler(async ({ data }) => {
+    // 1) Try HN AI Studio first (ai.hn-groupe.org) if configured.
+    const { hnGenerateSpeech } = await import("./hn-clients.server");
+    const hn = await hnGenerateSpeech(data.text, data.voice);
+    if (hn.ok) return { audioBase64: hn.audioBase64, mime: hn.mime, error: null as string | null };
+    if (!("notConfigured" in hn) || !hn.notConfigured) console.warn("[nawat-tts] HN failed:", hn.error);
+
     const key = process.env.LOVABLE_API_KEY;
     if (!key) return { audioBase64: "", mime: "", error: "Missing LOVABLE_API_KEY" };
 
