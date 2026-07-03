@@ -15,6 +15,7 @@ import {
   Mic, Square, Volume2, Copy, Image as ImageIcon, FileDown, Wand2,
   FolderOpen, HardDrive,
 } from "lucide-react";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { searchTFIDF, searchHybrid, rerank, withNeighbors, chunkText, type Doc } from "@/lib/nawat-search";
 import { expandQuery } from "@/lib/nawat-query-expand.functions";
 import { extractPdfText } from "@/lib/pdf-extract";
@@ -530,26 +531,27 @@ function Home() {
 
   return (
     <div dir={isAr ? "rtl" : "ltr"} className="min-h-screen bg-background text-foreground relative [&>*]:relative [&>*]:z-[1]">
-      <header className="border-b border-border/60 backdrop-blur-xl sticky top-0 z-10 bg-background/60">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="relative size-10 rounded-2xl bg-primary/10 border border-primary/40 grid place-items-center text-primary shadow-elegant">
+      <header className="border-b border-border/40 backdrop-blur-2xl sticky top-0 z-20 bg-background/70">
+        <div className="max-w-6xl mx-auto px-4 py-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="relative size-11 shrink-0 rounded-2xl bg-gradient-to-br from-primary to-[color:var(--gold)] grid place-items-center text-white shadow-[0_10px_30px_-8px_color-mix(in_oklab,var(--primary)_60%,transparent)]">
               <Brain className="size-5" />
-              <span className="absolute inset-0 rounded-2xl animate-[pulse-ring_2.4s_ease-out_infinite]" />
+              <span className="absolute inset-0 rounded-2xl animate-[pulse-ring_2.6s_ease-out_infinite]" />
             </div>
-            <div>
-              <h1 className="text-lg font-extrabold leading-tight tracking-tight nawat-holo">{t("نواة", "NAWAT")}</h1>
-              <p className="nawat-chip text-muted-foreground leading-tight flex items-center gap-1.5">
-                <span className="inline-block size-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
-                {t("نظام معرفي · أوفلاين", "COGNITIVE OS · OFFLINE")}
+            <div className="min-w-0">
+              <h1 className="text-xl font-extrabold leading-tight tracking-tight nawat-holo truncate">{t("نواة", "NAWAT")}</h1>
+              <p className="text-[11px] text-muted-foreground leading-tight flex items-center gap-1.5 truncate">
+                <span className="inline-block size-1.5 shrink-0 rounded-full bg-[color:var(--gold)] shadow-[0_0_8px_var(--gold)]" />
+                {t("ذاكرتك وعقلك الثاني", "Your second brain")}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {streak.days > 0 && (
-              <Badge variant="secondary" className="gap-1 bg-secondary/60 border border-border nawat-chip"><Flame className="size-3 text-orange-400" />{streak.days}</Badge>
+              <Badge variant="secondary" className="gap-1 bg-[color:var(--gold)]/10 border border-[color:var(--gold)]/30 text-[color:var(--gold)] nawat-chip"><Flame className="size-3" />{streak.days}</Badge>
             )}
-            <Badge variant="secondary" className="gap-1 bg-secondary/60 border border-border nawat-chip"><Sparkles className="size-3 text-primary" />{docs.length}</Badge>
+            <Badge variant="secondary" className="hidden sm:inline-flex gap-1 bg-primary/10 border border-primary/30 text-primary nawat-chip"><Sparkles className="size-3" />{docs.length}</Badge>
+            <ThemeSwitcher isAr={isAr} />
             <Button variant="outline" size="sm" onClick={() => setLang(isAr ? "en" : "ar")}>
               <Languages className="size-4" /> {isAr ? "EN" : "ع"}
             </Button>
@@ -557,28 +559,68 @@ function Home() {
         </div>
       </header>
 
-      <section className="max-w-6xl mx-auto px-4 pt-20 pb-10 text-center relative">
-        <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-md nawat-chip text-primary">
-          <span className="inline-block size-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary)] animate-pulse" />
-          {t("الإصدار 2026 · نواة الذكاء", "v2026 · NEURAL CORE")}
+      {/* Premium hero — greeting card with brain glyph + quick actions */}
+      <section className="max-w-6xl mx-auto px-4 pt-8 pb-6 space-y-6">
+        <div className="relative rounded-[2rem] overflow-hidden nawat-hero-bg border border-border/50 p-6 sm:p-10 shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--primary)_50%,transparent)]">
+          <div className="absolute -top-16 -right-16 size-72 rounded-full bg-primary/25 blur-[80px]" />
+          <div className="absolute -bottom-20 -left-16 size-72 rounded-full bg-[color:var(--gold)]/15 blur-[90px]" />
+          <div className="relative grid md:grid-cols-[1fr_auto] items-center gap-6">
+            <div className="min-w-0 text-center md:text-start">
+              <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/5 nawat-chip nawat-gold-text">
+                <span className="inline-block size-1.5 rounded-full bg-[color:var(--gold)] shadow-[0_0_8px_var(--gold)] animate-pulse" />
+                {t("العقل نشط · دون إنترنت", "BRAIN ACTIVE · OFFLINE")}
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.1]">
+                <span className="nawat-holo">{t("صباح الخير،", "Good morning,")}</span>
+                <br />
+                <span className="text-foreground/90">{t("نواة تسمعك.", "Nawat is listening.")}</span>
+              </h2>
+              <p className="mt-4 text-muted-foreground text-sm sm:text-base leading-relaxed max-w-xl mx-auto md:mx-0">
+                {t(
+                  "أنا هنا لأتذكّر معك، أربط أفكارك، وأكشف ما نسيت — من ذاكرتك أنت، لا من الإنترنت.",
+                  "I'm here to remember with you, connect your thoughts, and surface what you forgot — from your own memory, never the web.",
+                )}
+              </p>
+            </div>
+            <div className="relative size-40 sm:size-52 shrink-0 mx-auto md:mx-0">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/40 to-[color:var(--gold)]/30 blur-2xl" />
+              <div className="relative size-full rounded-full bg-gradient-to-br from-primary/20 to-transparent border border-white/10 grid place-items-center backdrop-blur-xl">
+                <Brain className="size-24 sm:size-32 text-[color:var(--gold)] drop-shadow-[0_0_30px_color-mix(in_oklab,var(--primary)_70%,transparent)]" />
+              </div>
+            </div>
+          </div>
         </div>
-        <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.05]">
-          <span className="nawat-holo">{t("اقرأ. علّمني.", "Read. Teach me.")}</span>
-          <br />
-          <span className="bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent">{t("ثم اسألني.", "Then ask me.")}</span>
-        </h2>
-        <p className="mt-6 text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          {t(
-            "ارفع كتباً PDF أو أضف ملاحظات يومية. أُقطّعها وأفهرسها وأجد لك أهم المقاطع — كل ذلك داخل متصفحك بدون إنترنت.",
-            "Upload PDFs or add daily notes. I chunk, index, and retrieve the most relevant passages — fully in your browser, no internet needed.",
-          )}
-        </p>
-        <div className="mt-8 flex items-center justify-center gap-6 nawat-chip text-muted-foreground">
-          <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-primary" /> {t("بدون خوادم", "ZERO SERVER")}</span>
-          <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-[oklch(0.7_0.22_280)]" /> {t("بحث TF-IDF", "TF-IDF SEARCH")}</span>
-          <span className="hidden sm:flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-[oklch(0.75_0.2_220)]" /> {t("ذاكرة محلية", "LOCAL MEMORY")}</span>
+
+        {/* Quick action tiles — mockup-inspired */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { icon: MessageSquare, label: t("محادثة", "Chat"), sub: t("اسأل نواة", "Ask Nawat"), tone: "primary" },
+            { icon: Search,        label: t("بحث ذكي", "Smart search"), sub: t("في ذاكرتك", "Your memory"), tone: "gold" },
+            { icon: Plus,          label: t("ملاحظة", "Note"), sub: t("أضف فكرة", "Capture idea"), tone: "primary" },
+            { icon: FileUp,        label: t("رفع ملف", "Upload"), sub: t("PDF · صور · صوت", "PDF · IMG · Audio"), tone: "gold" },
+          ].map((a, i) => {
+            const Icon = a.icon;
+            const isGold = a.tone === "gold";
+            return (
+              <button
+                key={i}
+                className={`group text-start p-4 rounded-2xl nawat-glass hover:-translate-y-0.5 transition-all ${
+                  isGold ? "hover:border-[color:var(--gold)]/40" : "hover:border-primary/40"
+                }`}
+              >
+                <div className={`size-10 mb-3 rounded-xl grid place-items-center ${
+                  isGold ? "bg-[color:var(--gold)]/10 text-[color:var(--gold)]" : "bg-primary/10 text-primary"
+                } group-hover:scale-110 transition-transform`}>
+                  <Icon className="size-5" />
+                </div>
+                <div className="text-sm font-bold">{a.label}</div>
+                <div className="text-[11px] text-muted-foreground truncate">{a.sub}</div>
+              </button>
+            );
+          })}
         </div>
       </section>
+
 
 
       <main className="max-w-6xl mx-auto px-4 pb-16">
@@ -642,10 +684,10 @@ function Home() {
                 })()}
                 {chat.map((m) => (
                   <div key={m.id} className={`flex group ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                    <div className={`max-w-[85%] rounded-3xl px-4 py-2.5 text-sm leading-relaxed ${
                       m.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap"
-                        : "bg-card border border-border rounded-bl-sm"
+                        ? "nawat-bubble-user rounded-br-md whitespace-pre-wrap"
+                        : "nawat-glass rounded-bl-md"
                     }`}>
                       {m.role === "assistant" ? (
                         <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-pre:my-2 prose-headings:my-2">
