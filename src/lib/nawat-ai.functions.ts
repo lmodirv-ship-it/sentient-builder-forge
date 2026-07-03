@@ -76,6 +76,15 @@ export const askNawat = createServerFn({ method: "POST" })
 • **روابط ذات صلة** — إن ظهرت داخل المقاطع.
 • **فجوات المعرفة** — ما ينقص الذاكرة (سطر واحد).
 • **اقتراحات ربط** — مقاطع مترابطة يستفيد منها المستخدم (سطر واحد).`
+ + `
+
+قواعد خاصة بأسئلة «مواقعي / منظومة HN»:
+- إن سأل عن موقع أو مشروع من منظومته، أعطِ بالترتيب:
+  1) اسم المشروع + الرابط الرئيسي.
+  2) المهام/القدرات (من الذاكرة فقط).
+  3) قائمة الواجهات المتوفرة (admin / client / driver / api …) كروابط قابلة للنقر.
+  4) اقتراح ذكي في سطر واحد (مثلاً: هل تريد فتح لوحة الإدارة؟).
+- استخدم روابط Markdown [text](url) دائماً حتى تكون قابلة للنقر.`
       : `You are "Nawat" — the user's knowledge companion inside the HN ecosystem.
 
 Identity (never break):
@@ -108,6 +117,17 @@ Answer structure (use for complex questions):
 • **Knowledge gaps** — one line on what memory lacks.
 • **Connection hints** — one line linking related passages.`;
 
+    const sysExtraEn = `
+
+Rules for "my sites / HN ecosystem" questions:
+- When asked about one of the user's sites/projects, answer in this order:
+  1) Project name + primary URL.
+  2) Tasks/capabilities (from memory only).
+  3) List of available interfaces (admin / client / driver / api …) as clickable links.
+  4) One smart suggestion (e.g. "Want to open the admin panel?").
+- Always use Markdown links [text](url) so they are clickable.`;
+    const finalSys = isAr ? sys : sys + sysExtraEn;
+
 
     const ctxBlock =
       (isAr
@@ -123,7 +143,7 @@ Answer structure (use for complex questions):
         .join("\n\n");
 
     const messages = [
-      { role: "system" as const, content: sys },
+      { role: "system" as const, content: finalSys },
       { role: "system" as const, content: ctxBlock },
       ...data.history.map((m) => ({ role: m.role, content: m.text })),
       { role: "user" as const, content: data.question },

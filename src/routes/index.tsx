@@ -13,9 +13,8 @@ import {
   Brain, Sparkles, Plus, Search, Trash2, MessageSquare, BookOpen, Languages,
   Upload, Download, FileUp, Flame, Tag as TagIcon, Library,
   Mic, Square, Volume2, Copy, Image as ImageIcon, FileDown, Wand2,
-  FolderOpen, HardDrive, Network,
+  FolderOpen, HardDrive,
 } from "lucide-react";
-import { EcosystemBrowser } from "@/components/EcosystemBrowser";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { searchTFIDF, searchHybrid, rerank, withNeighbors, chunkText, type Doc } from "@/lib/nawat-search";
 import { expandQuery } from "@/lib/nawat-query-expand.functions";
@@ -23,6 +22,10 @@ import { extractPdfText } from "@/lib/pdf-extract";
 import { getSeedDocs, SEED_COUNT } from "@/lib/nawat-seed";
 import { getSitesDocs, SITES_COUNT, SITES_CATEGORY_COUNT, extractUrls, relatedCategoriesFor, SITE_CATEGORIES } from "@/lib/nawat-sites";
 import { getSitesQADocs, SITES_QA_COUNT } from "@/lib/nawat-sites-qa";
+import {
+  getProjectDocs, HN_PROJECT_DOC_COUNT, findProject,
+  renderAllSites, renderProjectCard, renderProjectTasks,
+} from "@/lib/nawat-sites-memory";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
@@ -159,7 +162,8 @@ function Home() {
       setDocs(prev => {
         const sites = getSitesDocs();
         const qa = getSitesQADocs();
-        const bundled = [...sites, ...qa];
+        const projects = getProjectDocs();
+        const bundled = [...projects, ...sites, ...qa];
         const ids = new Set(bundled.map(s => s.id));
         const merged = [...bundled, ...prev.filter(d => !ids.has(d.id))];
         save(K_DOCS, merged);
@@ -377,6 +381,32 @@ function Home() {
       } finally {
         setThinking(false);
       }
+      return;
+    }
+
+    // Local slash commands for HN sites — no AI call, pure memory.
+    const sitesCmd = raw.match(/^\/(sites|مواقعي|مواقع)\s*$/i);
+    const siteCmd = raw.match(/^\/(site|موقع)\s+([\s\S]+)/i);
+    const tasksCmd = raw.match(/^\/(tasks|مهام)\s+([\s\S]+)/i);
+    if (sitesCmd || siteCmd || tasksCmd) {
+      const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+      let reply = "";
+      if (sitesCmd) {
+        reply = renderAllSites(lang);
+      } else if (siteCmd) {
+        const p = findProject(siteCmd[2]);
+        reply = p
+          ? renderProjectCard(p, lang)
+          : t(`لا أجد مشروعاً باسم "${siteCmd[2]}".`, `No project matches "${siteCmd[2]}".`);
+      } else if (tasksCmd) {
+        const p = findProject(tasksCmd[1] === "tasks" ? tasksCmd[2] : tasksCmd[2]);
+        reply = p
+          ? renderProjectTasks(p, lang)
+          : t(`لا أجد مشروعاً باسم "${tasksCmd[2]}".`, `No project matches "${tasksCmd[2]}".`);
+      }
+      const assistant: ChatMsg = { id: crypto.randomUUID(), role: "assistant", text: reply };
+      persistChat([...chat, user, assistant]);
+      setInput("");
       return;
     }
 
@@ -626,10 +656,9 @@ function Home() {
 
       <main className="max-w-6xl mx-auto px-4 pb-16">
         <Tabs defaultValue="chat" className="w-full">
-          <TabsList className="grid grid-cols-3 w-full max-w-xl mx-auto p-1 bg-card/40 backdrop-blur-md border border-border rounded-2xl h-auto">
+          <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto p-1 bg-card/40 backdrop-blur-md border border-border rounded-2xl h-auto">
             <TabsTrigger value="chat" className="gap-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"><MessageSquare className="size-4" />{t("اسأل", "Ask")}</TabsTrigger>
             <TabsTrigger value="memory" className="gap-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"><BookOpen className="size-4" />{t("الذاكرة", "Memory")}</TabsTrigger>
-            <TabsTrigger value="network" className="gap-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"><Network className="size-4" />{t("شبكة HN", "HN Network")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="chat" className="mt-6">
@@ -750,7 +779,7 @@ function Home() {
                 </Button>
                 <Input value={input} onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
-                  placeholder={t("اكتب… أو جرّب /صورة، /لخّص، /ترجم، /اشرح", "Type… or try /image, /summarize, /translate, /explain")} className="flex-1" />
+                  placeholder={t("اكتب… /مواقعي · /موقع اسم · /مهام اسم · /صورة · /لخّص", "Type… /sites · /site name · /tasks name · /image · /summarize")} className="flex-1" />
                 <Button onClick={send} disabled={!input.trim() || thinking}>
                   {thinking ? t("يفكر…", "Thinking…") : t("إرسال", "Send")}
                 </Button>
@@ -805,13 +834,13 @@ function Home() {
                   <Library className="size-4" /> {t(`حمّل المكتبة الأساسية (${SEED_COUNT})`, `Load starter library (${SEED_COUNT})`)}
                 </Button>
                 <Button variant="secondary" className="w-full" onClick={() => {
-                  const bundled = [...getSitesDocs(), ...getSitesQADocs()];
+                  const bundled = [...getProjectDocs(), ...getSitesDocs(), ...getSitesQADocs()];
                   const ids = new Set(bundled.map(s => s.id));
                   persistDocs([...bundled, ...docs.filter(d => !ids.has(d.id))]);
                 }}>
                   <Library className="size-4" /> {t(
-                    `حدّث فهرس مواقعي (${SITES_COUNT} موقعاً · ${SITES_CATEGORY_COUNT} تصنيفاً · ${SITES_QA_COUNT} سؤال/جواب)`,
-                    `Refresh my sites (${SITES_COUNT} sites · ${SITES_CATEGORY_COUNT} categories · ${SITES_QA_COUNT} Q&A)`
+                    `حدّث فهرس مواقعي (${HN_PROJECT_DOC_COUNT} مشروعاً · ${SITES_COUNT} رابطاً · ${SITES_CATEGORY_COUNT} تصنيفاً · ${SITES_QA_COUNT} س/ج)`,
+                    `Refresh my sites (${HN_PROJECT_DOC_COUNT} projects · ${SITES_COUNT} URLs · ${SITES_CATEGORY_COUNT} categories · ${SITES_QA_COUNT} Q&A)`
                   )}
                 </Button>
               </div>
@@ -1001,9 +1030,6 @@ function Home() {
             </div>
           </TabsContent>
 
-          <TabsContent value="network" className="mt-6">
-            <EcosystemBrowser lang={lang} />
-          </TabsContent>
         </Tabs>
 
         <p className="text-xs text-muted-foreground text-center mt-8">
