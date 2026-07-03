@@ -103,10 +103,11 @@ export function projectToDoc(p: HNProject): Doc {
 }
 
 export function getProjectDocs(): Doc[] {
-  return HN_PROJECTS.map(projectToDoc);
+  const infra = hnInfrastructureCard() as unknown as Doc;
+  return [infra, ...HN_PROJECTS.map(projectToDoc)];
 }
 
-export const HN_PROJECT_DOC_COUNT = HN_PROJECTS.length;
+export const HN_PROJECT_DOC_COUNT = HN_PROJECTS.length + 1;
 
 /** Find a project by name / id / alias fragment (loose match). */
 export function findProject(needle: string): HNProject | null {
