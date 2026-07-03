@@ -881,7 +881,7 @@ function Home() {
                                     {urls.map((u) => (
                                       <a key={u} href={u} target="_blank" rel="noreferrer noopener"
                                         className="text-xs px-2 py-0.5 rounded-md bg-secondary/60 hover:bg-secondary text-foreground/90 border border-border/60 truncate max-w-[220px]">
-                                        {u.replace(/^https?:\/\//, "")}
+                                        <Highlight text={u.replace(/^https?:\/\//, "")} terms={highlightTerms} />
                                       </a>
                                     ))}
                                   </div>
