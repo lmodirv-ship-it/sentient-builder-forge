@@ -100,7 +100,8 @@ Strict rules:
         : "User memory passages (only allowed source):\n") +
       data.context
         .map((c, i) => {
-          const meta = [c.source, c.date].filter(Boolean).join(" • ");
+          const tierBadge = c.tier === "core" ? "🟣core" : c.tier === "daily" ? "🟢daily" : "🔵long";
+          const meta = [c.source, c.date, tierBadge].filter(Boolean).join(" • ");
           const tags = c.tags?.length ? `\n#${c.tags.join(" #")}` : "";
           return `[${i + 1}] ${c.title}${meta ? ` — ${meta}` : ""}${tags}\n${c.content}`;
         })
