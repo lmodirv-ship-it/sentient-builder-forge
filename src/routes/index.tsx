@@ -251,7 +251,7 @@ function Home() {
         const qa = getSitesQADocs();
         const projects = getProjectDocs();
         const caps = getCapabilityDocs();
-        const bundled = [...projects, ...caps, ...sites, ...qa];
+        const bundled = [...projects, ...caps, ...sites, ...qa, ...getServiceQADocs()];
         const ids = new Set(bundled.map(s => s.id));
         const merged = [...bundled, ...prev.filter(d => !ids.has(d.id))];
         save(K_DOCS, merged);
