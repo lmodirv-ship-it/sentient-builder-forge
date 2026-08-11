@@ -91,6 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "نواة — Nawat" },
       { property: "og:description", content: "نظام معرفي أوفلاين بالذكاء الاصطناعي" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "نواة — Nawat" },
       { name: "twitter:card", content: "summary" },
     ],
     links: [
