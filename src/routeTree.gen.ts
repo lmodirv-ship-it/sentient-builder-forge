@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudioRouteImport } from './routes/studio'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as HnRouteImport } from './routes/hn'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAgentRouteImport } from './routes/api/agent'
 
@@ -30,6 +31,11 @@ const HnRoute = HnRouteImport.update({
   path: '/hn',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +49,7 @@ const ApiAgentRoute = ApiAgentRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/hn': typeof HnRoute
   '/settings': typeof SettingsRoute
   '/studio': typeof StudioRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/hn': typeof HnRoute
   '/settings': typeof SettingsRoute
   '/studio': typeof StudioRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/hn': typeof HnRoute
   '/settings': typeof SettingsRoute
   '/studio': typeof StudioRoute
@@ -65,14 +74,22 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/hn' | '/settings' | '/studio' | '/api/agent'
+  fullPaths: '/' | '/auth' | '/hn' | '/settings' | '/studio' | '/api/agent'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/hn' | '/settings' | '/studio' | '/api/agent'
-  id: '__root__' | '/' | '/hn' | '/settings' | '/studio' | '/api/agent'
+  to: '/' | '/auth' | '/hn' | '/settings' | '/studio' | '/api/agent'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/hn'
+    | '/settings'
+    | '/studio'
+    | '/api/agent'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   HnRoute: typeof HnRoute
   SettingsRoute: typeof SettingsRoute
   StudioRoute: typeof StudioRoute
@@ -102,6 +119,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -121,6 +145,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   HnRoute: HnRoute,
   SettingsRoute: SettingsRoute,
   StudioRoute: StudioRoute,
