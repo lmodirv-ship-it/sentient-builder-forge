@@ -10,7 +10,11 @@ export const Route = createFileRoute("/settings")({
     meta: [
       { title: "الإعدادات — نواة" },
       { name: "description", content: "إدارة مفتاح HN ومسار حفظ الملفات" },
+      { property: "og:title", content: "الإعدادات — نواة" },
+      { property: "og:description", content: "إدارة مفتاح HN ومسار حفظ الملفات داخل نواة." },
+      { property: "og:url", content: "https://chat.hn-chat.com/settings" },
     ],
+    links: [{ rel: "canonical", href: "https://chat.hn-chat.com/settings" }],
   }),
   component: SettingsPage,
 });

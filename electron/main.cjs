@@ -51,11 +51,15 @@ function loadDotEnv() {
 
 loadDotEnv();
 
+// النطاق الرسمي لنواة. عنوان lovable يبقى احتياطياً عند فشل التحميل.
+const SITE_URL = "https://chat.hn-chat.com";
+const FALLBACK_URL = "https://sentient-builder-forge.lovable.app";
+
 const APP_URL =
   process.env.NAWAT_APP_URL ||
   process.env.NAWAT_URL ||
   process.env.HN_NAWAT_BASE_URL ||
-  "https://sentient-builder-forge.lovable.app";
+  SITE_URL;
 
 let mainWindow = null;
 
@@ -114,11 +118,18 @@ async function createWindow() {
 
   // Only trigger offline page when the MAIN frame truly fails with a network error.
   // Codes -3 (ABORTED) and -20..-99 are transient — ignore them.
+  let usedFallback = false;
   mainWindow.webContents.on("did-fail-load", (_e, code, desc, url, isMainFrame) => {
     if (!isMainFrame) return;
     if (code === -3) return; // aborted (normal during redirects)
     if (code > -100) return; // not a real network failure
     console.error("Load failed:", code, desc, url);
+    if (!usedFallback && APP_URL === SITE_URL) {
+      usedFallback = true;
+      console.warn("Falling back to", FALLBACK_URL);
+      mainWindow.loadURL(FALLBACK_URL);
+      return;
+    }
     showOffline(code, desc);
   });
 

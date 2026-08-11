@@ -7,7 +7,11 @@ export const Route = createFileRoute("/hn")({
     meta: [
       { title: "منظومة HN — نواة" },
       { name: "description", content: "خريطة كاملة لمنظومة HN: 27 مشروع، 152 موقع، وواجهات نواة إلى كل خدمة." },
+      { property: "og:title", content: "منظومة HN — نواة" },
+      { property: "og:description", content: "خريطة كاملة لمنظومة HN: 27 مشروع و152 موقع." },
+      { property: "og:url", content: "https://chat.hn-chat.com/hn" },
     ],
+    links: [{ rel: "canonical", href: "https://chat.hn-chat.com/hn" }],
   }),
   component: HNPage,
 });
