@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { DevEnginePanel } from "@/components/DevEnginePanel";
+import { AuthBanner } from "@/components/AuthBanner";
 
 function NotFoundComponent() {
   return (
