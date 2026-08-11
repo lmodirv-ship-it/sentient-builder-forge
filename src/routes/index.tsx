@@ -57,7 +57,9 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "عقل معرفي يعمل بلا إنترنت، يقرأ كتبك ويتعلم منها يومياً. Offline self-learning knowledge brain." },
       { property: "og:title", content: "نواة — العقل المعرفي الذاتي" },
       { property: "og:description", content: "اقرأ. علّمني. اسألني. يعمل كاملاً في متصفحك." },
+      { property: "og:url", content: "https://chat.hn-chat.com/" },
     ],
+    links: [{ rel: "canonical", href: "https://chat.hn-chat.com/" }],
   }),
   component: Home,
 });

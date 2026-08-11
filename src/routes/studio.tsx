@@ -30,7 +30,9 @@ export const Route = createFileRoute("/studio")({
       { name: "description", content: "استوديو موحّد لتصميم المواقع والفيديو والصور والسيرة الذاتية — كاش فوري + تحميل تدريجي." },
       { property: "og:title", content: "استوديو نواة — Nawat Studio" },
       { property: "og:description", content: "لوحة موحّدة لكل استوديوهات نواة." },
+      { property: "og:url", content: "https://chat.hn-chat.com/studio" },
     ],
+    links: [{ rel: "canonical", href: "https://chat.hn-chat.com/studio" }],
   }),
   component: StudioPage,
 });
