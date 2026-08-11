@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   appName: "نواة",
   webDir: "dist/client",
   server: {
-    url: "https://sentient-builder-forge.lovable.app",
+    url: "https://chat.hn-chat.com",
     cleartext: false,
   },
   android: {

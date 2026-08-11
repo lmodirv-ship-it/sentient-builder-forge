@@ -51,11 +51,15 @@ function loadDotEnv() {
 
 loadDotEnv();
 
+// النطاق الرسمي لنواة. عنوان lovable يبقى احتياطياً عند فشل التحميل.
+const SITE_URL = "https://chat.hn-chat.com";
+const FALLBACK_URL = "https://sentient-builder-forge.lovable.app";
+
 const APP_URL =
   process.env.NAWAT_APP_URL ||
   process.env.NAWAT_URL ||
   process.env.HN_NAWAT_BASE_URL ||
-  "https://sentient-builder-forge.lovable.app";
+  SITE_URL;
 
 let mainWindow = null;
 
