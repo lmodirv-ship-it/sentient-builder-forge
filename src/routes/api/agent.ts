@@ -22,6 +22,13 @@ export const Route = createFileRoute("/api/agent")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // Auth gate: only signed-in users may spend the server's AI credits.
+        const { getRequestUserId } = await import("@/lib/require-user.server");
+        const userId = await getRequestUserId(request);
+        if (!userId) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
         const key = process.env.LOVABLE_API_KEY;
         if (!key) {
           return new Response("Missing LOVABLE_API_KEY", { status: 500 });
