@@ -1,3 +1,4 @@
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -8,6 +9,7 @@ const Input = z.object({ prompt: z.string().min(1).max(2000) });
  * On failure returns { imageUrl:"", error, hnUrl } so the UI can offer to open HN directly.
  */
 export const generateImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => Input.parse(i))
   .handler(async ({ data }) => {
     const { hnGenerateImage } = await import("./hn-clients.server");

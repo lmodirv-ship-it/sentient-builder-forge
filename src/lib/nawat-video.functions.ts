@@ -1,3 +1,4 @@
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -5,6 +6,7 @@ const Input = z.object({ prompt: z.string().min(2).max(2000) });
 
 /** Video generation — HN Video Studio only (studio.hn-createur.com). */
 export const generateVideo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => Input.parse(i))
   .handler(async ({ data }) => {
     const { hnGenerateVideo } = await import("./hn-clients.server");

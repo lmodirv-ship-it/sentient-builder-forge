@@ -1,3 +1,4 @@
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -11,6 +12,7 @@ const Input = z.object({
  * question unchanged (safe no-op, no external fallback).
  */
 export const expandQuery = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => Input.parse(i))
   .handler(async ({ data }) => {
     const base = process.env.HN_AI_BASE_URL;
