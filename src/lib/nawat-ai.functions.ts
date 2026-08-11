@@ -1,3 +1,4 @@
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -29,6 +30,7 @@ const Input = z.object({
  * If HN is not configured, refuses gracefully with a link to open HN Chat.
  */
 export const askNawat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }) => {
     const isAr = data.lang === "ar";

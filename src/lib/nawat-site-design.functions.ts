@@ -1,3 +1,4 @@
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -8,6 +9,7 @@ const Input = z.object({
 
 /** Site generation — HN Site Builder only (site.hn-groupe.tech). No external fallback. */
 export const generateSiteHtml = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => Input.parse(i))
   .handler(async ({ data }) => {
     const { hnGenerateSite } = await import("./hn-clients.server");

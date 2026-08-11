@@ -1,3 +1,4 @@
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -9,6 +10,7 @@ const Input = z.object({
 
 /** Audio transcription — HN AI Gateway only (ai.hn-groupe.org). */
 export const transcribeAudio = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => Input.parse(i))
   .handler(async ({ data }) => {
     const base = process.env.HN_AI_BASE_URL;
