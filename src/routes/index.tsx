@@ -851,22 +851,22 @@ function Home() {
       </header>
 
       {/* Premium hero — greeting card with brain glyph + quick actions */}
-      <section className="max-w-6xl mx-auto px-4 pt-8 pb-6 space-y-6 hidden sm:block">
-        <div className="relative rounded-[2rem] overflow-hidden nawat-hero-bg border border-border/50 p-6 sm:p-10 shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--primary)_50%,transparent)]">
+      <section className="max-w-6xl mx-auto px-4 pt-4 pb-3 space-y-3 hidden sm:block">
+        <div className="relative rounded-[1.5rem] overflow-hidden nawat-hero-bg border border-border/50 p-3 sm:p-5 shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--primary)_50%,transparent)]">
           <div className="absolute -top-16 -right-16 size-72 rounded-full bg-primary/25 blur-[80px]" />
           <div className="absolute -bottom-20 -left-16 size-72 rounded-full bg-[color:var(--gold)]/15 blur-[90px]" />
-          <div className="relative grid md:grid-cols-[1fr_auto] items-center gap-6">
+          <div className="relative grid md:grid-cols-[1fr_auto] items-center gap-3">
             <div className="min-w-0 text-center md:text-start">
-              <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/5 nawat-chip nawat-gold-text">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 mb-2 rounded-full border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/5 nawat-chip nawat-gold-text text-xs">
                 <span className="inline-block size-1.5 rounded-full bg-[color:var(--gold)] shadow-[0_0_8px_var(--gold)] animate-pulse" />
                 {t("العقل نشط · دون إنترنت", "BRAIN ACTIVE · OFFLINE")}
               </div>
-              <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.1]">
+              <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight leading-[1.15]">
                 <span className="nawat-holo">{t("صباح الخير،", "Good morning,")}</span>
                 <br />
                 <span className="text-foreground/90">{t("نواة تسمعك.", "Nawat is listening.")}</span>
               </h2>
-              <p className="mt-4 text-muted-foreground text-sm sm:text-base leading-relaxed max-w-xl mx-auto md:mx-0">
+              <p className="mt-2 text-muted-foreground text-xs sm:text-sm leading-snug max-w-xl mx-auto md:mx-0">
                 {t(
                   "أنا هنا لأتذكّر معك، أربط أفكارك، وأكشف ما نسيت — من ذاكرتك أنت، لا من الإنترنت.",
                   "I'm here to remember with you, connect your thoughts, and surface what you forgot — from your own memory, never the web.",
