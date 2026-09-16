@@ -564,6 +564,81 @@ function Services({ onChanged }: { onChanged: () => void }) {
   );
 }
 
+function DocsLibrary({ panels, onChanged }: { panels: Panel[]; onChanged: () => void }) {
+  const docs = panels.filter((p) => !p.builtin && (p.settings as any)?.doc);
+  const groups = docs.filter((p) => !p.parent_key && docs.some((d) => d.parent_key === p.key));
+  const [sel, setSel] = useState<string | null>(null);
+  const current = docs.find((p) => p.key === sel) ?? null;
+
+  if (docs.length === 0)
+    return <p className="text-xs text-white/40">لا توجد شروحات بعد.</p>;
+
+  return (
+    <div className="space-y-3">
+      {groups.map((g) => {
+        const kids = docs.filter((p) => p.parent_key === g.key);
+        return (
+          <div key={g.key} className="rounded-2xl border border-white/10 p-3">
+            <button
+              onClick={() => setSel(sel === g.key ? null : g.key)}
+              className="text-sm font-semibold text-emerald-300"
+            >
+              {ICONS[g.icon ?? ""] ?? "🔹"} {g.label}
+            </button>
+            {g.description ? (
+              <p className="mt-1 text-[11px] text-white/40">{g.description}</p>
+            ) : null}
+            {kids.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {kids.map((k) => (
+                  <button
+                    key={k.key}
+                    onClick={() => setSel(sel === k.key ? null : k.key)}
+                    className={
+                      "rounded-lg px-3 py-1.5 text-xs ring-1 transition " +
+                      (sel === k.key
+                        ? "bg-emerald-500/20 text-emerald-200 ring-emerald-400/50"
+                        : "bg-white/5 text-white/60 ring-white/10 hover:bg-white/10")
+                    }
+                  >
+                    {k.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <div className="flex flex-wrap gap-2">
+        {docs
+          .filter((p) => !p.parent_key && docs.every((d) => d.parent_key !== p.key))
+          .map((p) => (
+            <button
+              key={p.key}
+              onClick={() => setSel(sel === p.key ? null : p.key)}
+              className={
+                "rounded-lg px-3 py-1.5 text-xs ring-1 transition " +
+                (sel === p.key
+                  ? "bg-emerald-500/20 text-emerald-200 ring-emerald-400/50"
+                  : "bg-white/5 text-white/60 ring-white/10 hover:bg-white/10")
+              }
+            >
+              {ICONS[p.icon ?? ""] ?? "🔹"} {p.label}
+            </button>
+          ))}
+      </div>
+
+      {current && (
+        <div className="rounded-2xl border border-emerald-400/20 bg-black/30 p-4">
+          <h4 className="mb-3 text-sm font-bold text-emerald-200">{current.label}</h4>
+          <CustomPanel panel={current} onChanged={onChanged} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Settings({ onChanged, panels }: { onChanged: () => void; panels: Panel[] }) {
   const fn = useServerFn(getPlatformSettings);
   const setFn = useServerFn(setPlatformSetting);
@@ -588,6 +663,10 @@ function Settings({ onChanged, panels }: { onChanged: () => void; panels: Panel[
 
   return (
     <div className="space-y-6">
+      <section>
+        <h3 className="mb-2 text-sm font-semibold text-white/70">الأدوات والشروحات</h3>
+        <DocsLibrary panels={panels} onChanged={onChanged} />
+      </section>
       <section>
         <h3 className="mb-2 text-sm font-semibold text-white/70">أزرار اللوحة وصفحاتها</h3>
         <PanelsManager panels={panels} onChanged={onChanged} />
