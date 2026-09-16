@@ -17,6 +17,7 @@ import {
   listAdminUsers,
   saveAdminTemplate,
   setPlatformSetting,
+  updateAdminTemplate,
   upsertAdminService,
 } from "@/lib/admin.functions";
 import { purgeBadKnowledge, retrainKernel } from "@/lib/kernel.functions";
