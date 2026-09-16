@@ -566,7 +566,7 @@ function Services({ onChanged }: { onChanged: () => void }) {
 
 function DocsLibrary({ panels, onChanged }: { panels: Panel[]; onChanged: () => void }) {
   const docs = panels.filter((p) => !p.builtin && (p.settings as any)?.doc);
-  const groups = docs.filter((p) => !p.parent_key);
+  const groups = docs.filter((p) => !p.parent_key && docs.some((d) => d.parent_key === p.key));
   const [sel, setSel] = useState<string | null>(null);
   const current = docs.find((p) => p.key === sel) ?? null;
 
