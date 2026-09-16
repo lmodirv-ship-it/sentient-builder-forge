@@ -30,7 +30,7 @@ export const generateSiteHtml = createServerFn({ method: "POST" })
             return {
               ok: true,
               summary: data.prompt.slice(0, 200),
-              value: { html: hn.html, error: null, hnUrl },
+              value: { html: hn.html, error: null as string | null, hnUrl },
             };
 
           const reason =

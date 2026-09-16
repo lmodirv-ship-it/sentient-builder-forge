@@ -30,7 +30,7 @@ export const generateCV = createServerFn({ method: "POST" })
             return {
               ok: true,
               summary: data.prompt.slice(0, 200),
-              value: { html: hn.html, pdfUrl: hn.pdfUrl ?? null, error: null, hnUrl },
+              value: { html: hn.html, pdfUrl: hn.pdfUrl ?? null, error: null as string | null, hnUrl },
             };
 
           const reason =

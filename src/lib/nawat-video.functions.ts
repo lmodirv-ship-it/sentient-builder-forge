@@ -27,7 +27,7 @@ export const generateVideo = createServerFn({ method: "POST" })
             return {
               ok: true,
               summary: data.prompt.slice(0, 200),
-              value: { videoUrl: hn.videoUrl, jobId: hn.jobId ?? null, error: null, hnUrl },
+              value: { videoUrl: hn.videoUrl, jobId: hn.jobId ?? null, error: null as string | null, hnUrl },
             };
 
           const reason =
