@@ -137,6 +137,7 @@ function RootComponent() {
       <Outlet />
       <Toaster position="top-center" richColors closeButton dir="rtl" />
       <AuthBanner />
+      <DevEnginePanel />
       <OfflineIndicator />
     </QueryClientProvider>
   );
