@@ -74,6 +74,7 @@ function Card({ title, value, sub }: { title: string; value: string | number; su
 function AdminPage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<string>("overview");
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const roleFn = useServerFn(getMyRole);
   const panelsFn = useServerFn(listAdminPanels);
