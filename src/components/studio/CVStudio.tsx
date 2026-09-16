@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { ResultFeedback } from "@/components/ResultFeedback";
 import { FileText, Wand2, Loader2, Download, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,6 +84,7 @@ export default function CVStudio({ online }: { online: boolean }) {
             توليد السيرة
           </Button>
           <Button variant="outline" onClick={save} disabled={!html}>حفظ</Button>
+          <ResultFeedback intent="cv" prompt={prompt} />
         </div>
         {via && (
           <p className="text-xs text-muted-foreground flex items-center gap-1">

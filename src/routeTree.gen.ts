@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAgentRouteImport } from './routes/api/agent'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicCronLearnRouteImport } from './routes/api/public/cron-learn'
 
 const StudioRoute = StudioRouteImport.update({
   id: '/studio',
@@ -57,6 +58,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicCronLearnRoute = ApiPublicCronLearnRouteImport.update({
+  id: '/api/public/cron-learn',
+  path: '/api/public/cron-learn',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/studio': typeof StudioRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/api/agent': typeof ApiAgentRoute
+  '/api/public/cron-learn': typeof ApiPublicCronLearnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/studio': typeof StudioRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/api/agent': typeof ApiAgentRoute
+  '/api/public/cron-learn': typeof ApiPublicCronLearnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/studio': typeof StudioRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/api/agent': typeof ApiAgentRoute
+  '/api/public/cron-learn': typeof ApiPublicCronLearnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,8 +106,17 @@ export interface FileRouteTypes {
     | '/studio'
     | '/admin'
     | '/api/agent'
+    | '/api/public/cron-learn'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/hn' | '/settings' | '/studio' | '/admin' | '/api/agent'
+  to:
+    | '/'
+    | '/auth'
+    | '/hn'
+    | '/settings'
+    | '/studio'
+    | '/admin'
+    | '/api/agent'
+    | '/api/public/cron-learn'
   id:
     | '__root__'
     | '/'
@@ -109,6 +127,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/_authenticated/admin'
     | '/api/agent'
+    | '/api/public/cron-learn'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +138,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   StudioRoute: typeof StudioRoute
   ApiAgentRoute: typeof ApiAgentRoute
+  ApiPublicCronLearnRoute: typeof ApiPublicCronLearnRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -179,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/cron-learn': {
+      id: '/api/public/cron-learn'
+      path: '/api/public/cron-learn'
+      fullPath: '/api/public/cron-learn'
+      preLoaderRoute: typeof ApiPublicCronLearnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -201,6 +228,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   StudioRoute: StudioRoute,
   ApiAgentRoute: ApiAgentRoute,
+  ApiPublicCronLearnRoute: ApiPublicCronLearnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
