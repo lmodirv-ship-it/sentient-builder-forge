@@ -37,6 +37,7 @@ import { HN_PILLARS } from "@/lib/hn-ecosystem";
 import { HNStatusPill } from "@/components/HNStatusPill";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
+import { kernelTemplateAnswer } from "@/lib/kernel-chat.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
 import { transcribeAudio } from "@/lib/nawat-transcribe.functions";
 import { generateImage } from "@/lib/nawat-image.functions";
@@ -216,6 +217,7 @@ function Home() {
   const [folderName, setFolderName] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const ask = useServerFn(askNawat);
+  const templateAsk = useServerFn(kernelTemplateAnswer);
   const expand = useServerFn(expandQuery);
   const transcribe = useServerFn(transcribeAudio);
   const imageGen = useServerFn(generateImage);
@@ -553,6 +555,19 @@ function Home() {
     }
 
 
+    // ── نواة المساعد الذكي: أسئلة الترحيب والقوالب المعروفة تُجاب فوراً من جدول القوالب.
+    if (!raw.startsWith("/")) {
+      try {
+        const tm = await templateAsk({ data: { question: raw, lang } });
+        if (tm.matched && tm.text) {
+          const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+          persistChat([...chat, user, { id: crypto.randomUUID(), role: "assistant", text: tm.text }]);
+          setInput("");
+          if (inputRef.current) inputRef.current.value = "";
+          return;
+        }
+      } catch { /* لا قوالب مطابقة — نكمل المسار الطبيعي */ }
+    }
 
     // ── Wave 2 · Service router: /خدمة /service /افتح /open <name>
     const svcCmd = raw.match(/^\/(?:خدمة|خدمه|service|svc|افتح|open|نفّذ|نفذ|execute)\s+([\s\S]+)/i);
