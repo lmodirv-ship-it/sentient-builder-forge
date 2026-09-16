@@ -72,7 +72,10 @@ export const listAdminUsers = createServerFn({ method: "GET" })
         roleByUser[r.user_id] = r.role;
     }
     const jobsByUser: Record<string, number> = {};
-    for (const j of jobs.data ?? []) jobsByUser[j.user_id] = (jobsByUser[j.user_id] ?? 0) + 1;
+    for (const j of jobs.data ?? []) {
+      const uid = j.user_id as string | null;
+      if (uid) jobsByUser[uid] = (jobsByUser[uid] ?? 0) + 1;
+    }
     const { data: authUsers } = await db.auth.admin.listUsers({ perPage: 200 });
     const emailById: Record<string, string> = {};
     for (const u of authUsers?.users ?? []) emailById[u.id] = u.email ?? "";

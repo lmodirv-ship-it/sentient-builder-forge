@@ -46,7 +46,6 @@ export const recordFeedback = createServerFn({ method: "POST" })
       const target = rows?.[0]?.id;
       if (target) {
         const delta = data.kind === "like" ? 1 : data.kind === "dislike" ? -1 : 0;
-        await context.supabase.rpc("noop" as never).catch(() => {});
         await context.supabase
           .from("knowledge_items")
           .update({ rating: delta, result_summary: data.resultSummary?.slice(0, 500) ?? null })
