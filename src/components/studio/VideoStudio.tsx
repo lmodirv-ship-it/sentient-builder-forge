@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { ResultFeedback } from "@/components/ResultFeedback";
 import { Film, Wand2, Loader2, ExternalLink, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,7 @@ export default function VideoStudio({ online }: { online: boolean }) {
             توليد الفيديو
           </Button>
           <Button variant="outline" onClick={save} disabled={!videoUrl && !poster}>حفظ</Button>
+          <ResultFeedback intent="video" prompt={prompt} />
         </div>
         {via && (
           <p className="text-xs text-muted-foreground flex items-center gap-1">

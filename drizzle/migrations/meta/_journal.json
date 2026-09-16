@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789597850708,
+      "tag": "0000_nawat_core_platform_tables",
+      "breakpoints": true
+    }
+  ]
+}
