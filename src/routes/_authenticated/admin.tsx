@@ -55,6 +55,7 @@ type Panel = {
   icon: string | null;
   description: string | null;
   sort_order: number;
+  parent_key?: string | null;
   enabled: boolean;
   builtin: boolean;
   settings: any;
