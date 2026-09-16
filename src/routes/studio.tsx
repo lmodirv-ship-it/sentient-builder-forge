@@ -50,10 +50,11 @@ const prefetchers: Record<TabKey, () => Promise<unknown>> = {
 
 function StudioPage() {
   const [tab, setTab] = useState<TabKey>("sites");
-  const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+  const [online, setOnline] = useState(true); // real value set after mount (SSR-safe)
   const [agentTick, setAgentTick] = useState(0);
 
   useEffect(() => {
+    setOnline(navigator.onLine);
     const on = () => setOnline(true);
     const off = () => setOnline(false);
     window.addEventListener("online", on);
