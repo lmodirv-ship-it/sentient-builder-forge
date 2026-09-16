@@ -589,6 +589,10 @@ function Settings({ onChanged, panels }: { onChanged: () => void; panels: Panel[
   return (
     <div className="space-y-6">
       <section>
+        <h3 className="mb-2 text-sm font-semibold text-white/70">الأدوات والشروحات</h3>
+        <DocsLibrary panels={panels} onChanged={onChanged} />
+      </section>
+      <section>
         <h3 className="mb-2 text-sm font-semibold text-white/70">أزرار اللوحة وصفحاتها</h3>
         <PanelsManager panels={panels} onChanged={onChanged} />
       </section>
