@@ -508,7 +508,13 @@ function Settings({ onChanged, panels }: { onChanged: () => void; panels: Panel[
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
+      <section>
+        <h3 className="mb-2 text-sm font-semibold text-white/70">أزرار اللوحة وصفحاتها</h3>
+        <PanelsManager panels={panels} onChanged={onChanged} />
+      </section>
+      <section className="space-y-3">
+      <h3 className="text-sm font-semibold text-white/70">إعدادات المنصة</h3>
       {data.settings.map((s: any) => (
         <div key={s.key} className="rounded-2xl border border-white/10 p-3">
           <div className="mb-1 text-xs text-white/50">{s.key}</div>
