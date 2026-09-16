@@ -530,6 +530,7 @@ function Settings({ onChanged, panels }: { onChanged: () => void; panels: Panel[
         </div>
       ))}
  {data.settings.length === 0 && <p className="text-white/50">لا إعدادات بعد.</p>}
+      </section>
     </div>
   );
 }
