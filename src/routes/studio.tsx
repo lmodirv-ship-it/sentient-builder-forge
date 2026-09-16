@@ -54,6 +54,7 @@ function StudioPage() {
   const [agentTick, setAgentTick] = useState(0);
 
   useEffect(() => {
+    setOnline(navigator.onLine);
     const on = () => setOnline(true);
     const off = () => setOnline(false);
     window.addEventListener("online", on);
