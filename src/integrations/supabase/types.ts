@@ -342,6 +342,7 @@ export type Database = {
         Row: {
           archived: boolean
           body: string
+          code: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -353,6 +354,7 @@ export type Database = {
         Insert: {
           archived?: boolean
           body: string
+          code?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -364,6 +366,7 @@ export type Database = {
         Update: {
           archived?: boolean
           body?: string
+          code?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -425,6 +428,7 @@ export type Database = {
     }
     Functions: {
       claim_ownership: { Args: never; Returns: string }
+      gen_template_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

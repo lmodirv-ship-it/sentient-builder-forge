@@ -249,3 +249,26 @@ export const archiveAdminTemplate = createServerFn({ method: "POST" })
     if (error) return { ok: false as const, error: error.message };
     return { ok: true as const };
   });
+
+/** تعديل سؤال/جواب قالب موجود. */
+export const updateAdminTemplate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        title: z.string().min(1),
+        body: z.string().min(1),
+      })
+      .parse(i),
+  )
+  .handler(async ({ context, data }) => {
+    if (!(await isStaff(context.supabase))) return { ok: false as const, error: "غير مصرّح" };
+    const db = await adminDb();
+    const { error } = await db
+      .from("templates")
+      .update({ title: data.title, body: data.body })
+      .eq("id", data.id);
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  });
