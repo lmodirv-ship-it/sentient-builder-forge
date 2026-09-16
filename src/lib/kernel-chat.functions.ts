@@ -28,6 +28,15 @@ function toks(s: string): string[] {
   return normAr(s).split(" ").filter((t) => t.length > 1);
 }
 
+/** الجواب حروف فقط: يزيل الرموز وعلامات الترقيم والإيموجي ويبقي الحروف والأرقام والمسافات. */
+function lettersOnly(s: string): string {
+  return (s || "")
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 const AR_GREETING = `مرحبا انا نواة المساعد الذكي كيف اخدمك
 
 للإنشاء اكتب طلبك مباشرة مثل صمم لي موقع أو حوّل هذا النص إلى صوت أو أنشئ صورة أو اصنع فيديو أو سيرة ذاتية والنواة ترسل طلبك لخدمة HN المناسبة وتعيد لك النتيجة مع أزرار تقييم على كل عملية لتتعلّم النواة وتتحسّن
@@ -104,7 +113,7 @@ export const kernelTemplateAnswer = createServerFn({ method: "POST" })
         }
       }
       if (best?.body?.trim()) {
-        return { matched: true as const, source: "template" as const, code: best.code, text: best.body };
+        return { matched: true as const, source: "template" as const, code: best.code, text: lettersOnly(best.body) };
       }
     }
 
