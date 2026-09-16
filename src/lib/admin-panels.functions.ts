@@ -49,7 +49,7 @@ export const upsertAdminPanel = createServerFn({ method: "POST" })
         description: data.description ?? null,
         sort_order: data.sortOrder ?? 100,
         enabled: data.enabled ?? true,
-        ...(data.settings ? { settings: data.settings } : {}),
+        ...(data.settings ? { settings: data.settings as any } : {}),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "key" },
@@ -74,7 +74,7 @@ export const savePanelSettings = createServerFn({ method: "POST" })
       return { ok: false as const, error: "غير مصرّح" };
     const { error } = await context.supabase
       .from("admin_panels")
-      .update({ settings: data.settings, updated_at: new Date().toISOString() })
+      .update({ settings: data.settings as any, updated_at: new Date().toISOString() })
       .eq("key", data.key);
     if (error) return { ok: false as const, error: error.message };
     return { ok: true as const };
