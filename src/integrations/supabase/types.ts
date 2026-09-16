@@ -14,16 +14,390 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          detail: Json | null
+          entity: string | null
+          id: string
+          job_id: string | null
+          request_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          detail?: Json | null
+          entity?: string | null
+          id?: string
+          job_id?: string | null
+          request_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          detail?: Json | null
+          entity?: string | null
+          id?: string
+          job_id?: string | null
+          request_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      feedback_events: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string | null
+          kind: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          kind: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          kind?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      generation_jobs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          id: string
+          kind: string
+          prompt: string | null
+          result_summary: string | null
+          service_key: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          kind: string
+          prompt?: string | null
+          result_summary?: string | null
+          service_key?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          kind?: string
+          prompt?: string | null
+          result_summary?: string | null
+          service_key?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      hn_service_health: {
+        Row: {
+          checked_at: string
+          error: string | null
+          id: string
+          latency_ms: number | null
+          ok: boolean
+          service_key: string
+        }
+        Insert: {
+          checked_at?: string
+          error?: string | null
+          id?: string
+          latency_ms?: number | null
+          ok: boolean
+          service_key: string
+        }
+        Update: {
+          checked_at?: string
+          error?: string | null
+          id?: string
+          latency_ms?: number | null
+          ok?: boolean
+          service_key?: string
+        }
+        Relationships: []
+      }
+      hn_services: {
+        Row: {
+          capabilities: string[]
+          created_at: string
+          enabled: boolean
+          id: string
+          key: string
+          name: string
+          priority: number
+          url: string
+        }
+        Insert: {
+          capabilities?: string[]
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          key: string
+          name: string
+          priority?: number
+          url: string
+        }
+        Update: {
+          capabilities?: string[]
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          key?: string
+          name?: string
+          priority?: number
+          url?: string
+        }
+        Relationships: []
+      }
+      knowledge_items: {
+        Row: {
+          created_at: string
+          embedding: Json | null
+          id: string
+          intent: string
+          ok: boolean
+          prompt: string | null
+          prompt_template: string | null
+          rating: number | null
+          result_summary: string | null
+          service_key: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          embedding?: Json | null
+          id?: string
+          intent: string
+          ok?: boolean
+          prompt?: string | null
+          prompt_template?: string | null
+          rating?: number | null
+          result_summary?: string | null
+          service_key?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          embedding?: Json | null
+          id?: string
+          intent?: string
+          ok?: boolean
+          prompt?: string | null
+          prompt_template?: string | null
+          rating?: number | null
+          result_summary?: string | null
+          service_key?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      model_policies: {
+        Row: {
+          id: string
+          intent: string
+          prompt_template: string | null
+          service_key: string
+          success_rate: number
+          updated_at: string
+          uses: number
+          weight: number
+        }
+        Insert: {
+          id?: string
+          intent: string
+          prompt_template?: string | null
+          service_key: string
+          success_rate?: number
+          updated_at?: string
+          uses?: number
+          weight?: number
+        }
+        Update: {
+          id?: string
+          intent?: string
+          prompt_template?: string | null
+          service_key?: string
+          success_rate?: number
+          updated_at?: string
+          uses?: number
+          weight?: number
+        }
+        Relationships: []
+      }
+      platform_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          banned: boolean
+          created_at: string
+          display_name: string | null
+          id: string
+          last_seen_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          banned?: boolean
+          created_at?: string
+          display_name?: string | null
+          id: string
+          last_seen_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          banned?: boolean
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_seen_at?: string | null
+        }
+        Relationships: []
+      }
+      templates: {
+        Row: {
+          archived: boolean
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          tags: string[]
+          title: string
+          usage_count: number
+        }
+        Insert: {
+          archived?: boolean
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          tags?: string[]
+          title: string
+          usage_count?: number
+        }
+        Update: {
+          archived?: boolean
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          tags?: string[]
+          title?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
+      usage_quotas: {
+        Row: {
+          id: string
+          limit_count: number
+          period: string
+          role: Database["public"]["Enums"]["app_role"] | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          limit_count: number
+          period: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          limit_count?: number
+          period?: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_ownership: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
+      set_user_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "owner" | "admin" | "editor" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -39,12 +413,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -68,11 +442,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -93,11 +467,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -118,11 +492,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -135,11 +509,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -150,6 +524,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["owner", "admin", "editor", "user"],
+    },
   },
 } as const
