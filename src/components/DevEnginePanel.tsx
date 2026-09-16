@@ -24,7 +24,7 @@ const BUTTONS: BtnDef[] = [
   { mode: "full",      label: "تطوير شامل",     ring: "shadow-[0_0_0_4px_rgba(236,72,153,0.35),0_0_28px_10px_rgba(236,72,153,0.55)]", bg: "bg-gradient-to-br from-emerald-500 via-amber-400 to-red-500 text-white", Icon: Sparkles },
 ];
 
-export function DevEnginePanel() {
+export function DevEnginePanel({ embedded = false }: { embedded?: boolean } = {}) {
   const [mounted, setMounted] = useState(false);
   const [status, setStatus] = useState(engineStatus());
   const [openLogs, setOpenLogs] = useState(false);
@@ -60,8 +60,8 @@ export function DevEnginePanel() {
 
   return (
     <>
-      {/* Fixed right-side vertical rail */}
-      <div className="fixed right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-3" dir="rtl">
+      {/* Buttons rail — embedded inside Settings (no longer floating on pages) */}
+      <div className={embedded ? "flex flex-wrap gap-3" : "fixed right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-3"} dir="rtl">
         {BUTTONS.map((b) => {
           const active = status.running && status.mode === b.mode;
           return (

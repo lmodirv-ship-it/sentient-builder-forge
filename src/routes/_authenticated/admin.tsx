@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { DevEnginePanel } from "@/components/DevEnginePanel";
 import { getMyRole, setUserBanned, setUserRole } from "@/lib/roles.functions";
 import {
   archiveAdminTemplate,
@@ -663,6 +664,13 @@ function Settings({ onChanged, panels }: { onChanged: () => void; panels: Panel[
 
   return (
     <div className="space-y-6">
+      <section>
+        <h3 className="mb-1 text-sm font-semibold text-white/70">محرّك التطوير الذاتي</h3>
+        <p className="mb-3 text-xs text-white/50">تطوير الذات، الأمان، المكتبات، تطوير شامل، وسجل التتبع.</p>
+        <div className="rounded-2xl border border-white/10 p-3">
+          <DevEnginePanel embedded />
+        </div>
+      </section>
       <section>
         <h3 className="mb-2 text-sm font-semibold text-white/70">الأدوات والشروحات</h3>
         <DocsLibrary panels={panels} onChanged={onChanged} />
