@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { DevEnginePanel } from "@/components/DevEnginePanel";
+
 import { getMyRole, setUserBanned, setUserRole } from "@/lib/roles.functions";
 import {
   archiveAdminTemplate,
