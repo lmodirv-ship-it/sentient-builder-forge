@@ -28,24 +28,24 @@ function toks(s: string): string[] {
   return normAr(s).split(" ").filter((t) => t.length > 1);
 }
 
-const AR_GREETING = `مرحباً! أنا نواة المساعد الذكي — كيف أخدمك؟
+const AR_GREETING = `مرحبا انا نواة المساعد الذكي كيف اخدمك
 
-🛠️ للإنشاء: اكتب طلبك مباشرة — «صمم لي موقع»، «حوّل هذا النص إلى صوت»، «أنشئ صورة»، «اصنع فيديو»، «سيرة ذاتية» — والنواة ترسل طلبك لخدمة HN المناسبة وتعيد لك النتيجة، مع أزرار تقييم (👍/👎/🔄) على كل عملية لتتعلّم النواة وتتحسّن.
+للإنشاء اكتب طلبك مباشرة مثل صمم لي موقع أو حوّل هذا النص إلى صوت أو أنشئ صورة أو اصنع فيديو أو سيرة ذاتية والنواة ترسل طلبك لخدمة HN المناسبة وتعيد لك النتيجة مع أزرار تقييم على كل عملية لتتعلّم النواة وتتحسّن
 
-🎛️ لوحة التحكم (الزر أسفل الشاشة، لك كمالك): نظرة عامة · المستخدمون · خدمات HN · الإعدادات · السجلات · القوالب · النواة.
+لوحة التحكم زر أسفل الشاشة لك كمالك وتضم نظرة عامة والمستخدمين وخدمات HN والإعدادات والسجلات والقوالب والنواة
 
-⌨️ أوامر سريعة: /مواقع — /ابحث كلمة — /موقع اسم — /خدمة اسم`;
+أوامر سريعة مواقع وابحث كلمة وموقع اسم وخدمة اسم`;
 
-const EN_GREETING = `Hello! I am the Nawat Smart Assistant Core — how can I help you?
+const EN_GREETING = `Hello I am the Nawat Smart Assistant Core how can I help you
 
-🛠️ To create: just type your request — "design a site", "turn this text into speech", "create an image", "make a video", "build a CV" — the core routes it to the matching HN service and returns the result, with 👍/👎/🔄 rating buttons so the core keeps learning.
+To create just type your request like design a site or turn this text into speech or create an image or make a video or build a CV and the core routes it to the matching HN service and returns the result with rating buttons so the core keeps learning
 
-🎛️ Control panel (button at the bottom of the screen, owner only): Overview · Users · HN Services · Settings · Logs · Templates · Core.
+The control panel button at the bottom of the screen for the owner only with overview users HN services settings logs templates and core
 
-⌨️ Quick commands: /sites — /search word — /site name — /service name`;
+Quick commands sites search word site name service name`;
 
-const IDENTITY_AR = "اسمي نواة المساعد الذكي — العقل المركزي لمنظومة HN.";
-const IDENTITY_EN = "My name is the Nawat Smart Assistant Core — the central brain of the HN ecosystem.";
+const IDENTITY_AR = "اسمي نواة المساعد الذكي العقل المركزي لمنظومة HN";
+const IDENTITY_EN = "My name is the Nawat Smart Assistant Core the central brain of the HN ecosystem";
 
 /** رسائل مدمجة تُستعمل فقط إن لم يجد جدول القوالب جواباً. */
 const BUILTIN: Array<{ re: RegExp; ar: string; en: string }> = [
