@@ -485,7 +485,7 @@ function Services({ onChanged }: { onChanged: () => void }) {
   );
 }
 
-function Settings({ onChanged }: { onChanged: () => void }) {
+function Settings({ onChanged, panels }: { onChanged: () => void; panels: Panel[] }) {
   const fn = useServerFn(getPlatformSettings);
   const setFn = useServerFn(setPlatformSetting);
   const { data } = useQuery({ queryKey: ["admin-settings"], queryFn: fn });
