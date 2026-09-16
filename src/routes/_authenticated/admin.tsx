@@ -89,8 +89,17 @@ function AdminPage() {
 
   const panels: Panel[] = (panelsData?.panels ?? []) as Panel[];
   const visible = panels.filter((p) => p.enabled);
+  const roots = visible.filter((p) => !p.parent_key);
+  const childrenOf = (key: string) => visible.filter((p) => p.parent_key === key);
   const active = panels.find((p) => p.key === tab);
   const onChanged = () => qc.invalidateQueries();
+
+  const btnClass = (key: string, child = false) =>
+    "flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-right text-sm transition md:w-full " +
+    (child ? "md:pr-6 text-xs " : "") +
+    (tab === key
+      ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/50"
+      : "text-white/60 hover:bg-white/10");
 
   return (
     <div dir="rtl" className="min-h-screen bg-[#050807] text-white">
@@ -104,21 +113,44 @@ function AdminPage() {
               </span>
             </div>
             <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
-              {visible.map((p) => (
-                <button
-                  key={p.key}
-                  onClick={() => setTab(p.key)}
-                  className={
-                    "flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-right text-sm transition md:w-full " +
-                    (tab === p.key
-                      ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/50"
-                      : "text-white/60 hover:bg-white/10")
-                  }
-                >
-                  <span>{ICONS[p.icon ?? ""] ?? "🔹"}</span>
-                  <span className="whitespace-nowrap">{p.label}</span>
-                </button>
-              ))}
+              {roots.map((p) => {
+                const kids = childrenOf(p.key);
+                const expanded = openGroups[p.key] ?? kids.some((k) => k.key === tab);
+                return (
+                  <div key={p.key} className="contents md:block">
+                    <button
+                      onClick={() => {
+                        setTab(p.key);
+                        if (kids.length)
+                          setOpenGroups((g) => ({ ...g, [p.key]: !expanded }));
+                      }}
+                      className={btnClass(p.key)}
+                    >
+                      <span>{ICONS[p.icon ?? ""] ?? "🔹"}</span>
+                      <span className="whitespace-nowrap">{p.label}</span>
+                      {kids.length > 0 && (
+                        <span className="mr-auto text-[10px] text-white/40">
+                          {expanded ? "▾" : "▸"}
+                        </span>
+                      )}
+                    </button>
+                    {kids.length > 0 && expanded && (
+                      <div className="flex gap-1 md:mt-1 md:flex-col md:border-r md:border-white/10 md:pr-1">
+                        {kids.map((c) => (
+                          <button
+                            key={c.key}
+                            onClick={() => setTab(c.key)}
+                            className={btnClass(c.key, true)}
+                          >
+                            <span>{ICONS[c.icon ?? ""] ?? "◦"}</span>
+                            <span className="whitespace-nowrap">{c.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               {visible.length === 0 && <span className="px-2 text-xs text-white/40">لا أقسام.</span>}
             </nav>
           </div>
