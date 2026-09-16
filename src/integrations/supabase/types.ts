@@ -47,6 +47,48 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_panels: {
+        Row: {
+          builtin: boolean
+          created_at: string
+          description: string | null
+          enabled: boolean
+          icon: string | null
+          id: string
+          key: string
+          label: string
+          settings: Json
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          builtin?: boolean
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          icon?: string | null
+          id?: string
+          key: string
+          label: string
+          settings?: Json
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          builtin?: boolean
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          icon?: string | null
+          id?: string
+          key?: string
+          label?: string
+          settings?: Json
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       feedback_events: {
         Row: {
           created_at: string
