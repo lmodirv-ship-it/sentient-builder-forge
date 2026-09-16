@@ -60,8 +60,8 @@ export function DevEnginePanel({ embedded = false }: { embedded?: boolean } = {}
 
   return (
     <>
-      {/* Fixed right-side vertical rail */}
-      <div className="fixed right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-3" dir="rtl">
+      {/* Buttons rail — embedded inside Settings (no longer floating on pages) */}
+      <div className={embedded ? "flex flex-wrap gap-3" : "fixed right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-3"} dir="rtl">
         {BUTTONS.map((b) => {
           const active = status.running && status.mode === b.mode;
           return (
