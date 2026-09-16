@@ -49,6 +49,7 @@ import {
   fsSupported, pickRootDir, getRootName, clearRootDir,
   saveSnapshot, loadSnapshot, saveOriginalFile,
 } from "@/lib/nawat-fs";
+import nawatLogo from "@/assets/nawat-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -821,8 +822,8 @@ function Home() {
       <header className="border-b border-border/40 backdrop-blur-2xl sticky top-0 z-20 bg-background/70">
         <div className="max-w-6xl mx-auto px-4 py-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="relative size-11 shrink-0 rounded-2xl bg-gradient-to-br from-primary to-[color:var(--gold)] grid place-items-center text-white shadow-[0_10px_30px_-8px_color-mix(in_oklab,var(--primary)_60%,transparent)]">
-              <Brain className="size-5" />
+            <div className="relative size-11 shrink-0 rounded-xl overflow-hidden border border-[color:var(--gold)]/40 shadow-[0_10px_30px_-8px_color-mix(in_oklab,var(--gold)_60%,transparent)]">
+              <img src={nawatLogo.url} alt="شعار النواة" className="size-full object-cover" />
               <span className="absolute inset-0 rounded-2xl animate-[pulse-ring_2.6s_ease-out_infinite]" />
             </div>
             <div className="min-w-0 hidden sm:block">
@@ -875,8 +876,8 @@ function Home() {
             </div>
             <div className="relative size-40 sm:size-52 shrink-0 mx-auto md:mx-0">
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/40 to-[color:var(--gold)]/30 blur-2xl" />
-              <div className="relative size-full rounded-full bg-gradient-to-br from-primary/20 to-transparent border border-white/10 grid place-items-center backdrop-blur-xl">
-                <Brain className="size-24 sm:size-32 text-[color:var(--gold)] drop-shadow-[0_0_30px_color-mix(in_oklab,var(--primary)_70%,transparent)]" />
+              <div className="relative size-full rounded-[1.75rem] overflow-hidden border border-[color:var(--gold)]/30 shadow-[0_0_35px_color-mix(in_oklab,var(--gold)_35%,transparent)]">
+                <img src={nawatLogo.url} alt="شعار النواة" className="size-full object-cover" />
               </div>
             </div>
           </div>
