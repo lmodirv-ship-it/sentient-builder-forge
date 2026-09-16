@@ -30,6 +30,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  component: () => <AdminPage />,
 });
 
 const TABS = [
