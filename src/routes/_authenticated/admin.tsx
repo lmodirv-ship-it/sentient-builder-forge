@@ -164,25 +164,70 @@ function CustomPanel({ panel, onChanged }: { panel: Panel; onChanged: () => void
     }
   };
 
+  const doc = (panel.settings as any)?.doc as
+    | { summary?: string; code?: string; lang?: string; notes?: string[] }
+    | undefined;
+  const [editing, setEditing] = useState(false);
+
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-white/60">
-        هذه صفحة القسم «{panel.label}». محتواها محفوظ في قاعدة البيانات بالمعرّف{" "}
-        <code dir="ltr" className="rounded bg-white/10 px-1">{panel.key}</code>.
+    <div className="space-y-4">
+      {doc && !editing && (
+        <div className="space-y-4">
+          {doc.summary && (
+            <p className="rounded-2xl bg-white/5 p-4 text-sm leading-7 text-white/80 ring-1 ring-white/10">
+              {doc.summary}
+            </p>
+          )}
+          {doc.code && (
+            <pre
+              dir="ltr"
+              className="overflow-x-auto rounded-2xl bg-black/50 p-4 text-left font-mono text-xs leading-6 text-emerald-100 ring-1 ring-emerald-400/20"
+            >
+              <code>{doc.code}</code>
+            </pre>
+          )}
+          {doc.notes?.length ? (
+            <ul className="space-y-2 rounded-2xl bg-white/5 p-4 text-sm text-white/70 ring-1 ring-white/10">
+              {doc.notes.map((n, i) => (
+                <li key={i} className="flex gap-2">
+                  <span className="text-emerald-300">•</span>
+                  <span>{n}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      )}
+
+      <p className="text-xs text-white/40">
+        معرّف القسم في قاعدة البيانات:{" "}
+        <code dir="ltr" className="rounded bg-white/10 px-1">{panel.key}</code>
       </p>
-      <textarea
-        dir="ltr"
-        rows={12}
-        className="w-full rounded-2xl bg-white/5 p-3 font-mono text-xs ring-1 ring-white/10"
-        value={raw}
-        onChange={(e) => setRaw(e.target.value)}
-      />
+
       <button
-        className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-200 ring-1 ring-emerald-400/40"
-        onClick={save}
+        className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white/70 ring-1 ring-white/15"
+        onClick={() => setEditing((v) => !v)}
       >
-        حفظ محتوى الصفحة
+        {editing ? "إخفاء المحرّر" : "تحرير محتوى الصفحة"}
       </button>
+
+      {(editing || !doc) && (
+        <div className="space-y-3">
+          <textarea
+            dir="ltr"
+            rows={14}
+            className="w-full rounded-2xl bg-white/5 p-3 font-mono text-xs ring-1 ring-white/10"
+            value={raw}
+            onChange={(e) => setRaw(e.target.value)}
+          />
+          <button
+            className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-200 ring-1 ring-emerald-400/40"
+            onClick={save}
+          >
+            حفظ محتوى الصفحة
+          </button>
+        </div>
+      )}
     </div>
   );
 }
