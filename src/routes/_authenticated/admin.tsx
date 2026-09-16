@@ -724,20 +724,75 @@ function Logs() {
   );
 }
 
+function TemplateRow({ t, onChanged }: { t: any; onChanged: () => void }) {
+  const updateFn = useServerFn(updateAdminTemplate);
+  const archiveFn = useServerFn(archiveAdminTemplate);
+  const [q, setQ] = useState(t.title ?? "");
+  const [a, setA] = useState(t.body ?? "");
+  const dirty = q !== (t.title ?? "") || a !== (t.body ?? "");
+
+  const save = async () => {
+    if (!q.trim() || !a.trim()) return toast.error("أكمل السؤال والجواب");
+    const r = await updateFn({ data: { id: t.id, title: q, body: a } });
+    if (!r.ok) toast.error(r.error ?? "فشل");
+    else { toast.success("تم التحديث"); onChanged(); }
+  };
+
+  return (
+    <tr className={"border-t border-white/10 align-top " + (t.archived ? "opacity-40" : "")}>
+      <td className="p-2 font-mono text-emerald-300" dir="ltr">{t.code ?? "—"}</td>
+      <td className="p-2">
+        <textarea
+          rows={2}
+          className="w-full resize-y rounded-lg bg-white/5 p-2 text-sm ring-1 ring-white/10"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      </td>
+      <td className="p-2">
+        <textarea
+          rows={3}
+          className="w-full resize-y rounded-lg bg-white/5 p-2 text-sm ring-1 ring-white/10"
+          value={a}
+          onChange={(e) => setA(e.target.value)}
+        />
+      </td>
+      <td className="whitespace-nowrap p-2">
+        <div className="flex flex-col gap-1">
+          <button
+            className="rounded bg-emerald-500/20 px-2 py-1 text-emerald-200 ring-1 ring-emerald-400/40 disabled:opacity-40"
+            disabled={!dirty}
+            onClick={save}
+          >
+            حفظ
+          </button>
+          {!t.archived && (
+            <button
+              className="rounded bg-white/10 px-2 py-1 hover:bg-white/20"
+              onClick={async () => { await archiveFn({ data: { id: t.id } }); onChanged(); }}
+            >
+              أرشفة
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 function Templates({ onChanged }: { onChanged: () => void }) {
   const fn = useServerFn(listAdminTemplates);
   const saveFn = useServerFn(saveAdminTemplate);
-  const archiveFn = useServerFn(archiveAdminTemplate);
   const { data } = useQuery({ queryKey: ["admin-templates"], queryFn: fn });
-  const [form, setForm] = useState({ kind: "image", title: "", body: "" });
+  const [form, setForm] = useState({ kind: "chat", title: "", body: "" });
   if (!data?.allowed) return <p className="text-white/60">غير مصرّح.</p>;
 
   const save = async () => {
-    if (!form.title || !form.body) return toast.error("أكمل الحقول");
+    if (!form.title || !form.body) return toast.error("أكمل السؤال والجواب");
     const r = await saveFn({ data: { ...form, tags: [] } });
     if (!r.ok) toast.error(r.error ?? "فشل");
     else {
-      toast.success("تم حفظ القالب");
+      toast.success("تم حفظ القالب — تم توليد المعرّف تلقائيًا");
       setForm({ kind: form.kind, title: "", body: "" });
       onChanged();
     }
@@ -746,33 +801,36 @@ function Templates({ onChanged }: { onChanged: () => void }) {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 p-4">
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2 md:grid-cols-[auto_1fr_1fr_auto]">
           <select className="rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
-            {["image", "tts", "video", "site", "cv", "chat"].map((k) => (
+            {["chat", "image", "tts", "video", "site", "cv"].map((k) => (
               <option key={k} value={k} className="bg-black">{k}</option>
             ))}
           </select>
-          <input className="rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10" placeholder="العنوان" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-          <input className="min-w-[240px] flex-1 rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10" placeholder="القالب — استعمل {subject}" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
-          <button className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-200 ring-1 ring-emerald-400/40" onClick={save}>حفظ</button>
+          <textarea rows={2} className="resize-y rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10" placeholder="السؤال" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+          <textarea rows={2} className="resize-y rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10" placeholder="الجواب" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
+          <button className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-200 ring-1 ring-emerald-400/40" onClick={save}>إضافة</button>
         </div>
+        <p className="mt-2 text-xs text-white/40">المعرّف يُولَّد تلقائيًا (حرف + ستة أرقام) ويُحفظ في قاعدة البيانات.</p>
       </div>
-      <div className="space-y-2">
-        {data.templates.map((t: any) => (
-          <div key={t.id} className={"rounded-xl border border-white/10 p-3 text-xs " + (t.archived ? "opacity-40" : "")}>
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold text-white/80">{t.title}</span>
-              <span className="rounded bg-white/10 px-2 py-0.5">{t.kind}</span>
-              {!t.archived && (
-                <button className="rounded bg-white/10 px-2 py-1 hover:bg-white/20" onClick={async () => { await archiveFn({ data: { id: t.id } }); onChanged(); }}>
-                  أرشفة
-                </button>
-              )}
-            </div>
-            <div className="mt-1 text-white/40" dir="ltr">{t.body}</div>
-          </div>
-        ))}
-        {data.templates.length === 0 && <p className="text-white/50">لا قوالب بعد.</p>}
+
+      <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <table className="w-full text-right text-xs">
+          <thead className="bg-white/5 text-white/70">
+            <tr>
+              <th className="p-2 font-medium">المعرّف</th>
+              <th className="p-2 font-medium">السؤال</th>
+              <th className="p-2 font-medium">الجواب</th>
+              <th className="p-2 font-medium">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.templates.map((t: any) => (
+              <TemplateRow key={t.id} t={t} onChanged={onChanged} />
+            ))}
+          </tbody>
+        </table>
+        {data.templates.length === 0 && <p className="p-3 text-white/50">لا قوالب بعد.</p>}
       </div>
     </div>
   );
