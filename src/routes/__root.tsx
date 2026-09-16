@@ -13,7 +13,6 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { DevEnginePanel } from "@/components/DevEnginePanel";
 import { AuthBanner } from "@/components/AuthBanner";
 
 function NotFoundComponent() {
@@ -139,7 +138,6 @@ function RootComponent() {
       <Toaster position="top-center" richColors closeButton dir="rtl" />
       <AuthBanner />
       <OfflineIndicator />
-      <DevEnginePanel />
     </QueryClientProvider>
   );
 }
