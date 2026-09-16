@@ -31,7 +31,7 @@ export const generateImage = createServerFn({ method: "POST" })
             return {
               ok: true,
               summary: data.prompt.slice(0, 200),
-              value: { imageUrl: hn.imageUrl, error: null as string | null, hnUrl, via: "hn" as const },
+              value: { imageUrl: hn.imageUrl, error: null as string | null, hnUrl, via: "hn" as "hn" | "none" },
             };
 
           const reason =
