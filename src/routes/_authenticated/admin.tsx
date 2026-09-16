@@ -17,6 +17,12 @@ import {
   upsertAdminService,
 } from "@/lib/admin.functions";
 import { purgeBadKnowledge, retrainKernel } from "@/lib/kernel.functions";
+import {
+  deleteAdminPanel,
+  listAdminPanels,
+  savePanelSettings,
+  upsertAdminPanel,
+} from "@/lib/admin-panels.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
