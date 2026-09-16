@@ -39,17 +39,26 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: () => <AdminPage />,
 });
 
-const TABS = [
-  ["overview", "نظرة عامة"],
-  ["users", "المستخدمون"],
-  ["services", "خدمات HN"],
-  ["settings", "الإعدادات"],
-  ["logs", "السجلات"],
-  ["templates", "القوالب"],
-  ["kernel", "النواة"],
-] as const;
+const ICONS: Record<string, string> = {
+  chart: "📊",
+  users: "👥",
+  server: "🛰️",
+  settings: "⚙️",
+  list: "📜",
+  file: "🧩",
+  brain: "🧠",
+};
 
-type TabKey = (typeof TABS)[number][0];
+type Panel = {
+  key: string;
+  label: string;
+  icon: string | null;
+  description: string | null;
+  sort_order: number;
+  enabled: boolean;
+  builtin: boolean;
+  settings: any;
+};
 
 function Card({ title, value, sub }: { title: string; value: string | number; sub?: string }) {
   return (
@@ -63,10 +72,12 @@ function Card({ title, value, sub }: { title: string; value: string | number; su
 
 function AdminPage() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<TabKey>("overview");
+  const [tab, setTab] = useState<string>("overview");
 
   const roleFn = useServerFn(getMyRole);
+  const panelsFn = useServerFn(listAdminPanels);
   const { data: role } = useQuery({ queryKey: ["my-role"], queryFn: roleFn });
+  const { data: panelsData } = useQuery({ queryKey: ["admin-panels"], queryFn: panelsFn });
 
   if (!role) return <div className="p-10 text-white/60">جارٍ التحميل…</div>;
   if (!role.isStaff)
@@ -76,42 +87,195 @@ function AdminPage() {
       </div>
     );
 
+  const panels: Panel[] = (panelsData?.panels ?? []) as Panel[];
+  const visible = panels.filter((p) => p.enabled);
+  const active = panels.find((p) => p.key === tab);
+  const onChanged = () => qc.invalidateQueries();
+
   return (
-    <div dir="rtl" className="min-h-screen bg-[#050807] px-4 py-6 text-white sm:px-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-xl font-bold text-emerald-300">لوحة تحكم منصة النواة</h1>
-          <span className="rounded-full border border-emerald-500/40 px-3 py-1 text-xs text-emerald-300">
-            دورك: {role.role === "owner" ? "المالك" : role.role === "admin" ? "مدير" : role.role}
-          </span>
-        </div>
+    <div dir="rtl" className="min-h-screen bg-[#050807] text-white">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:gap-6 md:px-6">
+        <aside className="md:w-60 md:shrink-0">
+          <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
+            <div className="px-2 pb-3">
+              <h1 className="text-sm font-bold text-emerald-300">لوحة تحكم النواة</h1>
+              <span className="text-[11px] text-white/40">
+                دورك: {role.role === "owner" ? "المالك" : role.role === "admin" ? "مدير" : role.role}
+              </span>
+            </div>
+            <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
+              {visible.map((p) => (
+                <button
+                  key={p.key}
+                  onClick={() => setTab(p.key)}
+                  className={
+                    "flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-right text-sm transition md:w-full " +
+                    (tab === p.key
+                      ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/50"
+                      : "text-white/60 hover:bg-white/10")
+                  }
+                >
+                  <span>{ICONS[p.icon ?? ""] ?? "🔹"}</span>
+                  <span className="whitespace-nowrap">{p.label}</span>
+                </button>
+              ))}
+              {visible.length === 0 && <span className="px-2 text-xs text-white/40">لا أقسام.</span>}
+            </nav>
+          </div>
+        </aside>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {TABS.map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              className={
-                "rounded-full px-4 py-1.5 text-sm transition " +
-                (tab === key
-                  ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/50"
-                  : "bg-white/5 text-white/60 hover:bg-white/10")
-              }
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-6">
+        <main className="min-w-0 flex-1">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-white/90">{active?.label ?? "لوحة التحكم"}</h2>
+            {active?.description ? (
+              <p className="text-xs text-white/40">{active.description}</p>
+            ) : null}
+          </div>
           {tab === "overview" && <Overview />}
-          {tab === "users" && <Users canManageRoles={role.isOwner} onChanged={() => qc.invalidateQueries()} />}
-          {tab === "services" && <Services onChanged={() => qc.invalidateQueries()} />}
-          {tab === "settings" && <Settings onChanged={() => qc.invalidateQueries()} />}
+          {tab === "users" && <Users canManageRoles={role.isOwner} onChanged={onChanged} />}
+          {tab === "services" && <Services onChanged={onChanged} />}
+          {tab === "settings" && <Settings onChanged={onChanged} panels={panels} />}
           {tab === "logs" && <Logs />}
-          {tab === "templates" && <Templates onChanged={() => qc.invalidateQueries()} />}
-          {tab === "kernel" && <Kernel onChanged={() => qc.invalidateQueries()} />}
+          {tab === "templates" && <Templates onChanged={onChanged} />}
+          {tab === "kernel" && <Kernel onChanged={onChanged} />}
+          {active && !active.builtin && <CustomPanel panel={active} onChanged={onChanged} />}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function CustomPanel({ panel, onChanged }: { panel: Panel; onChanged: () => void }) {
+  const saveFn = useServerFn(savePanelSettings);
+  const [raw, setRaw] = useState(JSON.stringify(panel.settings ?? {}, null, 2));
+
+  const save = async () => {
+    let parsed: any;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return toast.error("صيغة غير صحيحة");
+    }
+    const r = await saveFn({ data: { key: panel.key, settings: parsed } });
+    if (!r.ok) toast.error(r.error ?? "فشل");
+    else {
+      toast.success("تم الحفظ");
+      onChanged();
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-white/60">
+        هذه صفحة القسم «{panel.label}». محتواها محفوظ في قاعدة البيانات بالمعرّف{" "}
+        <code dir="ltr" className="rounded bg-white/10 px-1">{panel.key}</code>.
+      </p>
+      <textarea
+        dir="ltr"
+        rows={12}
+        className="w-full rounded-2xl bg-white/5 p-3 font-mono text-xs ring-1 ring-white/10"
+        value={raw}
+        onChange={(e) => setRaw(e.target.value)}
+      />
+      <button
+        className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-200 ring-1 ring-emerald-400/40"
+        onClick={save}
+      >
+        حفظ محتوى الصفحة
+      </button>
+    </div>
+  );
+}
+
+function PanelsManager({ panels, onChanged }: { panels: Panel[]; onChanged: () => void }) {
+  const upsertFn = useServerFn(upsertAdminPanel);
+  const deleteFn = useServerFn(deleteAdminPanel);
+  const [form, setForm] = useState({ key: "", label: "", icon: "", description: "", sortOrder: 100 });
+
+  const add = async () => {
+    if (!form.key || !form.label) return toast.error("أدخل المعرّف والاسم");
+    const r = await upsertFn({
+      data: {
+        key: form.key,
+        label: form.label,
+        icon: form.icon || undefined,
+        description: form.description || undefined,
+        sortOrder: Number(form.sortOrder) || 100,
+        enabled: true,
+      },
+    });
+    if (!r.ok) return toast.error(r.error ?? "فشل");
+    toast.success("تم إنشاء الزر وصفحته");
+    setForm({ key: "", label: "", icon: "", description: "", sortOrder: 100 });
+    onChanged();
+  };
+
+  const update = async (p: Panel, patch: Partial<Panel>) => {
+    const r = await upsertFn({
+      data: {
+        key: p.key,
+        label: (patch.label ?? p.label) as string,
+        icon: (patch.icon ?? p.icon) ?? undefined,
+        description: (patch.description ?? p.description) ?? undefined,
+        sortOrder: (patch.sort_order ?? p.sort_order) as number,
+        enabled: (patch.enabled ?? p.enabled) as boolean,
+      },
+    });
+    if (!r.ok) toast.error(r.error ?? "فشل");
+    else onChanged();
+  };
+
+  const remove = async (p: Panel) => {
+    const r = await deleteFn({ data: { key: p.key } });
+    if (!r.ok) toast.error(r.error ?? "فشل");
+    else {
+      toast.success("تم الحذف");
+      onChanged();
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-white/10 p-4">
+        <h3 className="mb-2 text-sm font-semibold text-white/70">إضافة زر جديد (يُنشئ صفحته تلقائياً)</h3>
+        <div className="flex flex-wrap gap-2">
+          <input dir="ltr" className="rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10" placeholder="المعرّف (key)" value={form.key} onChange={(e) => setForm({ ...form, key: e.target.value })} />
+          <input className="rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10" placeholder="الاسم الظاهر" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
+          <select className="rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })}>
+            <option value="" className="bg-black">أيقونة</option>
+            {Object.keys(ICONS).map((i) => (
+              <option key={i} value={i} className="bg-black">{ICONS[i]} {i}</option>
+            ))}
+          </select>
+          <input className="min-w-[200px] flex-1 rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10" placeholder="وصف مختصر" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <input type="number" className="w-24 rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })} />
+          <button className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-200 ring-1 ring-emerald-400/40" onClick={add}>إنشاء</button>
         </div>
+      </div>
+
+      <div className="space-y-2">
+        {panels.map((p) => (
+          <div key={p.key} className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 p-3 text-xs">
+            <span>{ICONS[p.icon ?? ""] ?? "🔹"}</span>
+            <span className="font-semibold text-white/80">{p.label}</span>
+            <code dir="ltr" className="rounded bg-white/10 px-1 text-white/50">{p.key}</code>
+            {p.builtin && <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-emerald-200">أساسي</span>}
+            <input
+              type="number"
+              className="w-20 rounded bg-white/5 px-2 py-1 ring-1 ring-white/10"
+              defaultValue={p.sort_order}
+              onBlur={(e) => update(p, { sort_order: Number(e.target.value) })}
+            />
+            <button className="rounded bg-white/10 px-2 py-1 hover:bg-white/20" onClick={() => update(p, { enabled: !p.enabled })}>
+              {p.enabled ? "إخفاء" : "إظهار"}
+            </button>
+            {!p.builtin && (
+              <button className="rounded bg-red-500/20 px-2 py-1 text-red-200 hover:bg-red-500/30" onClick={() => remove(p)}>
+                حذف
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
