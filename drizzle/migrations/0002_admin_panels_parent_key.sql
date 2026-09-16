@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_panels ADD COLUMN IF NOT EXISTS parent_key text;
