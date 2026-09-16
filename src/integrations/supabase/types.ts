@@ -57,6 +57,7 @@ export type Database = {
           id: string
           key: string
           label: string
+          parent_key: string | null
           settings: Json
           sort_order: number
           updated_at: string
@@ -70,6 +71,7 @@ export type Database = {
           id?: string
           key: string
           label: string
+          parent_key?: string | null
           settings?: Json
           sort_order?: number
           updated_at?: string
@@ -83,6 +85,7 @@ export type Database = {
           id?: string
           key?: string
           label?: string
+          parent_key?: string | null
           settings?: Json
           sort_order?: number
           updated_at?: string
