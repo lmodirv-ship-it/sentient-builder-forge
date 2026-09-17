@@ -808,16 +808,22 @@ function Logs() {
 
 function TemplateRow({ t, onChanged }: { t: any; onChanged: () => void }) {
   const updateFn = useServerFn(updateAdminTemplate);
-  const archiveFn = useServerFn(archiveAdminTemplate);
   const [q, setQ] = useState(t.title ?? "");
   const [a, setA] = useState(t.body ?? "");
+  const [editing, setEditing] = useState(false);
   const dirty = q !== (t.title ?? "") || a !== (t.body ?? "");
 
   const save = async () => {
     if (!q.trim() || !a.trim()) return toast.error("أكمل السؤال والجواب");
     const r = await updateFn({ data: { id: t.id, title: q, body: a } });
     if (!r.ok) toast.error(r.error ?? "فشل");
-    else { toast.success("تم التحديث"); onChanged(); }
+    else { toast.success("تم التحديث"); setEditing(false); onChanged(); }
+  };
+
+  const cancel = () => {
+    setQ(t.title ?? "");
+    setA(t.body ?? "");
+    setEditing(false);
   };
 
   return (
@@ -826,34 +832,45 @@ function TemplateRow({ t, onChanged }: { t: any; onChanged: () => void }) {
       <td className="p-2">
         <textarea
           rows={2}
-          className="w-full resize-y rounded-lg bg-white/5 p-2 text-sm ring-1 ring-white/10"
+          className="w-full resize-y rounded-lg bg-white/5 p-2 text-sm ring-1 ring-white/10 disabled:opacity-70"
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          disabled={!editing}
         />
       </td>
       <td className="p-2">
         <textarea
           rows={3}
-          className="w-full resize-y rounded-lg bg-white/5 p-2 text-sm ring-1 ring-white/10"
+          className="w-full resize-y rounded-lg bg-white/5 p-2 text-sm ring-1 ring-white/10 disabled:opacity-70"
           value={a}
           onChange={(e) => setA(e.target.value)}
+          disabled={!editing}
         />
       </td>
       <td className="whitespace-nowrap p-2">
         <div className="flex flex-col gap-1">
-          <button
-            className="rounded bg-emerald-500/20 px-2 py-1 text-emerald-200 ring-1 ring-emerald-400/40 disabled:opacity-40"
-            disabled={!dirty}
-            onClick={save}
-          >
-            حفظ
-          </button>
-          {!t.archived && (
+          {editing ? (
+            <>
+              <button
+                className="rounded bg-emerald-500/20 px-2 py-1 text-emerald-200 ring-1 ring-emerald-400/40 disabled:opacity-40"
+                disabled={!dirty}
+                onClick={save}
+              >
+                حفظ
+              </button>
+              <button
+                className="rounded bg-white/10 px-2 py-1 hover:bg-white/20"
+                onClick={cancel}
+              >
+                إلغاء
+              </button>
+            </>
+          ) : (
             <button
               className="rounded bg-white/10 px-2 py-1 hover:bg-white/20"
-              onClick={async () => { await archiveFn({ data: { id: t.id } }); onChanged(); }}
+              onClick={() => setEditing(true)}
             >
-              أرشفة
+              تعديل
             </button>
           )}
         </div>
