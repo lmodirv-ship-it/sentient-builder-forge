@@ -587,6 +587,19 @@ function Home() {
         if (inputRef.current) inputRef.current.value = "";
         return;
       }
+      // منصة TVCC — مركز قيادة المواقع
+      if (isTvccQuestion(raw)) {
+        try {
+          const tv = await tvccAskFn({ data: { question: raw } });
+          if (tv.ok && tv.text) {
+            const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+            persistChat([...chat, user, { id: crypto.randomUUID(), role: "assistant", text: tv.text }]);
+            setInput("");
+            if (inputRef.current) inputRef.current.value = "";
+            return;
+          }
+        } catch { /* TVCC غير متاح — نكمل المسار العادي */ }
+      }
       // محرك نواة على الخادم (عند ضبط VITE_ENGINE_URL) — الواجهة عرض فقط
       if (engineEnabled()) {
         try {
