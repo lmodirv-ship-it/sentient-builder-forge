@@ -29,6 +29,13 @@
       "when": 1789601728540,
       "tag": "0003_templates_code_identifier",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789603934079,
+      "tag": "0004_sequential_template_codes",
+      "breakpoints": true
     }
   ]
 }
