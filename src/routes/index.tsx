@@ -951,6 +951,19 @@ function Home() {
             <Button variant="outline" size="sm" onClick={() => setLang(isAr ? "en" : "ar")}>
               <Languages className="size-4" /> {isAr ? "EN" : "ع"}
             </Button>
+            <Button
+              variant={voiceMode ? "default" : "outline"}
+              size="sm"
+              onClick={toggleVoiceMode}
+              title={voiceMode ? t("إيقاف الوضع الصوتي", "Voice mode off") : t("تشغيل الوضع الصوتي", "Voice mode on")}
+            >
+              {voiceMode ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+            </Button>
+            {speaking && (
+              <Button variant="destructive" size="sm" onClick={stopSpeaking} title={t("إيقاف الصوت", "Stop audio")}>
+                <Square className="size-4" />
+              </Button>
+            )}
             <TabsList className="grid grid-cols-2 w-auto p-1 bg-card/40 backdrop-blur-md border border-border rounded-xl h-auto">
               <TabsTrigger value="chat" className="gap-1.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-1.5 text-sm"><MessageSquare className="size-3.5" />{t("اسأل", "Ask")}</TabsTrigger>
               <TabsTrigger value="memory" className="gap-1.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-1.5 text-sm"><BookOpen className="size-3.5" />{t("الذاكرة", "Memory")}</TabsTrigger>
