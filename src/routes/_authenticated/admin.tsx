@@ -819,7 +819,10 @@ function TemplateRow({ t, onChanged }: { t: any; onChanged: () => void }) {
     if (!q.trim() || !a.trim()) return toast.error("أكمل السؤال والجواب");
     const r = await updateFn({ data: { id: t.id, title: q, body: a } });
     if (!r.ok) toast.error(r.error ?? "فشل");
-    else { toast.success("تم التحديث"); setEditing(false); onChanged(); }
+    else {
+      try { await refreshIndex({ data: {} } as any); } catch { /* ignore */ }
+      toast.success("تم التحديث"); setEditing(false); onChanged();
+    }
   };
 
   const cancel = () => {
