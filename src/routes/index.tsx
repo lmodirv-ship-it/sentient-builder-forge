@@ -986,7 +986,14 @@ function Home() {
               <NeuralBrain bg className="w-[80vw] h-[80vw] max-w-[600px] max-h-[600px] text-muted-foreground brain-bg brain-glow" />
             </div>
             <Card className="relative p-0 overflow-hidden rounded-[2rem] bg-card/30 backdrop-blur-xl border-border/60 nawat-glow z-[1]">
-              <div ref={chatRef} className="h-[55vh] overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-transparent to-primary/[0.04]">
+              <div
+                ref={chatRef}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  const f = Array.from(e.dataTransfer.files).find((x) => x.type.startsWith("image/"));
+                  if (f) { e.preventDefault(); void onChatImage(f); }
+                }}
+                className="h-[55vh] overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-transparent to-primary/[0.04]">
                 {chat.length === 0 && (
                   <div className="h-full grid place-items-center">
                     <NeuralBrain className="w-32 h-32 text-muted-foreground" />
