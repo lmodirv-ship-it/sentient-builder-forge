@@ -87,34 +87,11 @@ export const kernelTemplateAnswer = createServerFn({ method: "POST" })
     const qTokens = toks(data.question);
     if (!q) return { matched: false as const };
 
-    // 1) جدول القوالب أولاً — المالك يعدّل الأجوبة من صفحة «القوالب» فتتغير استجابة النواة فوراً.
-    const { data: rows, error } = await context.supabase
-      .from("templates")
-      .select("code, title, body")
-      .eq("archived", false)
-      .limit(300);
-    if (!error && rows?.length) {
-      let best: { code: string; body: string; score: number } | null = null;
-      for (const r of rows) {
-        const nt = normAr(r.title ?? "");
-        if (!nt) continue;
-        let score = 0;
-        if (nt === q) score = 100;
-        else {
-          const tTokens = toks(r.title ?? "");
-          if (tTokens.length) {
-            const tSet = new Set(tTokens);
-            const overlap = qTokens.filter((t) => tSet.has(t)).length;
-            score = Math.round((overlap / Math.max(qTokens.length, tTokens.length)) * 100);
-          }
-        }
-        if (score >= 70 && (!best || score > best.score)) {
-          best = { code: r.code ?? "", body: r.body ?? "", score };
-        }
-      }
-      if (best?.body?.trim()) {
-        return { matched: true as const, source: "template" as const, code: best.code, text: lettersOnly(best.body) };
-      }
+    // 1) فهرس القوالب في الذاكرة — يُبنى مرة ويُحدَّث كل بضع دقائق بدل قراءة الجدول عند كل سؤال.
+    const index = await getTemplateIndex(context.supabase);
+    const best = matchIndex(index, q, qTokens);
+    if (best) {
+      return { matched: true as const, source: "template" as const, code: best.code, text: lettersOnly(best.body) };
     }
 
     // 2) رسائل مدمجة (ترحيب/تعريف) — فقط للرسائل القصيرة كي لا تختطف الطلبات الحقيقية.
@@ -125,5 +102,81 @@ export const kernelTemplateAnswer = createServerFn({ method: "POST" })
       }
     }
 
+    // 3) ذاكرة النواة — جواب محفوظ سابقاً لسؤال مشابه قبل الذهاب إلى خدمة الذكاء.
+    const { data: mem } = await context.supabase
+      .from("knowledge_items")
+      .select("prompt, result_summary, rating, ok")
+      .eq("user_id", context.userId)
+      .eq("ok", true)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (mem?.length) {
+      let hit: { text: string; score: number } | null = null;
+      for (const r of mem) {
+        const p = r.prompt ?? "";
+        const body = r.result_summary ?? "";
+        if (!p || !body.trim() || (r.rating ?? 0) < 0) continue;
+        const score = scoreOf(normAr(p), toks(p), q, qTokens);
+        if (score >= 80 && (!hit || score > hit.score)) hit = { text: body, score };
+      }
+      if (hit) return { matched: true as const, source: "memory" as const, text: lettersOnly(hit.text) };
+    }
+
     return { matched: false as const };
+  });
+
+/** نتيجة المطابقة بين سؤال وعنوان: 100 للمطابقة التامة وإلا نسبة التداخل اللفظي. */
+function scoreOf(nTitle: string, tTokens: string[], q: string, qTokens: string[]): number {
+  if (!nTitle) return 0;
+  if (nTitle === q) return 100;
+  if (!tTokens.length || !qTokens.length) return 0;
+  const tSet = new Set(tTokens);
+  const overlap = qTokens.filter((t) => tSet.has(t)).length;
+  return Math.round((overlap / Math.max(qTokens.length, tTokens.length)) * 100);
+}
+
+type IndexedTemplate = { code: string; body: string; norm: string; tokens: string[] };
+let TEMPLATE_INDEX: IndexedTemplate[] | null = null;
+let TEMPLATE_INDEX_AT = 0;
+const TEMPLATE_TTL_MS = 3 * 60 * 1000;
+
+/** فهرس القوالب غير المؤرشفة محفوظ في ذاكرة الخادم مع تحديث دوري. */
+async function getTemplateIndex(db: any): Promise<IndexedTemplate[]> {
+  const now = Date.now();
+  if (TEMPLATE_INDEX && now - TEMPLATE_INDEX_AT < TEMPLATE_TTL_MS) return TEMPLATE_INDEX;
+  const { data: rows, error } = await db
+    .from("templates")
+    .select("code, title, body")
+    .eq("archived", false)
+    .limit(1000);
+  if (error || !rows) return TEMPLATE_INDEX ?? [];
+  TEMPLATE_INDEX = (rows as Array<{ code: string | null; title: string | null; body: string | null }>)
+    .filter((r) => (r.title ?? "").trim() && (r.body ?? "").trim())
+    .map((r) => ({
+      code: r.code ?? "",
+      body: r.body ?? "",
+      norm: normAr(r.title ?? ""),
+      tokens: toks(r.title ?? ""),
+    }));
+  TEMPLATE_INDEX_AT = now;
+  return TEMPLATE_INDEX;
+}
+
+function matchIndex(index: IndexedTemplate[], q: string, qTokens: string[]) {
+  let best: { code: string; body: string; score: number } | null = null;
+  for (const r of index) {
+    const score = scoreOf(r.norm, r.tokens, q, qTokens);
+    if (score >= 70 && (!best || score > best.score)) best = { code: r.code, body: r.body, score };
+    if (score === 100) break;
+  }
+  return best;
+}
+
+/** يُستدعى بعد أي تعديل في صفحة القوالب حتى يعاد بناء الفهرس فوراً. */
+export const invalidateTemplateIndex = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    TEMPLATE_INDEX = null;
+    TEMPLATE_INDEX_AT = 0;
+    return { ok: true as const };
   });
