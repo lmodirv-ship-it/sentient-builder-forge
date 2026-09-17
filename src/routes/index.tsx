@@ -878,25 +878,8 @@ function Home() {
         <div className="relative rounded-[1.5rem] overflow-hidden nawat-hero-bg border border-border/50 p-3 sm:p-5 shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--primary)_50%,transparent)]">
           <div className="absolute -top-16 -right-16 size-72 rounded-full bg-primary/25 blur-[80px]" />
           <div className="absolute -bottom-20 -left-16 size-72 rounded-full bg-[color:var(--gold)]/15 blur-[90px]" />
-          <div className="relative grid md:grid-cols-[1fr_auto] items-center gap-3">
-            <div className="min-w-0 text-center md:text-start">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 mb-2 rounded-full border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/5 nawat-chip nawat-gold-text text-xs">
-                <span className="inline-block size-1.5 rounded-full bg-[color:var(--gold)] shadow-[0_0_8px_var(--gold)] animate-pulse" />
-                {t("العقل نشط · دون إنترنت", "BRAIN ACTIVE · OFFLINE")}
-              </div>
-              <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight leading-[1.15]">
-                <span className="nawat-holo">{t("صباح الخير،", "Good morning,")}</span>
-                <br />
-                <span className="text-foreground/90">{t("نواة تسمعك.", "Nawat is listening.")}</span>
-              </h2>
-              <p className="mt-2 text-muted-foreground text-xs sm:text-sm leading-snug max-w-xl mx-auto md:mx-0">
-                {t(
-                  "أنا هنا لأتذكّر معك، أربط أفكارك، وأكشف ما نسيت — من ذاكرتك أنت، لا من الإنترنت.",
-                  "I'm here to remember with you, connect your thoughts, and surface what you forgot — from your own memory, never the web.",
-                )}
-              </p>
-            </div>
-            <div className="relative size-40 sm:size-52 shrink-0 mx-auto md:mx-0">
+          <div className="relative flex justify-center">
+            <div className="relative size-40 sm:size-52 shrink-0">
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/40 to-[color:var(--gold)]/30 blur-2xl" />
               <div className="relative size-full rounded-[1.75rem] overflow-hidden border border-[color:var(--gold)]/30 shadow-[0_0_35px_color-mix(in_oklab,var(--gold)_35%,transparent)]">
                 <img src={nawatLogo.url} alt="شعار النواة" className="size-full object-cover" />
