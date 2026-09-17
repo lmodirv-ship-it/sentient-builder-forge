@@ -22,8 +22,8 @@ export const ocrImage = createServerFn({ method: "POST" })
 
     const prompt =
       data.lang === "ar"
-        ? "حلّل هذه الصورة تحليلاً نصياً وافياً بالعربية: صف ما فيها من عناصر وأشخاص ومشهد وألوان وسياق، واستخرج أي نص ظاهر فيها حرفياً ضمن التحليل. أعد النص التحليلي فقط دون مقدمات أو رموز تنسيق."
-        : "Analyze this image in a thorough written analysis: describe its elements, people, scene, colors and context, and transcribe any visible text verbatim within the analysis. Return the analytical text only, no preamble or formatting symbols.";
+        ? "حلّل هذه الصورة تحليلاً حرفياً وبيانياً بالعربية. صف المشهد وعناصره صفياً، وحدّد الألوان بأسمائها الصريحة لكل عنصر، وقدّر الأطوال والأبعاد والنِسب بيانياً بأرقام تقريبية، وحدّد أشكال كل عنصر بدقة مثل مربع ودائرة ومستطيل وخط، واستخرج أي أسماء أشخاص أو علامات أو كتابات ظاهرة في الصورة، وانقل أي نص ظاهر حرفياً. أعد النص التحليلي فقط بالحروف دون مقدمات أو رموز تنسيق."
+        : "Analyze this image verbally and numerically: describe the scene and its elements, name each element's explicit colors, estimate lengths, dimensions and proportions with approximate numbers, identify the precise shape of each element such as square circle rectangle line, extract any visible names of people brands or writings, and transcribe any visible text verbatim. Return the analytical text only, no preamble or formatting symbols.";
 
     try {
       const res = await fetch(`${base.replace(/\/$/, "")}/v1/chat/completions`, {
