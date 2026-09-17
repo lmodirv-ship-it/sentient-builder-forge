@@ -577,9 +577,19 @@ function Home() {
 
     // ── نواة المساعد الذكي: أسئلة الترحيب والقوالب المعروفة تُجاب فوراً من جدول القوالب.
     if (!raw.startsWith("/")) {
+      const cacheKey = `${lang}|${raw.toLowerCase()}`;
+      const cached = qaCacheRef.current.get(cacheKey);
+      if (cached) {
+        const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+        persistChat([...chat, user, { id: crypto.randomUUID(), role: "assistant", text: cached }]);
+        setInput("");
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
       try {
         const tm = await templateAsk({ data: { question: raw, lang } });
         if (tm.matched && tm.text) {
+          qaCacheRef.current.set(cacheKey, tm.text);
           const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
           persistChat([...chat, user, { id: crypto.randomUUID(), role: "assistant", text: tm.text }]);
           setInput("");
