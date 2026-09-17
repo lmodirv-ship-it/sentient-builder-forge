@@ -1052,7 +1052,10 @@ function Home() {
 
                         </div>
                       ) : (
-                        m.text
+                        <>
+                          {m.imageUrl && <img src={m.imageUrl} alt="" className="mb-2 rounded-lg max-w-full max-h-64 object-contain" />}
+                          {m.text}
+                        </>
                       )}
                     </div>
                   </div>
