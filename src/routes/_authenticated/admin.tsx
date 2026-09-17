@@ -21,6 +21,7 @@ import {
   upsertAdminService,
 } from "@/lib/admin.functions";
 import { purgeBadKnowledge, retrainKernel } from "@/lib/kernel.functions";
+import { invalidateTemplateIndex } from "@/lib/kernel-chat.functions";
 import {
   deleteAdminPanel,
   listAdminPanels,
