@@ -39,6 +39,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { kernelTemplateAnswer } from "@/lib/kernel-chat.functions";
 import { engineAsk, engineEnabled } from "@/lib/engine-client";
+import { isTvccQuestion, tvccAsk } from "@/lib/tvcc.functions";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
 import { transcribeAudio } from "@/lib/nawat-transcribe.functions";
 import { generateImage } from "@/lib/nawat-image.functions";
@@ -219,6 +220,7 @@ function Home() {
   const [syncing, setSyncing] = useState(false);
   const ask = useServerFn(askNawat);
   const templateAsk = useServerFn(kernelTemplateAnswer);
+  const tvccAskFn = useServerFn(tvccAsk);
   const expand = useServerFn(expandQuery);
   const transcribe = useServerFn(transcribeAudio);
   const imageGen = useServerFn(generateImage);
