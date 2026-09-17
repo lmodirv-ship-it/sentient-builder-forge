@@ -274,6 +274,38 @@ function PanelsManager({ panels, onChanged }: { panels: Panel[]; onChanged: () =
   const upsertFn = useServerFn(upsertAdminPanel);
   const deleteFn = useServerFn(deleteAdminPanel);
   const [form, setForm] = useState({ key: "", label: "", icon: "", description: "", sortOrder: 100 });
+  const [editKey, setEditKey] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState({ label: "", icon: "", description: "", sortOrder: 100 });
+
+  const startEdit = (p: Panel) => {
+    setEditKey(p.key);
+    setEditDraft({
+      label: p.label,
+      icon: p.icon ?? "",
+      description: p.description ?? "",
+      sortOrder: p.sort_order,
+    });
+  };
+
+  const saveEdit = async (p: Panel) => {
+    const r = await upsertFn({
+      data: {
+        key: p.key,
+        label: editDraft.label || p.label,
+        icon: editDraft.icon || undefined,
+        description: editDraft.description || undefined,
+        sortOrder: Number(editDraft.sortOrder) || p.sort_order,
+        enabled: p.enabled,
+      },
+    });
+    if (!r.ok) {
+      toast.error(r.error ?? "فشل");
+      return;
+    }
+    toast.success("تم الحفظ");
+    setEditKey(null);
+    onChanged();
+  };
 
   const add = async () => {
     if (!form.key || !form.label) return toast.error("أدخل المعرّف والاسم");
