@@ -1,0 +1,18 @@
+{
+  "name": "nawat-engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "محرك نواة المركزي — وكيل واحد، سجل أدوات، ذاكرة، طابور مهام",
+  "main": "src/server.mjs",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "migrate": "node src/migrate.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}

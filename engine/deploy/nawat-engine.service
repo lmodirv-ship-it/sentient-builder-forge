@@ -1,0 +1,17 @@
+[Unit]
+Description=NAWAT Engine
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=nawat
+WorkingDirectory=/opt/nawat-engine
+EnvironmentFile=/opt/nawat-engine/.env
+ExecStart=/usr/bin/node src/server.mjs
+Restart=always
+RestartSec=3
+StandardOutput=append:/var/log/nawat-engine.log
+StandardError=append:/var/log/nawat-engine.log
+
+[Install]
+WantedBy=multi-user.target
