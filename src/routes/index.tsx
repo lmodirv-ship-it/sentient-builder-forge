@@ -905,34 +905,6 @@ function Home() {
           </div>
         </div>
 
-        {/* Quick action tiles — mockup-inspired */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { icon: MessageSquare, label: t("محادثة", "Chat"), sub: t("اسأل نواة", "Ask Nawat"), tone: "primary" },
-            { icon: Search,        label: t("بحث ذكي", "Smart search"), sub: t("في ذاكرتك", "Your memory"), tone: "gold" },
-            { icon: Plus,          label: t("ملاحظة", "Note"), sub: t("أضف فكرة", "Capture idea"), tone: "primary" },
-            { icon: FileUp,        label: t("رفع ملف", "Upload"), sub: t("PDF · صور · صوت", "PDF · IMG · Audio"), tone: "gold" },
-          ].map((a, i) => {
-            const Icon = a.icon;
-            const isGold = a.tone === "gold";
-            return (
-              <button
-                key={i}
-                className={`group text-start p-4 rounded-2xl nawat-glass hover:-translate-y-0.5 transition-all ${
-                  isGold ? "hover:border-[color:var(--gold)]/40" : "hover:border-primary/40"
-                }`}
-              >
-                <div className={`size-10 mb-3 rounded-xl grid place-items-center ${
-                  isGold ? "bg-[color:var(--gold)]/10 text-[color:var(--gold)]" : "bg-primary/10 text-primary"
-                } group-hover:scale-110 transition-transform`}>
-                  <Icon className="size-5" />
-                </div>
-                <div className="text-sm font-bold">{a.label}</div>
-                <div className="text-[11px] text-muted-foreground truncate">{a.sub}</div>
-              </button>
-            );
-          })}
-        </div>
       </section>
 
 
