@@ -38,6 +38,7 @@ import { HNStatusPill } from "@/components/HNStatusPill";
 import { useServerFn } from "@tanstack/react-start";
 import { askNawat } from "@/lib/nawat-ai.functions";
 import { kernelTemplateAnswer } from "@/lib/kernel-chat.functions";
+import { engineAsk, engineEnabled } from "@/lib/engine-client";
 import { ocrImage } from "@/lib/nawat-ocr.functions";
 import { transcribeAudio } from "@/lib/nawat-transcribe.functions";
 import { generateImage } from "@/lib/nawat-image.functions";
@@ -585,6 +586,26 @@ function Home() {
         setInput("");
         if (inputRef.current) inputRef.current.value = "";
         return;
+      }
+      // محرك نواة على الخادم (عند ضبط VITE_ENGINE_URL) — الواجهة عرض فقط
+      if (engineEnabled()) {
+        try {
+          const r = await engineAsk(raw);
+          const answer =
+            r.route === "job"
+              ? `جارٍ العمل على طلبك رقم ${r.job.id}`
+              : "answer" in r
+                ? r.answer
+                : JSON.stringify((r as { result?: unknown }).result ?? "");
+          if (answer) {
+            qaCacheRef.current.set(cacheKey, answer);
+            const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+            persistChat([...chat, user, { id: crypto.randomUUID(), role: "assistant", text: answer }]);
+            setInput("");
+            if (inputRef.current) inputRef.current.value = "";
+            return;
+          }
+        } catch { /* المحرك غير متاح — نكمل المسار المحلي */ }
       }
       try {
         const tm = await templateAsk({ data: { question: raw, lang } });
