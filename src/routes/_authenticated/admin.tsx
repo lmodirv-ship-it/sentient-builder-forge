@@ -808,6 +808,7 @@ function Logs() {
 
 function TemplateRow({ t, onChanged }: { t: any; onChanged: () => void }) {
   const updateFn = useServerFn(updateAdminTemplate);
+  const refreshIndex = useServerFn(invalidateTemplateIndex);
   const [q, setQ] = useState(t.title ?? "");
   const [a, setA] = useState(t.body ?? "");
   const [editing, setEditing] = useState(false);
