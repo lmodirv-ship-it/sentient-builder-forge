@@ -247,6 +247,26 @@ function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
   const hydratedRef = useRef(false);
 
+  // ===== الوضع الصوتي: قراءة كل رد جديد بصوت HN تلقائياً =====
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [readingImage, setReadingImage] = useState(false);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const imgInputRef = useRef<HTMLInputElement>(null);
+  const spokenRef = useRef<Set<string>>(new Set());
+  // كاش الأسئلة المتكررة داخل الجلسة: نفس السؤال يُعاد جوابه فوراً بلا أي طلب.
+  const qaCacheRef = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => { setVoiceMode(load<boolean>("nawat.voicemode.v1", false)); }, []);
+  const toggleVoiceMode = () => {
+    setVoiceMode((prev) => {
+      const next = !prev;
+      save("nawat.voicemode.v1", next);
+      if (!next) stopSpeaking();
+      return next;
+    });
+  };
+
   useEffect(() => {
     (async () => {
       // Try restoring from chosen folder first; fall back to localStorage.
