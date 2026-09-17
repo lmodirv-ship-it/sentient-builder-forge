@@ -758,10 +758,17 @@ function Home() {
         persistDocs([qa, ...docs]);
       }
     } catch (e: any) {
+      const msg = String(e?.message || "");
+      const unauthorized = /unauthorized|401|authorization header/i.test(msg);
       const assistant: ChatMsg = {
         id: crypto.randomUUID(),
         role: "assistant",
-        text: t("تعذّر الاتصال بنواة الذكاء. حاول مجدداً.", "Failed to reach AI core. Try again.") + "\n" + (e?.message || ""),
+        text: unauthorized
+          ? t(
+              "سجّل الدخول أولاً لاستخدام نواة الذكاء. افتح صفحة الدخول من [هنا](/auth) ثم أعد إرسال سؤالك.",
+              "Please sign in first to use the AI core. Open the [sign-in page](/auth) and send your question again.",
+            )
+          : t("تعذّر الاتصال بنواة الذكاء. حاول مجدداً.", "Failed to reach AI core. Try again.") + "\n" + msg,
       };
       persistChat([...baseChat, assistant]);
     } finally {
