@@ -51,7 +51,7 @@ import {
   fsSupported, pickRootDir, getRootName, clearRootDir,
   saveSnapshot, loadSnapshot, saveOriginalFile,
 } from "@/lib/nawat-fs";
-import nawatLogo from "@/assets/nawat-logo.png.asset.json";
+const nawatLogo = { url: "/nawat-logo.png" };
 
 export const Route = createFileRoute("/")({
   head: () => ({
