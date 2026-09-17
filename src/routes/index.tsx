@@ -841,6 +841,7 @@ function Home() {
 
   return (
     <div dir={isAr ? "rtl" : "ltr"} className="min-h-screen bg-background text-foreground relative [&>*]:relative [&>*]:z-[1]">
+      <Tabs defaultValue="chat" className="contents">
       <header className="border-b border-border/40 backdrop-blur-2xl sticky top-0 z-20 bg-background/70">
         <div className="max-w-6xl mx-auto px-4 py-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -869,6 +870,10 @@ function Home() {
             <Button variant="outline" size="sm" onClick={() => setLang(isAr ? "en" : "ar")}>
               <Languages className="size-4" /> {isAr ? "EN" : "ع"}
             </Button>
+            <TabsList className="grid grid-cols-2 w-auto p-1 bg-card/40 backdrop-blur-md border border-border rounded-xl h-auto">
+              <TabsTrigger value="chat" className="gap-1.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-1.5 text-sm"><MessageSquare className="size-3.5" />{t("اسأل", "Ask")}</TabsTrigger>
+              <TabsTrigger value="memory" className="gap-1.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-1.5 text-sm"><BookOpen className="size-3.5" />{t("الذاكرة", "Memory")}</TabsTrigger>
+            </TabsList>
           </div>
         </div>
       </header>
@@ -881,12 +886,6 @@ function Home() {
 
 
       <main className="max-w-6xl mx-auto px-4 pb-16">
-        <Tabs defaultValue="chat" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto p-1 bg-card/40 backdrop-blur-md border border-border rounded-2xl h-auto">
-            <TabsTrigger value="chat" className="gap-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"><MessageSquare className="size-4" />{t("اسأل", "Ask")}</TabsTrigger>
-            <TabsTrigger value="memory" className="gap-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"><BookOpen className="size-4" />{t("الذاكرة", "Memory")}</TabsTrigger>
-          </TabsList>
-
           <TabsContent value="chat" className="mt-6 relative">
             {/* Background brain — large, pulsing, behind chat */}
             <div className="absolute inset-0 grid place-items-center pointer-events-none overflow-hidden z-0">
@@ -1252,9 +1251,8 @@ function Home() {
             </div>
           </TabsContent>
 
-        </Tabs>
-
       </main>
+      </Tabs>
 
       <footer className="w-full border-t border-border/50 bg-card/40 backdrop-blur-sm py-4 px-6 mt-4 text-center text-sm text-muted-foreground">
         جميع الحقوق محفوظة © مولاي اسماعيل الحسني — Groupe HN للبرمجة والتصميم
