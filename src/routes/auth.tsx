@@ -132,6 +132,16 @@ function AuthPage() {
           />
         </label>
 
+        <label className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+            className="h-4 w-4 accent-primary"
+          />
+          احفظ حسابي على هذا الجهاز ولا تطلب البيانات مجدداً
+        </label>
+
         <button
           type="submit"
           disabled={busy}
