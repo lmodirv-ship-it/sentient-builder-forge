@@ -6,6 +6,7 @@ import { searchMemory, rememberExchange } from "./memory.mjs";
 import { chat } from "./models.mjs";
 import { createJob } from "./jobs.mjs";
 import { log } from "./db.mjs";
+import { isTvccQuestion, tvccAnswer } from "./tvcc.mjs";
 
 const JOB_INTENTS = [
   [/صمم لي موقع|انشئ موقع|اصنع موقع/i, "site", (t) => ({ prompt: t })],
@@ -31,6 +32,15 @@ export async function ask({ userId, text, onToken }) {
   if (template) {
     await log("agent", "جواب من القوالب", { code: template.code });
     return { route: "template", code: template.code, answer: template.answer };
+  }
+
+  // 1.5) منصة TVCC — مركز قيادة المواقع
+  if (isTvccQuestion(question)) {
+    const tv = await tvccAnswer(question);
+    if (tv) {
+      await log("agent", "جواب من منصة TVCC", {});
+      return { route: "tvcc", answer: tv };
+    }
   }
 
   // 2) أداة
