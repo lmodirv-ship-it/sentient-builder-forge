@@ -1086,6 +1086,22 @@ function Home() {
                 )}
               </div>
               <div className="border-t border-border p-3 flex gap-2 bg-background items-center">
+                <input
+                  ref={imgInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => onChatImage(e.target.files?.[0])}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => imgInputRef.current?.click()}
+                  disabled={readingImage}
+                  title={t("إرفاق صورة", "Attach image")}
+                >
+                  {readingImage ? <Wand2 className="size-4 animate-pulse" /> : <ImageIcon className="size-4" />}
+                </Button>
                 <Button
                   variant={recording ? "destructive" : "outline"}
                   size="icon"
