@@ -903,7 +903,7 @@ function Home() {
       const { text, error } = await ocrImage({ data: { dataUrl, filename: file.name, lang } });
       const reply = error
         ? t("تعذّرت قراءة الصورة: ", "Could not read image: ") + error
-        : (text?.trim() || t("لم أجد نصاً في هذه الصورة.", "No text found in this image."));
+        : (text?.trim() || t("تعذّر تحليل هذه الصورة.", "Could not analyze this image."));
       persistChat(base.map((m) => (m.id === runId ? { ...m, text: reply, running: false } : m)));
     } catch (e: any) {
       alert(t("تعذّرت قراءة الصورة: ", "Could not read image: ") + (e?.message || ""));

@@ -22,8 +22,8 @@ export const ocrImage = createServerFn({ method: "POST" })
 
     const prompt =
       data.lang === "ar"
-        ? "استخرج كل النص المرئي في هذه الصورة حرفياً (OCR). إن لم يوجد نص، صف الصورة بدقة في فقرة موجزة. أعد النص فقط دون مقدمات."
-        : "Extract ALL visible text from this image verbatim (OCR). If no text, describe the image in one concise paragraph. Return text only.";
+        ? "حلّل هذه الصورة تحليلاً نصياً وافياً بالعربية: صف ما فيها من عناصر وأشخاص ومشهد وألوان وسياق، واستخرج أي نص ظاهر فيها حرفياً ضمن التحليل. أعد النص التحليلي فقط دون مقدمات أو رموز تنسيق."
+        : "Analyze this image in a thorough written analysis: describe its elements, people, scene, colors and context, and transcribe any visible text verbatim within the analysis. Return the analytical text only, no preamble or formatting symbols.";
 
     try {
       const res = await fetch(`${base.replace(/\/$/, "")}/v1/chat/completions`, {
