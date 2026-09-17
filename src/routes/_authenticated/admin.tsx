@@ -274,6 +274,38 @@ function PanelsManager({ panels, onChanged }: { panels: Panel[]; onChanged: () =
   const upsertFn = useServerFn(upsertAdminPanel);
   const deleteFn = useServerFn(deleteAdminPanel);
   const [form, setForm] = useState({ key: "", label: "", icon: "", description: "", sortOrder: 100 });
+  const [editKey, setEditKey] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState({ label: "", icon: "", description: "", sortOrder: 100 });
+
+  const startEdit = (p: Panel) => {
+    setEditKey(p.key);
+    setEditDraft({
+      label: p.label,
+      icon: p.icon ?? "",
+      description: p.description ?? "",
+      sortOrder: p.sort_order,
+    });
+  };
+
+  const saveEdit = async (p: Panel) => {
+    const r = await upsertFn({
+      data: {
+        key: p.key,
+        label: editDraft.label || p.label,
+        icon: editDraft.icon || undefined,
+        description: editDraft.description || undefined,
+        sortOrder: Number(editDraft.sortOrder) || p.sort_order,
+        enabled: p.enabled,
+      },
+    });
+    if (!r.ok) {
+      toast.error(r.error ?? "فشل");
+      return;
+    }
+    toast.success("تم الحفظ");
+    setEditKey(null);
+    onChanged();
+  };
 
   const add = async () => {
     if (!form.key || !form.label) return toast.error("أدخل المعرّف والاسم");
@@ -337,28 +369,77 @@ function PanelsManager({ panels, onChanged }: { panels: Panel[]; onChanged: () =
       </div>
 
       <div className="space-y-2">
-        {panels.map((p) => (
-          <div key={p.key} className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 p-3 text-xs">
-            <span>{ICONS[p.icon ?? ""] ?? "🔹"}</span>
-            <span className="font-semibold text-white/80">{p.label}</span>
-            <code dir="ltr" className="rounded bg-white/10 px-1 text-white/50">{p.key}</code>
-            {p.builtin && <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-emerald-200">أساسي</span>}
-            <input
-              type="number"
-              className="w-20 rounded bg-white/5 px-2 py-1 ring-1 ring-white/10"
-              defaultValue={p.sort_order}
-              onBlur={(e) => update(p, { sort_order: Number(e.target.value) })}
-            />
-            <button className="rounded bg-white/10 px-2 py-1 hover:bg-white/20" onClick={() => update(p, { enabled: !p.enabled })}>
-              {p.enabled ? "إخفاء" : "إظهار"}
-            </button>
-            {!p.builtin && (
-              <button className="rounded bg-red-500/20 px-2 py-1 text-red-200 hover:bg-red-500/30" onClick={() => remove(p)}>
-                حذف
-              </button>
-            )}
-          </div>
-        ))}
+        {panels.map((p) => {
+          const isEditing = editKey === p.key;
+          return (
+            <div key={p.key} className="rounded-xl border border-white/10 p-3 text-xs">
+              <div className="flex flex-wrap items-center gap-2">
+                <span>{ICONS[p.icon ?? ""] ?? "🔹"}</span>
+                <span className="font-semibold text-white/80">{p.label}</span>
+                <code dir="ltr" className="rounded bg-white/10 px-1 text-white/50">{p.key}</code>
+                {p.builtin && <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-emerald-200">أساسي</span>}
+                <button
+                  className="rounded bg-white/10 px-2 py-1 text-emerald-200 hover:bg-white/20"
+                  onClick={() => (isEditing ? setEditKey(null) : startEdit(p))}
+                >
+                  {isEditing ? "إغلاق" : "تعديل"}
+                </button>
+                <button className="rounded bg-white/10 px-2 py-1 hover:bg-white/20" onClick={() => update(p, { enabled: !p.enabled })}>
+                  {p.enabled ? "إخفاء" : "إظهار"}
+                </button>
+                {!p.builtin && (
+                  <button className="rounded bg-red-500/20 px-2 py-1 text-red-200 hover:bg-red-500/30" onClick={() => remove(p)}>
+                    حذف
+                  </button>
+                )}
+              </div>
+              {isEditing && (
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/10 pt-3">
+                  <input
+                    className="rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10"
+                    placeholder="الاسم الظاهر"
+                    value={editDraft.label}
+                    onChange={(e) => setEditDraft({ ...editDraft, label: e.target.value })}
+                  />
+                  <select
+                    className="rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10"
+                    value={editDraft.icon}
+                    onChange={(e) => setEditDraft({ ...editDraft, icon: e.target.value })}
+                  >
+                    <option value="" className="bg-black">أيقونة</option>
+                    {Object.entries(ICONS).map(([i, label]) => (
+                      <option key={i} value={i} className="bg-black">{label} {i}</option>
+                    ))}
+                  </select>
+                  <input
+                    className="min-w-[200px] flex-1 rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10"
+                    placeholder="وصف مختصر"
+                    value={editDraft.description}
+                    onChange={(e) => setEditDraft({ ...editDraft, description: e.target.value })}
+                  />
+                  <input
+                    type="number"
+                    className="w-24 rounded-lg bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10"
+                    value={editDraft.sortOrder}
+                    onChange={(e) => setEditDraft({ ...editDraft, sortOrder: Number(e.target.value) })}
+                  />
+                  <button
+                    className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm text-emerald-200 ring-1 ring-emerald-400/40"
+                    onClick={() => saveEdit(p)}
+                  >
+                    حفظ
+                  </button>
+                  <button
+                    className="rounded-lg bg-white/10 px-4 py-2 text-sm text-white/60 ring-1 ring-white/15"
+                    onClick={() => setEditKey(null)}
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
