@@ -21,6 +21,7 @@ import {
   upsertAdminService,
 } from "@/lib/admin.functions";
 import { purgeBadKnowledge, retrainKernel } from "@/lib/kernel.functions";
+import { invalidateTemplateIndex } from "@/lib/kernel-chat.functions";
 import {
   deleteAdminPanel,
   listAdminPanels,
@@ -808,6 +809,7 @@ function Logs() {
 
 function TemplateRow({ t, onChanged }: { t: any; onChanged: () => void }) {
   const updateFn = useServerFn(updateAdminTemplate);
+  const refreshIndex = useServerFn(invalidateTemplateIndex);
   const [q, setQ] = useState(t.title ?? "");
   const [a, setA] = useState(t.body ?? "");
   const [editing, setEditing] = useState(false);
@@ -817,7 +819,10 @@ function TemplateRow({ t, onChanged }: { t: any; onChanged: () => void }) {
     if (!q.trim() || !a.trim()) return toast.error("أكمل السؤال والجواب");
     const r = await updateFn({ data: { id: t.id, title: q, body: a } });
     if (!r.ok) toast.error(r.error ?? "فشل");
-    else { toast.success("تم التحديث"); setEditing(false); onChanged(); }
+    else {
+      try { await refreshIndex({ data: {} } as any); } catch { /* ignore */ }
+      toast.success("تم التحديث"); setEditing(false); onChanged();
+    }
   };
 
   const cancel = () => {

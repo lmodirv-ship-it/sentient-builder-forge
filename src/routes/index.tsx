@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Brain, Sparkles, Plus, Search, Trash2, MessageSquare, BookOpen, Languages,
   Upload, Download, FileUp, Flame, Tag as TagIcon, Library,
-  Mic, Square, Volume2, Copy, Image as ImageIcon, FileDown, Wand2,
+  Mic, Square, Volume2, VolumeX, Copy, Image as ImageIcon, FileDown, Wand2,
   FolderOpen, HardDrive,
 } from "lucide-react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -246,6 +246,26 @@ function Home() {
   const chunksRef = useRef<Blob[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const hydratedRef = useRef(false);
+
+  // ===== الوضع الصوتي: قراءة كل رد جديد بصوت HN تلقائياً =====
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [readingImage, setReadingImage] = useState(false);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const imgInputRef = useRef<HTMLInputElement>(null);
+  const spokenRef = useRef<Set<string>>(new Set());
+  // كاش الأسئلة المتكررة داخل الجلسة: نفس السؤال يُعاد جوابه فوراً بلا أي طلب.
+  const qaCacheRef = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => { setVoiceMode(load<boolean>("nawat.voicemode.v1", false)); }, []);
+  const toggleVoiceMode = () => {
+    setVoiceMode((prev) => {
+      const next = !prev;
+      save("nawat.voicemode.v1", next);
+      if (!next) stopSpeaking();
+      return next;
+    });
+  };
 
   useEffect(() => {
     (async () => {
@@ -557,9 +577,19 @@ function Home() {
 
     // ── نواة المساعد الذكي: أسئلة الترحيب والقوالب المعروفة تُجاب فوراً من جدول القوالب.
     if (!raw.startsWith("/")) {
+      const cacheKey = `${lang}|${raw.toLowerCase()}`;
+      const cached = qaCacheRef.current.get(cacheKey);
+      if (cached) {
+        const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
+        persistChat([...chat, user, { id: crypto.randomUUID(), role: "assistant", text: cached }]);
+        setInput("");
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
       try {
         const tm = await templateAsk({ data: { question: raw, lang } });
         if (tm.matched && tm.text) {
+          qaCacheRef.current.set(cacheKey, tm.text);
           const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: raw };
           persistChat([...chat, user, { id: crypto.randomUUID(), role: "assistant", text: tm.text }]);
           setInput("");
@@ -814,12 +844,73 @@ function Home() {
   };
 
   // ===== TTS =====
-  const speak = (text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = isAr ? "ar-SA" : "en-US";
-    window.speechSynthesis.speak(u);
+  function stopSpeaking() {
+    if (typeof window === "undefined") return;
+    window.speechSynthesis?.cancel();
+    if (audioElRef.current) { audioElRef.current.pause(); audioElRef.current = null; }
+    setSpeaking(false);
+  }
+
+  const speak = async (text: string) => {
+    if (typeof window === "undefined") return;
+    const clean = text.replace(/[*_>#`]/g, "").trim();
+    if (!clean) return;
+    stopSpeaking();
+    setSpeaking(true);
+    try {
+      const r = await speechGen({ data: { text: clean.slice(0, 1500) } });
+      if (r.audioBase64) {
+        const el = new Audio(`data:${r.mime || "audio/mpeg"};base64,${r.audioBase64}`);
+        audioElRef.current = el;
+        el.onended = () => setSpeaking(false);
+        await el.play();
+        return;
+      }
+      throw new Error(r.error || "no audio");
+    } catch {
+      if (window.speechSynthesis) {
+        const u = new SpeechSynthesisUtterance(clean);
+        u.lang = isAr ? "ar-SA" : "en-US";
+        u.onend = () => setSpeaking(false);
+        window.speechSynthesis.speak(u);
+      } else {
+        setSpeaking(false);
+      }
+    }
+  };
+
+  // قراءة كل رد جديد تلقائياً عند تشغيل الوضع الصوتي.
+  useEffect(() => {
+    if (!voiceMode || !chat.length) return;
+    const last = chat[chat.length - 1];
+    if (last.role !== "assistant" || last.running || !last.text.trim()) return;
+    if (spokenRef.current.has(last.id)) return;
+    spokenRef.current.add(last.id);
+    void speak(last.text);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chat, voiceMode]);
+
+  // ===== استقبال الصور: قراءة ضوئية لمحتوى الصورة عبر HN =====
+  const onChatImage = async (file: File | null | undefined) => {
+    if (!file || readingImage) return;
+    setReadingImage(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: file.name, imageUrl: dataUrl };
+      const runId = crypto.randomUUID();
+      const base = [...chat, user, { id: runId, role: "assistant" as const, text: t("جارٍ قراءة الصورة…", "Reading image…"), running: true }];
+      persistChat(base);
+      const { text, error } = await ocrImage({ data: { dataUrl, filename: file.name, lang } });
+      const reply = error
+        ? t("تعذّرت قراءة الصورة: ", "Could not read image: ") + error
+        : (text?.trim() || t("لم أجد نصاً في هذه الصورة.", "No text found in this image."));
+      persistChat(base.map((m) => (m.id === runId ? { ...m, text: reply, running: false } : m)));
+    } catch (e: any) {
+      alert(t("تعذّرت قراءة الصورة: ", "Could not read image: ") + (e?.message || ""));
+    } finally {
+      setReadingImage(false);
+      if (imgInputRef.current) imgInputRef.current.value = "";
+    }
   };
 
   // ===== Copy =====
@@ -870,6 +961,19 @@ function Home() {
             <Button variant="outline" size="sm" onClick={() => setLang(isAr ? "en" : "ar")}>
               <Languages className="size-4" /> {isAr ? "EN" : "ع"}
             </Button>
+            <Button
+              variant={voiceMode ? "default" : "outline"}
+              size="sm"
+              onClick={toggleVoiceMode}
+              title={voiceMode ? t("إيقاف الوضع الصوتي", "Voice mode off") : t("تشغيل الوضع الصوتي", "Voice mode on")}
+            >
+              {voiceMode ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+            </Button>
+            {speaking && (
+              <Button variant="destructive" size="sm" onClick={stopSpeaking} title={t("إيقاف الصوت", "Stop audio")}>
+                <Square className="size-4" />
+              </Button>
+            )}
             <TabsList className="grid grid-cols-2 w-auto p-1 bg-card/40 backdrop-blur-md border border-border rounded-xl h-auto">
               <TabsTrigger value="chat" className="gap-1.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-1.5 text-sm"><MessageSquare className="size-3.5" />{t("اسأل", "Ask")}</TabsTrigger>
               <TabsTrigger value="memory" className="gap-1.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-1.5 text-sm"><BookOpen className="size-3.5" />{t("الذاكرة", "Memory")}</TabsTrigger>
@@ -892,7 +996,14 @@ function Home() {
               <NeuralBrain bg className="w-[80vw] h-[80vw] max-w-[600px] max-h-[600px] text-muted-foreground brain-bg brain-glow" />
             </div>
             <Card className="relative p-0 overflow-hidden rounded-[2rem] bg-card/30 backdrop-blur-xl border-border/60 nawat-glow z-[1]">
-              <div ref={chatRef} className="h-[55vh] overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-transparent to-primary/[0.04]">
+              <div
+                ref={chatRef}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  const f = Array.from(e.dataTransfer.files).find((x) => x.type.startsWith("image/"));
+                  if (f) { e.preventDefault(); void onChatImage(f); }
+                }}
+                className="h-[55vh] overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-transparent to-primary/[0.04]">
                 {chat.length === 0 && (
                   <div className="h-full grid place-items-center">
                     <NeuralBrain className="w-32 h-32 text-muted-foreground" />
@@ -971,7 +1082,10 @@ function Home() {
 
                         </div>
                       ) : (
-                        m.text
+                        <>
+                          {m.imageUrl && <img src={m.imageUrl} alt="" className="mb-2 rounded-lg max-w-full max-h-64 object-contain" />}
+                          {m.text}
+                        </>
                       )}
                     </div>
                   </div>
@@ -989,6 +1103,22 @@ function Home() {
                 )}
               </div>
               <div className="border-t border-border p-3 flex gap-2 bg-background items-center">
+                <input
+                  ref={imgInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => onChatImage(e.target.files?.[0])}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => imgInputRef.current?.click()}
+                  disabled={readingImage}
+                  title={t("إرفاق صورة", "Attach image")}
+                >
+                  {readingImage ? <Wand2 className="size-4 animate-pulse" /> : <ImageIcon className="size-4" />}
+                </Button>
                 <Button
                   variant={recording ? "destructive" : "outline"}
                   size="icon"
