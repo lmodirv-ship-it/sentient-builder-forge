@@ -220,7 +220,6 @@ function Home() {
   const [syncing, setSyncing] = useState(false);
   const ask = useServerFn(askNawat);
   const templateAsk = useServerFn(kernelTemplateAnswer);
-  const tvccAskFn = useServerFn(tvccAsk);
   const expand = useServerFn(expandQuery);
   const transcribe = useServerFn(transcribeAudio);
   const imageGen = useServerFn(generateImage);
