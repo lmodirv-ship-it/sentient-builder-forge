@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Brain, Sparkles, Plus, Search, Trash2, MessageSquare, BookOpen, Languages,
   Upload, Download, FileUp, Flame, Tag as TagIcon, Library,
-  Mic, Square, Volume2, Copy, Image as ImageIcon, FileDown, Wand2,
+  Mic, Square, Volume2, VolumeX, Copy, Image as ImageIcon, FileDown, Wand2,
   FolderOpen, HardDrive,
 } from "lucide-react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
