@@ -18,17 +18,54 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+const REMEMBER_KEY = "nawat.remember.credentials";
+
+function loadRemembered(): { email: string; password: string } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(REMEMBER_KEY);
+    if (!raw) return null;
+    const v = JSON.parse(raw);
+    if (v && typeof v.email === "string" && typeof v.password === "string") return v;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const { session, loading } = useAuthSession();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [autoTried, setAutoTried] = useState(false);
 
   useEffect(() => {
     if (!loading && session) navigate({ to: "/" });
   }, [loading, session, navigate]);
+
+  // Restore saved credentials and sign in automatically (development mode).
+  useEffect(() => {
+    if (loading || session || autoTried) return;
+    const saved = loadRemembered();
+    if (!saved) return;
+    setAutoTried(true);
+    setEmail(saved.email);
+    setPassword(saved.password);
+    setBusy(true);
+    supabase.auth
+      .signInWithPassword({ email: saved.email, password: saved.password })
+      .then(({ error }) => {
+        if (!error) {
+          toast.success("مرحباً بعودتك.");
+          navigate({ to: "/" });
+        }
+      })
+      .finally(() => setBusy(false));
+  }, [loading, session, autoTried, navigate]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,6 +85,8 @@ function AuthPage() {
         toast.success("مرحباً بعودتك.");
         navigate({ to: "/" });
       }
+      if (remember) localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email, password }));
+      else localStorage.removeItem(REMEMBER_KEY);
     } catch (err: any) {
       toast.error(err?.message || "تعذّر إتمام العملية");
     } finally {
