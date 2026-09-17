@@ -7,7 +7,7 @@ import { DevEnginePanel } from "@/components/DevEnginePanel";
 
 import { getMyRole, setUserBanned, setUserRole } from "@/lib/roles.functions";
 import {
-  archiveAdminTemplate,
+  
   checkServiceHealth,
   getAdminLogs,
   getAdminOverview,
