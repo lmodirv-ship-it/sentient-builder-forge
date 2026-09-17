@@ -834,12 +834,73 @@ function Home() {
   };
 
   // ===== TTS =====
-  const speak = (text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = isAr ? "ar-SA" : "en-US";
-    window.speechSynthesis.speak(u);
+  function stopSpeaking() {
+    if (typeof window === "undefined") return;
+    window.speechSynthesis?.cancel();
+    if (audioElRef.current) { audioElRef.current.pause(); audioElRef.current = null; }
+    setSpeaking(false);
+  }
+
+  const speak = async (text: string) => {
+    if (typeof window === "undefined") return;
+    const clean = text.replace(/[*_>#`]/g, "").trim();
+    if (!clean) return;
+    stopSpeaking();
+    setSpeaking(true);
+    try {
+      const r = await speechGen({ data: { text: clean.slice(0, 1500) } });
+      if (r.audioBase64) {
+        const el = new Audio(`data:${r.mime || "audio/mpeg"};base64,${r.audioBase64}`);
+        audioElRef.current = el;
+        el.onended = () => setSpeaking(false);
+        await el.play();
+        return;
+      }
+      throw new Error(r.error || "no audio");
+    } catch {
+      if (window.speechSynthesis) {
+        const u = new SpeechSynthesisUtterance(clean);
+        u.lang = isAr ? "ar-SA" : "en-US";
+        u.onend = () => setSpeaking(false);
+        window.speechSynthesis.speak(u);
+      } else {
+        setSpeaking(false);
+      }
+    }
+  };
+
+  // قراءة كل رد جديد تلقائياً عند تشغيل الوضع الصوتي.
+  useEffect(() => {
+    if (!voiceMode || !chat.length) return;
+    const last = chat[chat.length - 1];
+    if (last.role !== "assistant" || last.running || !last.text.trim()) return;
+    if (spokenRef.current.has(last.id)) return;
+    spokenRef.current.add(last.id);
+    void speak(last.text);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chat, voiceMode]);
+
+  // ===== استقبال الصور: قراءة ضوئية لمحتوى الصورة عبر HN =====
+  const onChatImage = async (file: File | null | undefined) => {
+    if (!file || readingImage) return;
+    setReadingImage(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const user: ChatMsg = { id: crypto.randomUUID(), role: "user", text: file.name, imageUrl: dataUrl };
+      const runId = crypto.randomUUID();
+      const base = [...chat, user, { id: runId, role: "assistant" as const, text: t("جارٍ قراءة الصورة…", "Reading image…"), running: true }];
+      persistChat(base);
+      const { text, error } = await ocrImage({ data: { dataUrl, filename: file.name, lang } });
+      const reply = error
+        ? t("تعذّرت قراءة الصورة: ", "Could not read image: ") + error
+        : (text?.trim() || t("لم أجد نصاً في هذه الصورة.", "No text found in this image."));
+      persistChat(base.map((m) => (m.id === runId ? { ...m, text: reply, running: false } : m)));
+    } catch (e: any) {
+      alert(t("تعذّرت قراءة الصورة: ", "Could not read image: ") + (e?.message || ""));
+    } finally {
+      setReadingImage(false);
+      if (imgInputRef.current) imgInputRef.current.value = "";
+    }
   };
 
   // ===== Copy =====
